@@ -1,0 +1,39 @@
+{
+  "name": "@zimtsui/brainswitch",
+  "exports": {
+    "./adaptor": "./build/adaptor/exports.js",
+    "./suite": "./build/suite/exports.js"
+  },
+  "imports": {
+    "#adaptor/config": "./build/adaptor/config.js",
+    "#suite/assets": "./build/suite/assets.js",
+    "#suite/config": "./build/suite/config.js"
+  },
+  "description": "",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b ./src/tsconfig.json",
+    "clean": "rm -rf ./build"
+  },
+  "author": "Zim",
+  "dependencies": {
+    "@google/genai": "^0.10.0",
+    "@zimtsui/deque": "^0.0.10",
+    "@zimtsui/node-loaders": "^0.0.1",
+    "ajv": "^8.17.1",
+    "marked": "^16.3.0",
+    "openai": "^5.15.0",
+    "undici": "^7.16.0"
+  },
+  "peerDependencies": {
+    "@sinclair/typebox": "^0.34.40",
+    "@types/node": "^22.17.2",
+    "@zimtsui/amenda": "^0.0.13",
+    "@zimtsui/coroutine-locks": "^0.0.25",
+    "@zimtsui/typelog": "^0.0.5"
+  }
+}
