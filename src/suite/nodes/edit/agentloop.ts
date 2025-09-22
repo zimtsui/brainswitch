@@ -1,5 +1,5 @@
 import { Editor } from './editor.ts';
-import { Function, RoleMessage, ChatCompletion, type InferenceContext, Adaptor, type Session } from '@zimtsui/brainswitch/adaptor';
+import { Function, RoleMessage, Engine, type InferenceContext, Adaptor, type Session } from '@zimtsui/brainswitch/adaptor';
 import { Type } from '@sinclair/typebox';
 import { Config } from '#suite/config';
 
@@ -34,7 +34,7 @@ export namespace Agentloop {
 		): Promise<string> {
 			const editor = new Editor(text);
 			for (let i = 0; i < limit; i++) {
-				const response = await ChatCompletion.apply(ctx, session, cc);
+				const response = await Engine.apply(ctx, session, cc);
 				const fcs = response.getFunctionCalls();
 				if (fcs.length > 1) {
 					const message = '操作失败，每一轮对话中最多只能调用一次工具。';

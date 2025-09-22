@@ -1,6 +1,6 @@
 import { Config } from '#adaptor/config';
 import { Function } from './function.ts';
-import { ChatCompletion } from './chat-completion.ts';
+import { Engine } from './engine.ts';
 import assert from 'node:assert';
 import { OpenAIChatCompletionsAPI } from './api-types/openai-chatcompletions.ts';
 import { GoogleRESTfulAPI } from './api-types/google-rest.ts';
@@ -37,11 +37,11 @@ export class Adaptor {
 		endpoint: string,
 		functionDeclarations?: fd[],
 		functionCallMode?: Function.ToolChoice<fd>,
-	): ChatCompletion<fd> {
+	): Engine<fd> {
 		assert(endpoint in this.config.brainswitch.endpoints);
 		const endpointSpec = this.config.brainswitch.endpoints[endpoint]!;
 		const throttle = this.getThrottle(endpoint);
-		const options: ChatCompletion.Options<fd> = {
+		const options: Engine.Options<fd> = {
 			...endpointSpec,
 			functionDeclarations,
 			functionCallMode,

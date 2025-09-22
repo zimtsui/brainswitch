@@ -5,11 +5,11 @@ import { type InferenceContext } from './inference-context.ts';
 import { Throttle } from './throttle.ts';
 
 
-export interface ChatCompletion<in out fd extends Function.Declaration = never> {
+export interface Engine<in out fd extends Function.Declaration = never> {
 	(ctx: InferenceContext, session: Session<fd>): Promise<RoleMessage.AI<fd>>;
 }
 
-export namespace ChatCompletion {
+export namespace Engine {
 	export namespace Options {
 		export interface Functions<out fd extends Function.Declaration = never> {
 			functionDeclarations?: fd[];
@@ -27,7 +27,7 @@ export namespace ChatCompletion {
 	export async function apply<fd extends Function.Declaration = never>(
 		ctx: InferenceContext,
 		session: Session<fd>,
-		cc: ChatCompletion<fd>,
+		cc: Engine<fd>,
 	): Promise<RoleMessage.AI<fd>> {
 		const response = await cc(ctx, session);
 		session.chatMessages.push(response);

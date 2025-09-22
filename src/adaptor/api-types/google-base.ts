@@ -1,4 +1,4 @@
-import { ChatCompletion } from '../chat-completion.ts';
+import { Engine } from '../engine.ts';
 import { RoleMessage, type ChatMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
@@ -9,7 +9,7 @@ import Ajv from 'ajv';
 const ajv = new Ajv();
 
 export abstract class GoogleAPIBase<in out fd extends Function.Declaration = never> extends APIBase<fd> {
-	protected constructor(options: ChatCompletion.Options<fd>) {
+	protected constructor(options: Engine.Options<fd>) {
 		super(options);
 	}
 

@@ -1,4 +1,4 @@
-import { ChatCompletion } from '../chat-completion.ts';
+import { Engine } from '../engine.ts';
 import { RoleMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
@@ -15,7 +15,7 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 	protected client: OpenAI;
 	protected proxyAgent?: ProxyAgent;
 
-	protected constructor(options: ChatCompletion.Options<fd>) {
+	protected constructor(options: Engine.Options<fd>) {
 		super(options);
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 		this.client = new OpenAI({

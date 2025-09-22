@@ -1,4 +1,4 @@
-import { ChatCompletion } from '../chat-completion.ts';
+import { Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import { OpenAIChatCompletionsMonolithAPIBase } from './openai-chatcompletions-monolith-base.ts';
@@ -9,7 +9,7 @@ import { TransientError } from './base.ts';
 
 
 export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fd extends Function.Declaration = never> extends OpenAIChatCompletionsMonolithAPIBase<fd> {
-	public static create<fd extends Function.Declaration = never>(options: ChatCompletion.Options<fd>): ChatCompletion<fd> {
+	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
 		const api = new HuggingFaceCerebrasQwen3ThinkingAPI(options);
 		return api.monolith.bind(api);
 	}

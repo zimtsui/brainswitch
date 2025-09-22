@@ -1,7 +1,7 @@
 import { APIBase } from './base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
-import { ChatCompletion } from '../chat-completion.ts';
+import { Engine } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
@@ -16,12 +16,12 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 	protected client: OpenAI;
 	protected proxyAgent?: ProxyAgent;
 
-	public static create<fd extends Function.Declaration = never>(options: ChatCompletion.Options<fd>): ChatCompletion<fd> {
+	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
 		const api = new OpenAIResponsesAPI<fd>(options);
 		return api.monolith.bind(api);
 	}
 
-	public constructor(options: ChatCompletion.Options<fd>) {
+	public constructor(options: Engine.Options<fd>) {
 		super(options);
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 		this.client = new OpenAI({

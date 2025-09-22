@@ -1,5 +1,5 @@
 import { Function } from '../function.ts';
-import { ChatCompletion } from '../chat-completion.ts';
+import { Engine } from '../engine.ts';
 import { Throttle } from '../throttle.ts';
 
 
@@ -16,7 +16,7 @@ export abstract class APIBase<in out fd extends Function.Declaration = never> {
 	protected throttle: Throttle;
 	protected timeout?: number;
 
-	public constructor(options: ChatCompletion.Options<fd>) {
+	public constructor(options: Engine.Options<fd>) {
 		this.baseUrl = options.baseUrl;
 		this.apiKey = options.apiKey;
 		this.model = options.model;

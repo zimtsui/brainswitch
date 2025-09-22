@@ -1,4 +1,4 @@
-import { ChatCompletion } from '../chat-completion.ts';
+import { Engine } from '../engine.ts';
 import { type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
@@ -22,14 +22,14 @@ export class GoogleRESTfulAPI<in out fd extends Function.Declaration = never> ex
 	private apiURL: URL;
 	private tokenizerURL: URL;
 
-	protected constructor(options: ChatCompletion.Options<fd>) {
+	protected constructor(options: Engine.Options<fd>) {
 		super(options);
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 		this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
 		this.tokenizerURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:countTokens`);
 	}
 
-	public static create<fd extends Function.Declaration = never>(options: ChatCompletion.Options<fd>): ChatCompletion<fd> {
+	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
 		const api = new GoogleRESTfulAPI(options);
 		return api.monolith.bind(api);
 	}
