@@ -20,7 +20,7 @@ export interface Agentloop {
 
 export namespace Agentloop {
 	export function create(adaptor: Adaptor, config: Config): Agentloop {
-		const cc = adaptor.createChatCompletion(
+		const cc = adaptor.createEngine(
 			config.brainswitch.suite.agentloop,
 			Agentloop.fd,
 			Function.ToolChoice.REQUIRED,

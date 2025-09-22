@@ -10,7 +10,7 @@ export interface Summarize {
 }
 export namespace Summarize {
 	export function create(adaptor: Adaptor, config: Config): Summarize {
-		const cc = adaptor.createChatCompletion(
+		const cc = adaptor.createEngine(
 			config.brainswitch.suite.summarize,
 			Summarize.fd,
 			Function.ToolChoice.REQUIRED,

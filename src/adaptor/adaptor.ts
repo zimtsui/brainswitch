@@ -33,7 +33,7 @@ export class Adaptor {
 		return this.throttles.get(baseUrl)!.get(model)!;
 	}
 
-	public createChatCompletion<fd extends Function.Declaration = never>(
+	public createEngine<fd extends Function.Declaration = never>(
 		endpoint: string,
 		functionDeclarations?: fd[],
 		functionCallMode?: Function.ToolChoice<fd>,
