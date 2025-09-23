@@ -9,8 +9,8 @@ export interface QwenChatCompletionChunkChoiceDelta extends OpenAI.ChatCompletio
 }
 
 
-export class QwenAPI<in out fd extends Function.Declaration = never> extends OpenAIChatCompletionsStreamAPIBase<fd> {
-	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
+export class QwenAPI<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsStreamAPIBase<fdm> {
+	public static create<fdm extends Function.Declaration.Map = never>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
 		const api = new QwenAPI(options);
 		return api.stream.bind(api);
 	}

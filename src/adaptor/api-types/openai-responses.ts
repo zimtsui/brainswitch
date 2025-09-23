@@ -12,16 +12,16 @@ import Ajv from 'ajv';
 const ajv = new Ajv();
 
 
-export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> extends APIBase<fd> {
+export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
 	protected client: OpenAI;
 	protected proxyAgent?: ProxyAgent;
 
-	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
-		const api = new OpenAIResponsesAPI<fd>(options);
+	public static create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+		const api = new OpenAIResponsesAPI<fdm>(options);
 		return api.monolith.bind(api);
 	}
 
-	public constructor(options: Engine.Options<fd>) {
+	public constructor(options: Engine.Options<fdm>) {
 		super(options);
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 		this.client = new OpenAI({
@@ -33,7 +33,7 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 		});
 	}
 
-	protected convertFromFunctionCall(fc: Function.Call.Union<fd>): OpenAI.Responses.ResponseFunctionToolCall {
+	protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseFunctionToolCall {
 		assert(fc.id);
 		return {
 			type: 'function_call',
@@ -42,9 +42,9 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 			arguments: JSON.stringify(fc.args),
 		};
 	}
-	protected convertToFunctionCall(apifc: OpenAI.Responses.ResponseFunctionToolCall): Function.Call.Union<fd> {
-		const fd = this.functionDeclarations.find(fd => fd.name === apifc.name);
-		assert(fd, new TransientError('Invalid function call', { cause: apifc }));
+	protected convertToFunctionCall(apifc: OpenAI.Responses.ResponseFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+		const fditem = this.functionDeclarationMap[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
+		assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
 		const args = (() => {
 			try {
 				return JSON.parse(apifc.arguments);
@@ -53,17 +53,17 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 			}
 		})();
 		assert(
-			ajv.validate(fd.paraschema, args),
+			ajv.validate(fditem.paraschema, args),
 			new TransientError('Invalid function call', { cause: apifc }),
 		);
-		return new Function.Call<Function.Declaration>({
+		return Function.Call.create({
 			id: apifc.call_id,
 			name: apifc.name,
 			args,
-		}) as Function.Call.Union<fd>;
+		} as Function.Call.create.Options<Function.Declaration.From<fdm>>);
 	}
 
-	protected convertFromFunctionResponse(fr: Function.Response.Union<fd>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
+	protected convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
 		assert(fr.id);
 		return {
 			type: 'function_call_output',
@@ -72,7 +72,7 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 		};
 	}
 
-	protected convertFromUserMessage(userMessage: RoleMessage.User<fd>): OpenAI.Responses.ResponseInput {
+	protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		return userMessage.parts.map(part => {
 			if (part instanceof RoleMessage.Text)
 				return {
@@ -86,7 +86,7 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 		});
 	}
 
-	protected convertFromAIMessage(aiMessage: RoleMessage.AI<fd>): OpenAI.Responses.ResponseInput {
+	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		if (aiMessage instanceof OpenAIResponsesAIMessage)
 			return aiMessage.raw;
 		else {
@@ -103,7 +103,7 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 		}
 	}
 
-	protected convertFromChatMessage(chatMessage: ChatMessage<fd>): OpenAI.Responses.ResponseInput {
+	protected convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		if (chatMessage instanceof RoleMessage.User)
 			return this.convertFromUserMessage(chatMessage);
 		else if (chatMessage instanceof RoleMessage.AI)
@@ -111,35 +111,36 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 		else throw new Error();
 	}
 
-	protected convertFromFunctionDeclaration(fd: fd): OpenAI.Responses.FunctionTool {
+	protected convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): OpenAI.Responses.FunctionTool {
 		return {
-			name: fd.name,
-			description: fd.description,
-			parameters: fd.paraschema,
+			name: fdentry[0],
+			description: fdentry[1].description,
+			parameters: fdentry[1].paraschema,
 			strict: true,
 			type: 'function',
 		};
 	}
 
-	protected makeMonolithParams(session: Session<fd>): OpenAI.Responses.ResponseCreateParamsNonStreaming {
+	protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseCreateParamsNonStreaming {
 		return {
 			model: this.model,
 			include: ['reasoning.encrypted_content'],
 			store: false,
 			input: session.chatMessages.flatMap(chatMessage => this.convertFromChatMessage(chatMessage)),
 			instructions: session.developerMessage?.getOnlyText(),
-			tools: this.functionDeclarations.length
-				? this.functionDeclarations.map(fd => this.convertFromFunctionDeclaration(fd))
-				: undefined,
-			tool_choice: this.functionDeclarations.length ? 'required' : undefined,
-			parallel_tool_calls: this.functionDeclarations.length ? false : undefined,
+			tools: Object.keys(this.functionDeclarationMap).length
+				? Object.entries(this.functionDeclarationMap).map(
+					fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
+				) : undefined,
+			tool_choice: Object.keys(this.functionDeclarationMap).length ? 'required' : undefined,
+			parallel_tool_calls: Object.keys(this.functionDeclarationMap).length ? false : undefined,
 			...this.customOptions,
 		};
 	}
 
 
-	protected convertToAIMessage(output: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAIMessage<fd> {
-		const parts = output.flatMap((item): RoleMessage.AI.Part<fd>[] => {
+	protected convertToAIMessage(output: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAIMessage<Function.Declaration.From<fdm>> {
+		const parts = output.flatMap((item): RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] => {
 			if (item.type === 'message') {
 				assert(item.content.every(part => part.type === 'output_text'));
 				return [new RoleMessage.Text(item.content.map(part => part.text).join(''))];
@@ -153,7 +154,7 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 	}
 
 
-	protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Union<fd>[]): void {
+	protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
 		// https://community.openai.com/t/function-call-with-finish-reason-of-stop/437226/7
 		if (this.toolChoice === Function.ToolChoice.REQUIRED)
 			assert(functionCalls.length, new TransientError());
@@ -175,7 +176,9 @@ export class OpenAIResponsesAPI<in out fd extends Function.Declaration = never> 
 		return JSON.stringify(params).length;
 	}
 
-	protected async monolith(ctx: InferenceContext, session: Session<fd>, retry = 0): Promise<RoleMessage.AI<fd>> {
+	protected async monolith(
+		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		if (retry > 2) throw new RetryLimitError();
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([

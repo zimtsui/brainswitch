@@ -5,3 +5,4 @@ export * from './function.ts';
 export * from './config.ts';
 export * from './inference-context.ts';
 export * from './endpoint-spec.ts';
+export * from './agentloop.ts';

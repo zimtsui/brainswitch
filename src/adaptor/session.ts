@@ -2,14 +2,15 @@ import { assert } from 'node:console';
 import { Function } from './function.ts';
 
 
-export interface Session<out fd extends Function.Declaration = never> {
+export interface Session<out fdu extends Function.Declaration = never> {
 	developerMessage?: RoleMessage.Developer;
-	chatMessages: ChatMessage<fd>[];
+	chatMessages: ChatMessage<fdu>[];
 }
 
-export type ChatMessage<fd extends Function.Declaration = never> = RoleMessage.User<fd> | RoleMessage.AI<fd>;
+export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User<fdu> | RoleMessage.AI<fdu>;
 
-export abstract class RoleMessage<out fd extends Function.Declaration = never> {
+
+export abstract class RoleMessage<out fdu extends Function.Declaration = never> {
 	public static readonly ROLE_MESSAGE_NOMINAL = Symbol();
 	private declare readonly [RoleMessage.ROLE_MESSAGE_NOMINAL]: void;
 }
@@ -21,10 +22,10 @@ export namespace RoleMessage {
 		public constructor(public text: string) {}
 	}
 
-	export class AI<out fd extends Function.Declaration = never> extends RoleMessage<fd> {
+	export class AI<out fdu extends Function.Declaration = never> extends RoleMessage<fdu> {
 		public static readonly AI_NOMINAL = Symbol();
 		private declare readonly [AI.AI_NOMINAL]: void;
-		public constructor(public parts: AI.Part<fd>[]) {
+		public constructor(public parts: AI.Part<fdu>[]) {
 			super();
 		}
 		public getText(): string {
@@ -34,23 +35,23 @@ export namespace RoleMessage {
 			assert(this.parts.every(part => part instanceof Text));
 			return this.getText();
 		}
-		public getOnlyFunctionCall(): Function.Call.Union<fd> {
+		public getOnlyFunctionCall(): Function.Call.Distributive<fdu> {
 			const fcs = this.getFunctionCalls();
 			assert(fcs.length === 1);
 			return fcs[0]!;
 		}
-		public getFunctionCalls(): Function.Call.Union<fd>[] {
+		public getFunctionCalls(): Function.Call.Distributive<fdu>[] {
 			return this.parts.filter(part => part instanceof Function.Call);
 		}
 	}
 	export namespace AI {
-		export type Part<fd extends Function.Declaration = never> = Text | Function.Call.Union<fd>;
+		export type Part<fdu extends Function.Declaration = never> = Text | Function.Call.Distributive<fdu>;
 	}
 
-	export class User<fd extends Function.Declaration = never> extends RoleMessage<fd> {
+	export class User<out fdu extends Function.Declaration = never> extends RoleMessage<fdu> {
 		public static readonly USER_NOMINAL = Symbol();
 		private declare readonly [User.USER_NOMINAL]: void;
-		public constructor(public parts: User.Part<fd>[]) {
+		public constructor(public parts: User.Part<fdu>[]) {
 			super();
 		}
 		public getText(): string {
@@ -60,16 +61,16 @@ export namespace RoleMessage {
 			assert(this.parts.every(part => part instanceof Text));
 			return this.getText();
 		}
-		public getFunctionResponses(): Function.Response.Union<fd>[] {
+		public getFunctionResponses(): Function.Response.Distributive<fdu>[] {
 			return this.parts.filter(part => part instanceof Function.Response);
 		}
-		public getOnlyFunctionResponse(): Function.Response.Union<fd> {
+		public getOnlyFunctionResponse(): Function.Response.Distributive<fdu> {
 			assert(this.parts.length === 1 && this.parts[0] instanceof Function.Response);
-			return this.parts[0]! as Function.Response.Union<fd>;
+			return this.parts[0]! as Function.Response.Distributive<fdu>;
 		}
 	}
 	export namespace User {
-		export type Part<fd extends Function.Declaration = never> = Text | Function.Response.Union<fd>;
+		export type Part<fdu extends Function.Declaration = never> = Text | Function.Response.Distributive<fdu>;
 	}
 
 	export class Developer extends RoleMessage {

@@ -8,8 +8,8 @@ import { TransientError } from './base.ts';
 
 
 
-export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fd extends Function.Declaration = never> extends OpenAIChatCompletionsMonolithAPIBase<fd> {
-	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
+export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithAPIBase<fdm> {
+	public static create<fdm extends Function.Declaration.Map = never>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
 		const api = new HuggingFaceCerebrasQwen3ThinkingAPI(options);
 		return api.monolith.bind(api);
 	}
@@ -20,7 +20,7 @@ export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fd extends Function.Decl
 			content: developerMessage.getOnlyText(),
 		};
 	}
-	protected override convertFromUserMessage(userMessage: RoleMessage.User<fd>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
+	protected override convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
 		const textParts = userMessage.parts.filter(part => part instanceof RoleMessage.Text);
 		const frs = userMessage.getFunctionResponses();
 		if (textParts.length && !frs.length)
@@ -29,7 +29,7 @@ export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fd extends Function.Decl
 			return frs.map(fr => this.convertFromFunctionResponse(fr));
 		else throw new Error();
 	}
-	protected override convertFromAIMessage(aiMessage: RoleMessage.AI<fd>): OpenAI.ChatCompletionAssistantMessageParam {
+	protected override convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
 		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessage.Text);
 		const fcParts = aiMessage.parts.filter(part => part instanceof Function.Call);
 		return {
@@ -38,7 +38,7 @@ export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fd extends Function.Decl
 			tool_calls: fcParts.length ? fcParts.map(fc => this.convertFromFunctionCall(fc)) : undefined,
 		};
 	}
-	protected override convertFromFunctionResponse(fr: Function.Response.Union<fd>): OpenAI.ChatCompletionToolMessageParam {
+	protected override convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionToolMessageParam {
 		assert(fr.id);
 		return {
 			role: 'tool',

@@ -8,31 +8,31 @@ import Ajv from 'ajv';
 
 const ajv = new Ajv();
 
-export abstract class GoogleAPIBase<in out fd extends Function.Declaration = never> extends APIBase<fd> {
-	protected constructor(options: Engine.Options<fd>) {
+export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
+	protected constructor(options: Engine.Options<fdm>) {
 		super(options);
 	}
 
-	protected convertFromFunctionCall(fc: Function.Call.Union<fd>): Google.FunctionCall {
+	protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall {
 		return {
 			id: fc.id,
 			name: fc.name,
 			args: fc.args as Record<string, unknown>,
 		};
 	}
-	protected convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Union<fd> {
+	protected convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		assert(googlefc.name);
-		const fd = this.functionDeclarations.find(fd => fd.name === googlefc.name);
-		assert(fd);
-		assert(ajv.validate(fd.paraschema, googlefc.args), new TransientError('Invalid function call', { cause: googlefc }));
-		return new Function.Call<Function.Declaration>({
+		const fditem = this.functionDeclarationMap[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
+		assert(fditem);
+		assert(ajv.validate(fditem.paraschema, googlefc.args), new TransientError('Invalid function call', { cause: googlefc }));
+		return Function.Call.create({
 			id: googlefc.id,
 			name: googlefc.name,
-			args: googlefc.args as Function.Call<fd>['args'],
-		}) as Function.Call.Union<fd>;
+			args: googlefc.args,
+		} as Function.Call.create.Options<Function.Declaration.From<fdm>>);
 	}
 
-	protected convertFromUserMessage(userMessage: RoleMessage.User<fd>): Google.Content {
+	protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content {
 		const parts = userMessage.parts.map(part => {
 			if (part instanceof RoleMessage.Text)
 				return Google.createPartFromText(part.text);
@@ -44,7 +44,7 @@ export abstract class GoogleAPIBase<in out fd extends Function.Declaration = nev
 		});
 		return Google.createUserContent(parts);
 	}
-	protected convertFromAIMessage(aiMessage: RoleMessage.AI<fd>): Google.Content {
+	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): Google.Content {
 		if (aiMessage instanceof GoogleAIMessage)
 			return aiMessage.raw;
 		else {
@@ -63,7 +63,7 @@ export abstract class GoogleAPIBase<in out fd extends Function.Declaration = nev
 		const parts = developerMessage.parts.map(part => Google.createPartFromText(part.text));
 		return { parts };
 	}
-	protected convertFromChatMessages(chatMessages: ChatMessage<fd>[]): Google.Content[] {
+	protected convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[] {
 		return chatMessages.map(chatMessage => {
 			if (chatMessage instanceof RoleMessage.User) return this.convertFromUserMessage(chatMessage);
 			else if (chatMessage instanceof RoleMessage.AI) return this.convertFromAIMessage(chatMessage);
@@ -71,18 +71,18 @@ export abstract class GoogleAPIBase<in out fd extends Function.Declaration = nev
 		});
 	}
 
-	protected convertToAIMessage(content: Google.Content): GoogleAIMessage<fd> {
+	protected convertToAIMessage(content: Google.Content): GoogleAIMessage<Function.Declaration.From<fdm>> {
 		assert(content.parts);
 		return new GoogleAIMessage(content.parts.flatMap(part => {
-			const parts: RoleMessage.AI.Part<fd>[] = [];
+			const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
 			if (part.text) parts.push(new RoleMessage.Text(part.text));
 			if (part.functionCall) parts.push(this.convertToFunctionCall(part.functionCall));
 			return parts;
 		}), content);
 	}
 
-	protected convertFromFunctionDeclaration(fd: fd): Google.FunctionDeclaration {
-		const json = JSON.stringify(fd.paraschema);
+	protected convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): Google.FunctionDeclaration {
+		const json = JSON.stringify(fdentry[1].paraschema);
 		const parsed = JSON.parse(json, (key, value) => {
 			if (key === 'type' && typeof value === 'string') {
 				if (value === 'string') return Google.Type.STRING;
@@ -96,20 +96,20 @@ export abstract class GoogleAPIBase<in out fd extends Function.Declaration = nev
 			else return value;
 		}) as Google.Schema;
 		return {
-			name: fd.name,
-			description: fd.description,
+			name: fdentry[0],
+			description: fdentry[1].description,
 			parameters: parsed,
 		};
 	}
 
-	protected convertFromFunctionCallMode(mode: Function.ToolChoice<fd>): Google.FunctionCallingConfig {
+	protected convertFromFunctionCallMode(mode: Function.ToolChoice<fdm>): Google.FunctionCallingConfig {
 		if (mode === Function.ToolChoice.NONE) return { mode: Google.FunctionCallingConfigMode.NONE };
 		else if (mode === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
 		else if (mode === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
 		else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...mode] };
 	}
 
-	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.AI<fd>): void {
+	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): void {
 		const functionCalls = aiMessage.getFunctionCalls();
 		if (this.toolChoice === Function.ToolChoice.REQUIRED)
 			assert(functionCalls.length, new TransientError('No function call'));
@@ -120,8 +120,8 @@ export abstract class GoogleAPIBase<in out fd extends Function.Declaration = nev
 	}
 }
 
-export class GoogleAIMessage<out fd extends Function.Declaration> extends RoleMessage.AI<fd> {
-	public constructor(parts: RoleMessage.AI.Part<fd>[], public raw: Google.Content) {
+export class GoogleAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AI<fdu> {
+	public constructor(parts: RoleMessage.AI.Part<fdu>[], public raw: Google.Content) {
 		super(parts);
 	}
 }

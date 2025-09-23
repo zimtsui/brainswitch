@@ -8,19 +8,20 @@ import { RetryLimitError, TransientError } from './base.ts';
 
 
 
-export abstract class OpenAIChatCompletionsStreamAPIBase<in out fd extends Function.Declaration = never> extends OpenAIChatCompletionsAPIBase<fd> {
+export abstract class OpenAIChatCompletionsStreamAPIBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsAPIBase<fdm> {
 
-	protected makeStreamParams(session: Session<fd>): OpenAI.ChatCompletionCreateParamsStreaming {
+	protected makeStreamParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {
 		return {
 			model: this.model,
 			messages: [
 				...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
 				...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
 			],
-			tools: this.functionDeclarations.length
-				? this.functionDeclarations.map(f => this.convertFromFunctionDeclaration(f))
-				: undefined,
-			tool_choice: this.functionDeclarations.length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
+			tools: Object.keys(this.functionDeclarationMap).length
+				? Object.entries(this.functionDeclarationMap).map(
+					fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
+				) : undefined,
+			tool_choice: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
 			stream: true,
 			stream_options: {
 				include_usage: true
@@ -29,7 +30,7 @@ export abstract class OpenAIChatCompletionsStreamAPIBase<in out fd extends Funct
 		};
 	}
 
-	protected convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Union<fd> {
+	protected convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		assert(apifc.id);
 		assert(apifc.function?.name);
 		assert(apifc.function?.arguments);
@@ -38,7 +39,7 @@ export abstract class OpenAIChatCompletionsStreamAPIBase<in out fd extends Funct
 
 	protected abstract getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
 
-		protected async stream(ctx: InferenceContext, session: Session<fd>, retry = 0): Promise<RoleMessage.AI<fd>> {
+	protected async stream(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		if (retry > 2) throw new RetryLimitError();
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([

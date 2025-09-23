@@ -8,10 +8,10 @@ import { OpenAIChatCompletionsAPIBase } from './openai-chatcompletions-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
 
 
-export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fd extends Function.Declaration = never> extends OpenAIChatCompletionsAPIBase<fd> {
+export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsAPIBase<fdm> {
 
-	protected convertToAIMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.AI<fd> {
-		const parts: RoleMessage.AI.Part<fd>[] = [];
+	protected convertToAIMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.AI<Function.Declaration.From<fdm>> {
+		const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
 		if (message.content)
 			parts.push(new RoleMessage.Text(this.extractContent(message.content)));
 		if (message.tool_calls)
@@ -22,23 +22,27 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fd extends Fun
 		return new RoleMessage.AI(parts);
 	}
 
-	protected makeMonolithParams(session: Session<fd>): OpenAI.ChatCompletionCreateParamsNonStreaming {
+	protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
 		return {
 			model: this.model,
 			messages: [
 				...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
 				...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
 			],
-			tools: this.functionDeclarations.length
-				? this.functionDeclarations.map(f => this.convertFromFunctionDeclaration(f))
+			tools: Object.keys(this.functionDeclarationMap).length
+				? Object.entries(this.functionDeclarationMap).map(
+					fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
+				)
 				: undefined,
-			tool_choice: this.functionDeclarations.length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
-			parallel_tool_calls: this.functionDeclarations.length ? false : undefined,
+			tool_choice: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
+			parallel_tool_calls: Object.keys(this.functionDeclarationMap).length ? false : undefined,
 			...this.customOptions,
 		};
 	}
 
-	protected async monolith(ctx: InferenceContext, session: Session<fd>, retry = 0): Promise<RoleMessage.AI<fd>> {
+	protected async monolith(
+		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		if (retry > 2) throw new RetryLimitError();
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([

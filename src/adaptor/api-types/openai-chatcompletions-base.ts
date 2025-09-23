@@ -11,11 +11,11 @@ import { Ajv } from 'ajv';
 const ajv = new Ajv();
 
 
-export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.Declaration = never> extends APIBase<fd> {
+export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
 	protected client: OpenAI;
 	protected proxyAgent?: ProxyAgent;
 
-	protected constructor(options: Engine.Options<fd>) {
+	protected constructor(options: Engine.Options<fdm>) {
 		super(options);
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 		this.client = new OpenAI({
@@ -27,7 +27,7 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 		});
 	}
 
-	protected convertFromFunctionCall(fc: Function.Call.Union<fd>): OpenAI.ChatCompletionMessageToolCall {
+	protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageToolCall {
 		assert(fc.id);
 		return {
 			id: fc.id,
@@ -38,9 +38,9 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 			},
 		};
 	}
-	protected convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Union<fd> {
-		const fd = this.functionDeclarations.find(fd => fd.name === apifc.function.name);
-		assert(fd, new TransientError('Invalid function call', { cause: apifc }));
+	protected convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+		const fditem = this.functionDeclarationMap[apifc.function.name] as Function.Declaration.Item.From<fdm>;
+		assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
 		const args = (() => {
 			try {
 				return JSON.parse(apifc.function.arguments);
@@ -49,18 +49,18 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 			}
 		})();
 		assert(
-			ajv.validate(fd.paraschema, args),
+			ajv.validate(fditem.paraschema, args),
 			new TransientError('Invalid function call', { cause: apifc }),
 		);
-		return new Function.Call<Function.Declaration>({
+		return Function.Call.create({
 			id: apifc.id,
 			name: apifc.function.name,
 			args,
-		}) as Function.Call.Union<fd>;
+		} as Function.Call.create.Options<Function.Declaration.From<fdm>>);
 	}
 
 
-	protected convertFromFunctionResponse(fr: Function.Response.Union<fd>): OpenAI.ChatCompletionToolMessageParam {
+	protected convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionToolMessageParam {
 		assert(fr.id);
 		return {
 			role: 'tool',
@@ -74,7 +74,7 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 			content: [{ type: 'text', text: developerMessage.getOnlyText() }],
 		};
 	}
-	protected convertFromUserMessage(userMessage: RoleMessage.User<fd>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
+	protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
 		const textParts = userMessage.parts.filter(part => part instanceof RoleMessage.Text);
 		const frs = userMessage.getFunctionResponses();
 		if (textParts.length && !frs.length)
@@ -83,7 +83,7 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 			return frs.map(fr => this.convertFromFunctionResponse(fr));
 		else throw new Error();
 	}
-	protected convertFromAIMessage(aiMessage: RoleMessage.AI<fd>): OpenAI.ChatCompletionAssistantMessageParam {
+	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
 		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessage.Text);
 		const fcParts = aiMessage.parts.filter(part => part instanceof Function.Call);
 		return {
@@ -92,7 +92,7 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 			tool_calls: fcParts.length ? fcParts.map(fc => this.convertFromFunctionCall(fc)) : undefined,
 		};
 	}
-	protected convertFromRoleMessage(roleMessage: RoleMessage<fd>): OpenAI.ChatCompletionMessageParam[] {
+	protected convertFromRoleMessage(roleMessage: RoleMessage<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageParam[] {
 		if (roleMessage instanceof RoleMessage.Developer)
 			return [this.convertFromDeveloperMessage(roleMessage)];
 		else if (roleMessage instanceof RoleMessage.User)
@@ -102,19 +102,19 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 		else throw new Error();
 	}
 
-	protected convertFromFunctionDeclaration(fd: fd): OpenAI.ChatCompletionTool {
+	protected convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): OpenAI.ChatCompletionTool {
 		return {
 			type: 'function',
 			function: {
-				name: fd.name,
-				description: fd.description,
+				name: fdentry[0],
+				description: fdentry[1].description,
 				strict: true,
-				parameters: fd.paraschema,
+				parameters: fdentry[1].paraschema,
 			},
 		};
 	}
 
-	protected convertFromFunctionCallMode(mode: Function.ToolChoice<fd>): OpenAI.ChatCompletionToolChoiceOption {
+	protected convertFromFunctionCallMode(mode: Function.ToolChoice<fdm>): OpenAI.ChatCompletionToolChoiceOption {
 		if (mode === Function.ToolChoice.NONE) return 'none';
 		else if (mode === Function.ToolChoice.REQUIRED) return 'required';
 		else if (mode === Function.ToolChoice.AUTO) return 'auto';
@@ -124,7 +124,7 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fd extends Function.De
 		}
 	}
 
-	protected validateFunctionCallByToolChoice(fcs: Function.Call.Union<fd>[]): void {
+	protected validateFunctionCallByToolChoice(fcs: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
 		// https://community.openai.com/t/function-call-with-finish-reason-of-stop/437226/7
 		if (this.toolChoice === Function.ToolChoice.REQUIRED)
 			assert(fcs.length, new TransientError());

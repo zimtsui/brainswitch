@@ -21,8 +21,8 @@ export interface OpenRouterChatCompletionChunkChoiceDelta extends OpenAI.ChatCom
 	reasoning?: string;
 }
 
-export class OpenRouterStreamAPI<in out fd extends Function.Declaration = never> extends OpenAIChatCompletionsStreamAPIBase<fd> {
-	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
+export class OpenRouterStreamAPI<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsStreamAPIBase<fdm> {
+	public static create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
 		const api = new OpenRouterStreamAPI(options);
 		return api.stream.bind(api);
 	}
@@ -35,17 +35,19 @@ export class OpenRouterStreamAPI<in out fd extends Function.Declaration = never>
 		return (delta as OpenRouterChatCompletionChunkChoiceDelta).reasoning ?? '';
 	}
 
-	protected override makeStreamParams(session: Session<fd>): OpenAI.ChatCompletionCreateParamsStreaming {
+	protected override makeStreamParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {
 		const params: OpenRouterStreamParams = {
 			model: this.model,
 			messages: [
 				...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
 				...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
 			],
-			tools: this.functionDeclarations.length
-				? this.functionDeclarations.map(f => this.convertFromFunctionDeclaration(f))
+			tools: Object.keys(this.functionDeclarationMap).length
+				? Object.entries(this.functionDeclarationMap).map(
+					fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
+				)
 				: undefined,
-			tool_choice: this.functionDeclarations.length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
+			tool_choice: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
 			stream: true,
 			usage: {
 				include: true,
@@ -55,7 +57,7 @@ export class OpenRouterStreamAPI<in out fd extends Function.Declaration = never>
 		return params;
 	}
 
-	protected override convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Union<fd> {
+	protected override convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		assert(apifc.id, new Error(undefined, { cause: apifc }));
 		assert(apifc.function?.name, new Error(undefined, { cause: apifc }));
 		assert(typeof apifc.function?.arguments === 'string', new Error(undefined, { cause: apifc }));
@@ -63,7 +65,7 @@ export class OpenRouterStreamAPI<in out fd extends Function.Declaration = never>
 		return this.convertToFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
 	}
 
-	protected override convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Union<fd> {
+	protected override convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		if (apifc.function.arguments)
 			return super.convertToFunctionCall(apifc);
 		else
@@ -76,7 +78,9 @@ export class OpenRouterStreamAPI<in out fd extends Function.Declaration = never>
 			});
 	}
 
-	public override async stream(ctx: InferenceContext, session: Session<fd>, retry = 0): Promise<RoleMessage.AI<fd>> {
+	public override async stream(
+		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		try {
 			return await super.stream(ctx, session, retry);
 		} catch (e) {

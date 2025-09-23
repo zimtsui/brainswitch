@@ -6,20 +6,20 @@ import assert from 'node:assert';
 import { Opposition, Rejection, Thrown } from '../exceptions.ts';
 
 export interface Summarize {
-	(ctx: InferenceContext, session: Session<Summarize.fd>): Promise<string | Opposition>;
+	(ctx: InferenceContext, session: Session<Summarize.fdu>): Promise<string | Opposition>;
 }
 export namespace Summarize {
 	export function create(adaptor: Adaptor, config: Config): Summarize {
 		const cc = adaptor.createEngine(
 			config.brainswitch.suite.summarize,
-			Summarize.fd,
+			Summarize.fdm,
 			Function.ToolChoice.REQUIRED,
 		);
 		return async (ctx, session) => {
 			const response = session.chatMessages.at(-1);
 			assert(response instanceof RoleMessage.AI, new Error('Invalid response of optimize', { cause: response }));
 			const message = new RoleMessage.User([new RoleMessage.Text(Optimize.Optimize.summarize)]);
-			const ssession: Session<Summarize.fd> = {
+			const ssession: Session<Summarize.fdu> = {
 				...session,
 				chatMessages: [...session.chatMessages, message],
 			};
@@ -33,27 +33,24 @@ export namespace Summarize {
 		};
 	}
 
-	export const fd = [
-		{
-			name: 'submit' as const,
+	export const fdm = {
+		submit: {
 			description: '成功完成了任务，或根据下游节点的反馈重新完成了任务。',
 			paraschema: Type.Object({}, { additionalProperties: false }),
 		},
-		{
-			name: 'reject' as const,
+		reject: {
 			description: '因任务信息本身有误而未能完成任务。',
 			paraschema: Type.Object({}, { additionalProperties: false }),
 		},
-		{
-			name: 'oppose' as const,
+		oppose: {
 			description: '因下游节点对你的反馈有误而未能完成任务。',
 			paraschema: Type.Object({}, { additionalProperties: false }),
 		},
-		{
-			name: 'throw' as const,
+		throw: {
 			description: '因任何其他原因未能完成任务。',
 			paraschema: Type.Object({}, { additionalProperties: false }),
 		},
-	] satisfies Function.Declaration[];
-	export type fd = typeof fd[number];
+	} satisfies Function.Declaration.Map;
+	export type fdm = typeof fdm;
+	export type fdu = Function.Declaration.From<fdm>;
 }

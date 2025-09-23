@@ -16,8 +16,8 @@ export interface OpenRouterMonolithParams extends OpenAI.ChatCompletionCreatePar
 	};
 }
 
-export class OpenRouterMonolithAPI<in out fd extends Function.Declaration = never> extends OpenAIChatCompletionsMonolithAPIBase<fd> {
-	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
+export class OpenRouterMonolithAPI<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithAPIBase<fdm> {
+	public static create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
 		const api = new OpenRouterMonolithAPI(options);
 		return api.monolith.bind(api);
 	}
@@ -26,17 +26,19 @@ export class OpenRouterMonolithAPI<in out fd extends Function.Declaration = neve
 		return (usage as OpenRouterUsage).cost * EXCHANGE_RATE_USD_CNY;
 	}
 
-	protected override makeMonolithParams(session: Session<fd>): OpenAI.ChatCompletionCreateParamsNonStreaming {
+	protected override makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
 		const params: OpenRouterMonolithParams = {
 			model: this.model,
 			messages: [
 				...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
 				...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
 			],
-			tools: this.functionDeclarations.length
-				? this.functionDeclarations.map(f => this.convertFromFunctionDeclaration(f))
+			tools: Object.keys(this.functionDeclarationMap).length
+				? Object.entries(this.functionDeclarationMap).map(
+					fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
+				)
 				: undefined,
-			tool_choice: this.functionDeclarations.length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
+			tool_choice: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
 			stream: false,
 			usage: {
 				include: true,
@@ -46,7 +48,7 @@ export class OpenRouterMonolithAPI<in out fd extends Function.Declaration = neve
 		return params;
 	}
 
-	protected override convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Union<fd> {
+	protected override convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		if (apifc.function.arguments)
 			return super.convertToFunctionCall(apifc);
 		else
@@ -59,7 +61,9 @@ export class OpenRouterMonolithAPI<in out fd extends Function.Declaration = neve
 			});
 	}
 
-	public override async monolith(ctx: InferenceContext, session: Session<fd>, retry = 0): Promise<RoleMessage.AI<fd>> {
+	public override async monolith(
+		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		try {
 			return await super.monolith(ctx, session, retry);
 		} catch (e) {

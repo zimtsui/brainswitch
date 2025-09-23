@@ -17,19 +17,19 @@ export interface GoogleRESTfulRequest {
 	generationConfig?: Google.GenerationConfig;
 }
 
-export class GoogleRESTfulAPI<in out fd extends Function.Declaration = never> extends GoogleAPIBase<fd> {
+export class GoogleRESTfulAPI<in out fdm extends Function.Declaration.Map = {}> extends GoogleAPIBase<fdm> {
 	private proxyAgent?: ProxyAgent;
 	private apiURL: URL;
 	private tokenizerURL: URL;
 
-	protected constructor(options: Engine.Options<fd>) {
+	protected constructor(options: Engine.Options<fdm>) {
 		super(options);
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 		this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
 		this.tokenizerURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:countTokens`);
 	}
 
-	public static create<fd extends Function.Declaration = never>(options: Engine.Options<fd>): Engine<fd> {
+	public static create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
 		const api = new GoogleRESTfulAPI(options);
 		return api.monolith.bind(api);
 	}
@@ -52,7 +52,9 @@ export class GoogleRESTfulAPI<in out fd extends Function.Declaration = never> ex
 		return response.totalTokens;
 	}
 
-	private async monolith(ctx: InferenceContext, session: Session<fd>, retry = 0): Promise<GoogleAIMessage<fd>> {
+	private async monolith(
+		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+	): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
 		try {
 			const systemInstruction = session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage);
 			const contents = this.convertFromChatMessages(session.chatMessages);
@@ -62,10 +64,12 @@ export class GoogleRESTfulAPI<in out fd extends Function.Declaration = never> ex
 
 			const reqbody: GoogleRESTfulRequest = {
 				contents,
-				tools: this.functionDeclarations.length ? [{
-					functionDeclarations: this.functionDeclarations.map(f => this.convertFromFunctionDeclaration(f)),
+				tools: Object.keys(this.functionDeclarationMap).length ? [{
+					functionDeclarations: Object.entries(this.functionDeclarationMap).map(
+						fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
+					),
 				}] : undefined,
-				toolConfig: this.functionDeclarations.length && this.toolChoice ? {
+				toolConfig: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? {
 					functionCallingConfig: this.convertFromFunctionCallMode(this.toolChoice),
 				} : undefined,
 				systemInstruction,

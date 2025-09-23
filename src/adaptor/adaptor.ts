@@ -33,34 +33,34 @@ export class Adaptor {
 		return this.throttles.get(baseUrl)!.get(model)!;
 	}
 
-	public createEngine<fd extends Function.Declaration = never>(
+	public createEngine<fdm extends Function.Declaration.Map = {}>(
 		endpoint: string,
-		functionDeclarations?: fd[],
-		functionCallMode?: Function.ToolChoice<fd>,
-	): Engine<fd> {
+		functionDeclarationMap: fdm,
+		functionCallMode?: Function.ToolChoice<fdm>,
+	): Engine<Function.Declaration.From<fdm>> {
 		assert(endpoint in this.config.brainswitch.endpoints);
 		const endpointSpec = this.config.brainswitch.endpoints[endpoint]!;
 		const throttle = this.getThrottle(endpoint);
-		const options: Engine.Options<fd> = {
+		const options: Engine.Options<fdm> = {
 			...endpointSpec,
-			functionDeclarations,
+			functionDeclarationMap,
 			functionCallMode,
 			throttle,
 		};
 		if (endpointSpec.apiType === 'openai-responses')
-			return OpenAIResponsesAPI.create<fd>(options);
+			return OpenAIResponsesAPI.create<fdm>(options);
 		else if (endpointSpec.apiType === 'openai-chatcompletions')
-			return OpenAIChatCompletionsAPI.create<fd>(options);
+			return OpenAIChatCompletionsAPI.create<fdm>(options);
 		else if (endpointSpec.apiType === 'google')
-			return GoogleRESTfulAPI.create<fd>(options);
+			return GoogleRESTfulAPI.create<fdm>(options);
 		else if (endpointSpec.apiType === 'qwen')
-			return QwenAPI.create<fd>(options);
+			return QwenAPI.create<fdm>(options);
 		else if (endpointSpec.apiType === 'openrouter-monolith')
-			return OpenRouterMonolithAPI.create<fd>(options);
+			return OpenRouterMonolithAPI.create<fdm>(options);
 		else if (endpointSpec.apiType === 'openrouter-stream')
-			return OpenRouterStreamAPI.create<fd>(options);
+			return OpenRouterStreamAPI.create<fdm>(options);
 		else if (endpointSpec.apiType === 'huggingface-cerebras-qwen3-thinking')
-			return HuggingFaceCerebrasQwen3ThinkingAPI.create<fd>(options);
+			return HuggingFaceCerebrasQwen3ThinkingAPI.create<fdm>(options);
 		else throw new Error();
 	}
 }

@@ -6,20 +6,20 @@ import assert from 'node:assert';
 import { Rejection, Thrown } from '../exceptions.ts';
 
 export interface Summarize {
-	(ctx: InferenceContext, session: Session<Summarize.fd>): Promise<void>;
+	(ctx: InferenceContext, session: Session<Summarize.fdu>): Promise<void>;
 }
 export namespace Summarize {
 	export function create(adaptor: Adaptor, config: Config): Summarize {
 		const cc = adaptor.createEngine(
 			config.brainswitch.suite.summarize,
-			Summarize.fd,
+			Summarize.fdm,
 			Function.ToolChoice.REQUIRED,
 		);
 		return async (ctx, session) => {
 			const response = session.chatMessages.at(-1);
 			assert(response instanceof RoleMessage.AI, new Error('Invalid response of evaluate', { cause: response }));
 			const message = new RoleMessage.User([new RoleMessage.Text(Evaluate.Evaluate.summarize)]);
-			const ssession: Session<Summarize.fd> = {
+			const ssession: Session<Summarize.fdu> = {
 				...session,
 				chatMessages: [...session.chatMessages, message],
 			};
@@ -32,22 +32,20 @@ export namespace Summarize {
 		}
 	}
 
-	export const fd = [
-		{
-			name: 'accept' as const,
+	export const fdm = {
+		accept: {
 			description: '通过了审查',
 			paraschema: Type.Object({}, { additionalProperties: false }),
 		},
-		{
-			name: 'reject' as const,
+		reject: {
 			description: '不通过审查',
 			paraschema: Type.Object({}, { additionalProperties: false }),
 		},
-		{
-			name: 'throw' as const,
+		throw: {
 			description: '无法完成审查',
 			paraschema: Type.Object({}, { additionalProperties: false }),
 		},
-	] satisfies Function.Declaration[];
-	export type fd = typeof fd[number];
+	} satisfies Function.Declaration.Map;
+	export type fdm = typeof fdm;
+	export type fdu = Function.Declaration.From<fdm>;
 }
