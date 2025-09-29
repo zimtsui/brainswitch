@@ -1,10 +1,7 @@
 {
   "name": "@zimtsui/brainswitch",
   "version": "0.0.1",
-  "exports": {
-    "./adaptor": "./build/adaptor/exports.js",
-    "./suite": "./build/suite/exports.js"
-  },
+  "exports": "./build/exports.js",
   "imports": {
     "#adaptor/config": "./build/adaptor/config.js",
     "#suite/assets": "./build/suite/assets.js",
