@@ -1,4 +1,4 @@
-import { assert } from 'node:console';
+import assert from 'node:assert';
 import { Function } from './function.ts';
 
 
