@@ -1,4 +1,4 @@
-import { Config } from '#adaptor/config';
+import { Config } from '#config';
 import { Function } from './function.ts';
 import { Engine } from './engine.ts';
 import assert from 'node:assert';

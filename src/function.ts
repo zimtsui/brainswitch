@@ -92,31 +92,3 @@ export namespace Function {
 		[name in Function.Declaration.Map.NameOf<fdm>]: Function<Function.Declaration.From<fdm, name>>;
 	};
 }
-
-
-// const fdm = {
-// 	foo: {
-// 		description: 'foo' as const,
-// 		paraschema: Type.Object({
-// 			bar: Type.String(),
-// 		}),
-// 	},
-// 	bar: {
-// 		description: 'bar' as const,
-// 		paraschema: Type.Object({
-// 			baz: Type.String(),
-// 		}),
-// 	},
-// } satisfies Function.Map;
-
-// type fdm = typeof fdm;
-// type fdu = Function.Declaration.From<fdm>;
-// const fd: fdu = {
-// 	name: 'foo',
-// 	paraschema: Type.Object({
-// 		bar: Type.String(),
-// 	}),
-// };
-
-
-// export type A = DistributiveOmit<Function.Call.Distributive<fdu>, never>;
