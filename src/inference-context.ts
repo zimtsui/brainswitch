@@ -4,7 +4,7 @@ import * as Presets from '@zimtsui/typelog/presets';
 
 
 export interface InferenceContext {
-	ratelimited?: RWLock;
+	busy?: RWLock;
 	logger: InferenceContext.Logger;
 	signal?: AbortSignal;
 }

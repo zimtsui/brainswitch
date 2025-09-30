@@ -22,14 +22,14 @@ export class Throttle {
 	}
 
 	public async requests(ctx: InferenceContext): Promise<void> {
-		await ctx.ratelimited?.acquireRead();
+		await ctx.busy?.acquireRead();
 		await this.valve.acquire();
 		setTimeout(() => void this.valve.release(), this.interval);
-		ctx.ratelimited?.releaseRead();
+		ctx.busy?.releaseRead();
 	}
 
-	public async inputTokens(token: number, ctx: InferenceContext): Promise<void> {
-		await ctx.ratelimited?.acquireRead();
+	public async inputTokens(deltaTokenCount: number, ctx: InferenceContext): Promise<void> {
+		await ctx.busy?.acquireRead();
 		try {
 			while (this.tokenCount > this.tpm * (1-this.redundancy)) {
 				assert(this.fifo.length, new Error('Overflow'));
@@ -42,30 +42,15 @@ export class Throttle {
 				});
 				this.tokenCount -= this.fifo.popFront().token;
 			}
-			this.fifo.pushBack({ token, time: Date.now() });
-			this.tokenCount += token;
+			this.fifo.pushBack({ token: deltaTokenCount, time: Date.now() });
+			this.tokenCount += deltaTokenCount;
 		} finally {
-			ctx.ratelimited?.releaseRead();
+			ctx.busy?.releaseRead();
 		}
 	}
 
-	public outputTokens(token: number): void {
-		this.fifo.pushBack({ token, time: Date.now() });
-		this.tokenCount += token;
+	public outputTokens(deltaTokenCount: number): void {
+		this.fifo.pushBack({ token: deltaTokenCount, time: Date.now() });
+		this.tokenCount += deltaTokenCount;
 	}
-
-	// private static throttles = new Map<string, Map<string, Throttle>>();
-
-	// public static getThrottle(endpointId: string): Throttle {
-	// 	assert(endpointId in config.adaptors.endpoints);
-	// 	const baseUrl = config.adaptors.endpoints[endpointId]!.baseUrl;
-	// 	const modelId = config.adaptors.endpoints[endpointId]!.modelId;
-	// 	const rpm = config.adaptors.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
-	// 	const tpm = config.adaptors.endpoints[endpointId]!.tpm ?? Number.POSITIVE_INFINITY;
-	// 	if (!Throttle.throttles.has(baseUrl))
-	// 		Throttle.throttles.set(baseUrl, new Map<string, Throttle>());
-	// 	if (!Throttle.throttles.get(baseUrl)!.has(modelId))
-	// 		Throttle.throttles.get(baseUrl)!.set(modelId, new Throttle(rpm, tpm));
-	// 	return Throttle.throttles.get(baseUrl)!.get(modelId)!;
-	// }
 }
