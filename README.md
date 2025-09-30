@@ -162,5 +162,3 @@ session.chatMessages.push(new RoleMessage.User([
 const engineStrict = adaptor.createEngine('gpt-4o-mini', fdm); // Responses API 在声明了工具时会强制严格模式
 for await (const text of agentloop(ctx, session, engineStrict, fnm, 4)) console.log(text);
 ```
-
-提示：`agentloop` 会自动处理 AI 触发的函数调用，调用完毕后把 `Function.Response` 写回会话并继续推理，直到模型不再请求工具为止。循环上限 `limit` 用于防止意外的无限工具调用。
