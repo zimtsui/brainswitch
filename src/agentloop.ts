@@ -14,7 +14,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 	engine: Engine<Function.Declaration.From<fdm>>,
 	functionMap: Function.Map<fdm>,
 	limit = Number.POSITIVE_INFINITY,
-): AsyncGenerator<string> {
+): AsyncGenerator<string, void, void> {
 	for (let i = 0; i < limit; i++) {
 		const response = await Engine.apply(ctx, session, engine);
 		const fcs = response.getFunctionCalls();
@@ -38,7 +38,11 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 				} else throw new Error();
 			}
 			session.chatMessages.push(new RoleMessage.User<Function.Declaration.From<fdm>>(parts));
-		} else return response.getOnlyText();
+		} else return yield response.getOnlyText();
 	}
-	throw new Error('Function call limit exceeded.');
+	throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
+}
+
+export namespace agentloop {
+	export class FunctionCallLimitExceeded extends Error {}
 }

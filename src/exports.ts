@@ -1,4 +1,5 @@
 export * from './adaptor.ts';
+export * from './throttle.ts';
 export * from './session.ts';
 export * from './engine.ts';
 export * from './function.ts';

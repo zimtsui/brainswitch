@@ -13,14 +13,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b ./src/tsconfig.json",
-    "clean": "rm -rf ./build"
+    "clean": "rm -rf ./build",
+    "docs": "typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts"
   },
   "author": "Zim",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zimtsui/brainswitch.git"
+  },
   "dependencies": {
     "@google/genai": "^0.10.0",
     "@zimtsui/deque": "^0.0.10",
     "ajv": "^8.17.1",
     "openai": "^5.15.0",
+    "typedoc": "^0.28.13",
     "undici": "^7.16.0"
   },
   "peerDependencies": {
