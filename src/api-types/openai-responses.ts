@@ -88,7 +88,7 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		if (aiMessage instanceof OpenAIResponsesAIMessage)
-			return aiMessage.raw;
+			return OpenAIResponsesAIMessage.getRaw(aiMessage);
 		else {
 			return aiMessage.parts.map(part => {
 				if (part instanceof RoleMessage.Text)
@@ -226,11 +226,29 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 }
 
-export class OpenAIResponsesAIMessage<out fd extends Function.Declaration> extends RoleMessage.AI<fd> {
+export class OpenAIResponsesAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AI<fdu> {
 	public constructor(
-		parts: RoleMessage.AI.Part<fd>[],
-		public raw: OpenAI.Responses.ResponseOutputItem[],
+		parts: RoleMessage.AI.Part<fdu>[],
+		protected raw: OpenAI.Responses.ResponseOutputItem[],
 	) {
 		super(parts);
+	}
+	public static getRaw<fdu extends Function.Declaration>(message: OpenAIResponsesAIMessage<fdu>): OpenAI.Responses.ResponseOutputItem[] {
+		return message.raw;
+	}
+	public static override restore<fdu extends Function.Declaration>(snapshot: OpenAIResponsesAIMessage.Snapshot<fdu>): OpenAIResponsesAIMessage<fdu> {
+		return new OpenAIResponsesAIMessage(RoleMessage.AI.restore<fdu>(snapshot).parts, snapshot.raw);
+	}
+	public static override capture<fdu extends Function.Declaration>(message: OpenAIResponsesAIMessage<fdu>): OpenAIResponsesAIMessage.Snapshot<fdu> {
+		return {
+			parts: RoleMessage.AI.capture(message).parts,
+			raw: message.raw,
+		};
+	}
+}
+
+export namespace OpenAIResponsesAIMessage {
+	export interface Snapshot<fdu extends Function.Declaration = never> extends RoleMessage.AI.Snapshot<fdu> {
+		raw: OpenAI.Responses.ResponseOutputItem[];
 	}
 }

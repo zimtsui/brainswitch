@@ -46,7 +46,7 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 	}
 	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): Google.Content {
 		if (aiMessage instanceof GoogleAIMessage)
-			return aiMessage.raw;
+			return GoogleAIMessage.getRaw(aiMessage);
 		else {
 			const parts = aiMessage.parts.map(part => {
 				if (part instanceof RoleMessage.Text)
@@ -121,7 +121,25 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 }
 
 export class GoogleAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AI<fdu> {
-	public constructor(parts: RoleMessage.AI.Part<fdu>[], public raw: Google.Content) {
+	public constructor(parts: RoleMessage.AI.Part<fdu>[], protected raw: Google.Content) {
 		super(parts);
+	}
+	public static getRaw<fdu extends Function.Declaration>(message: GoogleAIMessage<fdu>): Google.Content {
+		return message.raw;
+	}
+	public static override restore<fdu extends Function.Declaration>(snapshot: GoogleAIMessage.Snapshot<fdu>): GoogleAIMessage<fdu> {
+		return new GoogleAIMessage(RoleMessage.AI.restore<fdu>(snapshot).parts, snapshot.raw);
+	}
+	public static override capture<fdu extends Function.Declaration>(message: GoogleAIMessage<fdu>): GoogleAIMessage.Snapshot<fdu> {
+		return {
+			parts: RoleMessage.AI.capture(message).parts,
+			raw: message.raw,
+		};
+	}
+}
+
+export namespace GoogleAIMessage {
+	export interface Snapshot<fdu extends Function.Declaration = never> extends RoleMessage.AI.Snapshot<fdu> {
+		raw: Google.Content;
 	}
 }

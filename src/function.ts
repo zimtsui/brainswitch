@@ -47,8 +47,18 @@ export namespace Function {
 		public static create<fdu extends Declaration>(fc: Call.create.Options<fdu>): Call.Distributive<fdu> {
 			return new Call(fc) as Call.Distributive<fdu>;
 		}
+		public static restore<fdu extends Declaration>(snapshot: Call.Snapshot.Distributive<fdu>): Call.Distributive<fdu> {
+			return new Call(snapshot) as Call.Distributive<fdu>;
+		}
+		public static capture<fdu extends Declaration>(fc: Call.Distributive<fdu>): Call.Snapshot.Distributive<fdu> {
+			return fc as Call.Snapshot.Distributive<fdu>;
+		}
 	}
 	export namespace Call {
+		export type Snapshot<fd extends Declaration> = Omit<Call<fd>, never>;
+		export namespace Snapshot {
+			export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Snapshot<fd> : never;
+		}
 		export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Call<fd> : never;
 		export namespace create {
 			export type Options<fdu extends Declaration> = fdu extends infer fd extends Function.Declaration ? Omit<Call<fd>, never> : never;
@@ -69,8 +79,18 @@ export namespace Function {
 		public static create<fdu extends Declaration>(fr: Response.create.Options<fdu>): Response.Distributive<fdu> {
 			return new Response(fr) as Response.Distributive<fdu>;
 		}
+		public static capture<fdu extends Declaration>(response: Response.Distributive<fdu>): Response.Snapshot.Distributive<fdu> {
+			return response as Response.Snapshot.Distributive<fdu>;
+		}
+		public static restore<fdu extends Declaration>(snapshot: Response.Snapshot.Distributive<fdu>): Response.Distributive<fdu> {
+			return new Response(snapshot) as Response.Distributive<fdu>;
+		}
 	}
 	export namespace Response {
+		export type Snapshot<fd extends Declaration> = Omit<Response<fd>, never>;
+		export namespace Snapshot {
+			export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Snapshot<fd> : never;
+		}
 		export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Response<fd> : never;
 		export namespace create {
 			export type Options<fdu extends Declaration> = fdu extends infer fd extends Function.Declaration ? Omit<Response<fd>, never> : never;
