@@ -60,7 +60,16 @@ export class OpenRouterMonolithAPI<in out fdm extends Function.Declaration.Map =
 				},
 			});
 	}
-
+	/*
+		OpenRouter 官方 bug：可能出现错误，疑似由返回的 JSON 不规范导致。
+		SyntaxError: Unexpected end of JSON input
+			at JSON.parse (<anonymous>)
+			at parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+			at successSteps (node:internal/deps/undici/undici:5719:27)
+			at fullyReadBody (node:internal/deps/undici/undici:4609:9)
+			at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+			at async consumeBody (node:internal/deps/undici/undici:5728:7)
+	*/
 	public override async monolith(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
