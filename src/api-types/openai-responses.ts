@@ -5,7 +5,7 @@ import { Engine } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { TransientError, RetryLimitError } from './base.ts';
+import { TransientError } from './base.ts';
 import { ProxyAgent } from 'undici';
 import Ajv from 'ajv';
 
@@ -179,7 +179,6 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 	protected async monolith(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
-		if (retry > 2) throw new RetryLimitError();
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,
@@ -191,7 +190,8 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 		await this.throttle.requests(ctx);
 		await this.throttle.inputTokens(this.tokenize(params), ctx);
 		try {
-			const response: OpenAI.Responses.Response = await this.client.responses.create(params, { signal });
+			const response: OpenAI.Responses.Response = await this.client.responses.create(params, { signal })
+				.catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
 			ctx.logger.message?.trace(response);
 			const aiMessage = this.convertToAIMessage(response.output);
 
@@ -213,14 +213,12 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 			return aiMessage;
 		} catch (e) {
 			if (ctx.signal?.aborted) throw new DOMException(undefined, 'AbortError');
-			if (e instanceof TransientError) {}	// 模型抽风
-			else if (e instanceof OpenAI.APIUserAbortError) {}	// 推理超时
-			else if (e instanceof OpenAI.BadRequestError) {
-				ctx.logger.message?.warn(params);
-			} else throw e;
+			else if (signalTimeout?.aborted) {}	// 推理超时
+			else if (e instanceof TransientError) {}	// 模型抽风
+			else throw e;
 			ctx.logger.message?.warn(e);
-			return await this.monolith(ctx, session, retry+1)
-				.catch(nexte => Promise.reject(nexte instanceof RetryLimitError ? e : nexte));
+			if (retry < 3) return await this.monolith(ctx, session, retry+1);
+			else throw e;
 		}
 	}
 

@@ -45,7 +45,7 @@ export class GoogleRESTfulAPI<in out fdm extends Function.Declaration.Map = {}> 
 			body: JSON.stringify(reqbody),
 			dispatcher: this.proxyAgent,
 			signal: ctx.signal,
-		});
+		}).catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
 		assert(res.ok, new Error(undefined, { cause: res }));
 		const response = await res.json() as Google.CountTokensResponse;
 		assert(response.totalTokens, new Error(undefined, { cause: response }));
@@ -91,9 +91,13 @@ export class GoogleRESTfulAPI<in out fdm extends Function.Declaration.Map = {}> 
 				body: JSON.stringify(reqbody),
 				dispatcher: this.proxyAgent,
 				signal,
-			});
+			}).catch(e => {
+				if (e instanceof TypeError)
+					throw new TransientError('Connection error', { cause: e });
+				else throw e;
+			});;
 			ctx.logger.message?.trace(res);
-			assert(res.ok, new Error(undefined, { cause: res }));
+			assert(res.ok, new TransientError(undefined, { cause: res }));
 			const response = await res.json() as Google.GenerateContentResponse;
 
 			assert(response.candidates?.[0]?.content?.parts, new TransientError('No content parts', { cause: response }));
@@ -128,7 +132,8 @@ export class GoogleRESTfulAPI<in out fdm extends Function.Declaration.Map = {}> 
 			return aiMessage;
 
 		} catch (e) {
-			if (e instanceof TransientError) {}	// 模型抽风
+			if (ctx.signal?.aborted) throw new DOMException(undefined, 'AbortError');
+			else if (e instanceof TransientError) {}	// 模型抽风
 			else throw e;
 			ctx.logger.message?.warn(e);
 			if (retry < 3) return this.monolith(ctx, session, retry+1);

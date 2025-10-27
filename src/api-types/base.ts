@@ -34,4 +34,3 @@ export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> 
 }
 
 export class TransientError extends Error {}
-export class RetryLimitError extends Error {}

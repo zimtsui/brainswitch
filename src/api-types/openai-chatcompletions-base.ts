@@ -150,10 +150,3 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.D
 		return completionContent;
 	}
 }
-
-
-export class InvalidFinishReason extends Error {
-	public constructor(public finishReason: OpenAI.ChatCompletionChunk.Choice['finish_reason']) {
-		super();
-	}
-}
