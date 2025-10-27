@@ -9,16 +9,16 @@ import { type InferenceContext } from '../inference-context.ts';
 
 export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsAPIBase<fdm> {
 
-	protected convertToAIMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.AIClass<Function.Declaration.From<fdm>> {
+	protected convertToAIMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.AI<Function.Declaration.From<fdm>> {
 		const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
 		if (message.content)
-			parts.push(new RoleMessage.Part.TextClass(this.extractContent(message.content)));
+			parts.push(new RoleMessage.Part.Text.Constructor(this.extractContent(message.content)));
 		if (message.tool_calls)
 			parts.push(...message.tool_calls.map(apifc => {
 				assert(apifc.type === 'function');
 				return this.convertToFunctionCall(apifc);
 			}));
-		return new RoleMessage.AIClass(parts);
+		return new RoleMessage.AI.Constructor(parts);
 	}
 
 	protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
@@ -41,7 +41,7 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Fu
 
 	protected async monolith(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-	): Promise<RoleMessage.AIClass<Function.Declaration.From<fdm>>> {
+	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,

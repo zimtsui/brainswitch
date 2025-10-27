@@ -32,9 +32,9 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 		} as Function.Call.create.Options<Function.Declaration.From<fdm>>);
 	}
 
-	protected convertFromUserMessage(userMessage: RoleMessage.UserClass<Function.Declaration.From<fdm>>): Google.Content {
+	protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content {
 		const parts = userMessage.parts.map(part => {
-			if (part instanceof RoleMessage.Part.TextClass)
+			if (part instanceof RoleMessage.Part.Text.Constructor)
 				return Google.createPartFromText(part.text);
 			else if (part instanceof Function.Response)
 				return {
@@ -44,12 +44,12 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 		});
 		return Google.createUserContent(parts);
 	}
-	protected convertFromAIMessage(aiMessage: RoleMessage.AIClass<Function.Declaration.From<fdm>>): Google.Content {
+	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): Google.Content {
 		if (aiMessage instanceof GoogleAIMessage)
 			return aiMessage.raw;
 		else {
 			const parts = aiMessage.parts.map(part => {
-				if (part instanceof RoleMessage.Part.TextClass)
+				if (part instanceof RoleMessage.Part.Text.Constructor)
 					return Google.createPartFromText(part.text);
 				else if (part instanceof Function.Call) {
 					assert(part.args instanceof Object);
@@ -59,14 +59,14 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 			return Google.createModelContent(parts);
 		}
 	}
-	protected convertFromDeveloperMessage(developerMessage: RoleMessage.DeveloperClass): Google.Content {
+	protected convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Google.Content {
 		const parts = developerMessage.parts.map(part => Google.createPartFromText(part.text));
 		return { parts };
 	}
 	protected convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[] {
 		return chatMessages.map(chatMessage => {
-			if (chatMessage instanceof RoleMessage.UserClass) return this.convertFromUserMessage(chatMessage);
-			else if (chatMessage instanceof RoleMessage.AIClass) return this.convertFromAIMessage(chatMessage);
+			if (chatMessage instanceof RoleMessage.User.Constructor) return this.convertFromUserMessage(chatMessage);
+			else if (chatMessage instanceof RoleMessage.AI.Constructor) return this.convertFromAIMessage(chatMessage);
 			else throw new Error();
 		});
 	}
@@ -75,7 +75,7 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 		assert(content.parts);
 		return new GoogleAIMessage(content.parts.flatMap(part => {
 			const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
-			if (part.text) parts.push(new RoleMessage.Part.TextClass(part.text));
+			if (part.text) parts.push(new RoleMessage.Part.Text.Constructor(part.text));
 			if (part.functionCall) parts.push(this.convertToFunctionCall(part.functionCall));
 			return parts;
 		}), content);
@@ -109,7 +109,7 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 		else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...mode] };
 	}
 
-	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.AIClass<Function.Declaration.From<fdm>>): void {
+	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): void {
 		const functionCalls = aiMessage.getFunctionCalls();
 		if (this.toolChoice === Function.ToolChoice.REQUIRED)
 			assert(functionCalls.length, new TransientError('No function call'));
@@ -120,7 +120,7 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 	}
 }
 
-export class GoogleAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AIClass<fdu> {
+export class GoogleAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AI.Constructor<fdu> {
 	public constructor(parts: RoleMessage.AI.Part<fdu>[], public raw: Google.Content) {
 		super(parts);
 	}

@@ -80,7 +80,7 @@ export class OpenRouterStreamAPI<in out fdm extends Function.Declaration.Map = {
 
 	public override async stream(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-	): Promise<RoleMessage.AIClass<Function.Declaration.From<fdm>>> {
+	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		try {
 			return await super.stream(ctx, session, retry);
 		} catch (e) {

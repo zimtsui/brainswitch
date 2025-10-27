@@ -72,9 +72,9 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 		};
 	}
 
-	protected convertFromUserMessage(userMessage: RoleMessage.UserClass<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
+	protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		return userMessage.parts.map(part => {
-			if (part instanceof RoleMessage.Part.TextClass)
+			if (part instanceof RoleMessage.Part.Text.Constructor)
 				return {
 					type: 'message',
 					role: 'user',
@@ -86,12 +86,12 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 		});
 	}
 
-	protected convertFromAIMessage(aiMessage: RoleMessage.AIClass<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
+	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		if (aiMessage instanceof OpenAIResponsesAIMessage)
 			return aiMessage.raw;
 		else {
 			return aiMessage.parts.map(part => {
-				if (part instanceof RoleMessage.Part.TextClass)
+				if (part instanceof RoleMessage.Part.Text.Constructor)
 					return {
 						role: 'assistant',
 						content: part.text,
@@ -104,9 +104,9 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 	}
 
 	protected convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
-		if (chatMessage instanceof RoleMessage.UserClass)
+		if (chatMessage instanceof RoleMessage.User.Constructor)
 			return this.convertFromUserMessage(chatMessage);
-		else if (chatMessage instanceof RoleMessage.AIClass)
+		else if (chatMessage instanceof RoleMessage.AI.Constructor)
 			return this.convertFromAIMessage(chatMessage);
 		else throw new Error();
 	}
@@ -143,7 +143,7 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 		const parts = output.flatMap((item): RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] => {
 			if (item.type === 'message') {
 				assert(item.content.every(part => part.type === 'output_text'));
-				return [new RoleMessage.Part.TextClass(item.content.map(part => part.text).join(''))];
+				return [new RoleMessage.Part.Text.Constructor(item.content.map(part => part.text).join(''))];
 			} else if (item.type === 'function_call')
 				return [this.convertToFunctionCall(item)];
 			else if (item.type === 'reasoning')
@@ -178,7 +178,7 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 	protected async monolith(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-	): Promise<RoleMessage.AIClass<Function.Declaration.From<fdm>>> {
+	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,
@@ -224,7 +224,7 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 }
 
-export class OpenAIResponsesAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AIClass<fdu> {
+export class OpenAIResponsesAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AI.Constructor<fdu> {
 	public constructor(
 		parts: RoleMessage.AI.Part<fdu>[],
 		public raw: OpenAI.Responses.ResponseOutputItem[],
