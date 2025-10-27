@@ -1,9 +1,9 @@
 import { Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
-import type { RoleMessage, Session } from '../session.ts';
+import { RoleMessageStatic, type Session } from '../session.ts';
 import assert from 'node:assert';
-import type { InferenceContext } from '../inference-context.ts';
+import { type InferenceContext } from '../inference-context.ts';
 import { OpenAIChatCompletionsStreamAPIBase } from './openai-chatcompletions-stream-base.ts';
 
 const EXCHANGE_RATE_USD_CNY = 8;
@@ -80,7 +80,7 @@ export class OpenRouterStreamAPI<in out fdm extends Function.Declaration.Map = {
 
 	public override async stream(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+	): Promise<RoleMessageStatic.AI<Function.Declaration.From<fdm>>> {
 		try {
 			return await super.stream(ctx, session, retry);
 		} catch (e) {

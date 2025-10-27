@@ -1,5 +1,5 @@
 import { Engine } from '../engine.ts';
-import { RoleMessage, type ChatMessage } from '../session.ts';
+import { RoleMessageStatic, type ChatMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
@@ -32,9 +32,9 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 		} as Function.Call.create.Options<Function.Declaration.From<fdm>>);
 	}
 
-	protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content {
+	protected convertFromUserMessage(userMessage: RoleMessageStatic.User<Function.Declaration.From<fdm>>): Google.Content {
 		const parts = userMessage.parts.map(part => {
-			if (part instanceof RoleMessage.Text)
+			if (part instanceof RoleMessageStatic.PartStatic.Text)
 				return Google.createPartFromText(part.text);
 			else if (part instanceof Function.Response)
 				return {
@@ -44,12 +44,12 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 		});
 		return Google.createUserContent(parts);
 	}
-	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): Google.Content {
+	protected convertFromAIMessage(aiMessage: RoleMessageStatic.AI<Function.Declaration.From<fdm>>): Google.Content {
 		if (aiMessage instanceof GoogleAIMessage)
-			return GoogleAIMessage.getRaw(aiMessage);
+			return aiMessage.raw;
 		else {
 			const parts = aiMessage.parts.map(part => {
-				if (part instanceof RoleMessage.Text)
+				if (part instanceof RoleMessageStatic.PartStatic.Text)
 					return Google.createPartFromText(part.text);
 				else if (part instanceof Function.Call) {
 					assert(part.args instanceof Object);
@@ -59,14 +59,14 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 			return Google.createModelContent(parts);
 		}
 	}
-	protected convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Google.Content {
+	protected convertFromDeveloperMessage(developerMessage: RoleMessageStatic.Developer): Google.Content {
 		const parts = developerMessage.parts.map(part => Google.createPartFromText(part.text));
 		return { parts };
 	}
 	protected convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[] {
 		return chatMessages.map(chatMessage => {
-			if (chatMessage instanceof RoleMessage.User) return this.convertFromUserMessage(chatMessage);
-			else if (chatMessage instanceof RoleMessage.AI) return this.convertFromAIMessage(chatMessage);
+			if (chatMessage instanceof RoleMessageStatic.User) return this.convertFromUserMessage(chatMessage);
+			else if (chatMessage instanceof RoleMessageStatic.AI) return this.convertFromAIMessage(chatMessage);
 			else throw new Error();
 		});
 	}
@@ -74,8 +74,8 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 	protected convertToAIMessage(content: Google.Content): GoogleAIMessage<Function.Declaration.From<fdm>> {
 		assert(content.parts);
 		return new GoogleAIMessage(content.parts.flatMap(part => {
-			const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
-			if (part.text) parts.push(new RoleMessage.Text(part.text));
+			const parts: RoleMessageStatic.AIStatic.Part<Function.Declaration.From<fdm>>[] = [];
+			if (part.text) parts.push(new RoleMessageStatic.PartStatic.Text(part.text));
 			if (part.functionCall) parts.push(this.convertToFunctionCall(part.functionCall));
 			return parts;
 		}), content);
@@ -109,7 +109,7 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 		else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...mode] };
 	}
 
-	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): void {
+	protected validateFunctionCallByToolChoice(aiMessage: RoleMessageStatic.AI<Function.Declaration.From<fdm>>): void {
 		const functionCalls = aiMessage.getFunctionCalls();
 		if (this.toolChoice === Function.ToolChoice.REQUIRED)
 			assert(functionCalls.length, new TransientError('No function call'));
@@ -120,26 +120,24 @@ export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map 
 	}
 }
 
-export class GoogleAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AI<fdu> {
-	public constructor(parts: RoleMessage.AI.Part<fdu>[], protected raw: Google.Content) {
+export class GoogleAIMessage<out fdu extends Function.Declaration> extends RoleMessageStatic.AI<fdu> {
+	public constructor(parts: RoleMessageStatic.AIStatic.Part<fdu>[], public raw: Google.Content) {
 		super(parts);
-	}
-	public static getRaw<fdu extends Function.Declaration>(message: GoogleAIMessage<fdu>): Google.Content {
-		return message.raw;
-	}
-	public static override restore<fdu extends Function.Declaration>(snapshot: GoogleAIMessage.Snapshot<fdu>): GoogleAIMessage<fdu> {
-		return new GoogleAIMessage(RoleMessage.AI.restore<fdu>(snapshot).parts, snapshot.raw);
-	}
-	public static override capture<fdu extends Function.Declaration>(message: GoogleAIMessage<fdu>): GoogleAIMessage.Snapshot<fdu> {
-		return {
-			parts: RoleMessage.AI.capture(message).parts,
-			raw: message.raw,
-		};
 	}
 }
 
 export namespace GoogleAIMessage {
-	export interface Snapshot<fdu extends Function.Declaration = never> extends RoleMessage.AI.Snapshot<fdu> {
+	export interface Snapshot<in out fdu extends Function.Declaration = never> {
+		parts: RoleMessageStatic.AIStatic.PartStatic.Snapshot<fdu>[];
 		raw: Google.Content;
+	}
+	export function restore<fdu extends Function.Declaration>(snapshot: GoogleAIMessage.Snapshot<fdu>): GoogleAIMessage<fdu> {
+		return new GoogleAIMessage(RoleMessageStatic.AIStatic.restore<fdu>(snapshot.parts).parts, snapshot.raw);
+	}
+	export function capture<fdu extends Function.Declaration>(message: GoogleAIMessage<fdu>): GoogleAIMessage.Snapshot<fdu> {
+		return {
+			parts: RoleMessageStatic.AIStatic.capture(message),
+			raw: message.raw,
+		};
 	}
 }

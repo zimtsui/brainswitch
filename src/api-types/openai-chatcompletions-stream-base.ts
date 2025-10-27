@@ -1,4 +1,4 @@
-import { RoleMessage, type Session } from '../session.ts';
+import { RoleMessageStatic, type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
@@ -39,7 +39,7 @@ export abstract class OpenAIChatCompletionsStreamAPIBase<in out fdm extends Func
 
 	protected abstract getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
 
-	protected async stream(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+	protected async stream(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessageStatic.AI<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,
@@ -107,8 +107,8 @@ export abstract class OpenAIChatCompletionsStreamAPIBase<in out fdm extends Func
 			const fcs = toolCalls.map(apifc => this.convertToFunctionCallFromDelta(apifc));
 			this.validateFunctionCallByToolChoice(fcs);
 
-			return new RoleMessage.AI([
-				new RoleMessage.Text(this.extractContent(text)),
+			return new RoleMessageStatic.AI([
+				new RoleMessageStatic.PartStatic.Text(this.extractContent(text)),
 				...fcs,
 			]);
 		} catch (e) {

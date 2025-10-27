@@ -1,5 +1,5 @@
 import { Engine } from '../engine.ts';
-import { RoleMessage } from '../session.ts';
+import { RoleMessage, RoleMessageStatic } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
@@ -68,14 +68,14 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.D
 			content: [{ type: 'text', text: fr.text }],
 		};
 	}
-	protected convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): OpenAI.ChatCompletionSystemMessageParam {
+	protected convertFromDeveloperMessage(developerMessage: RoleMessageStatic.Developer): OpenAI.ChatCompletionSystemMessageParam {
 		return {
 			role: 'system',
 			content: [{ type: 'text', text: developerMessage.getOnlyText() }],
 		};
 	}
-	protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
-		const textParts = userMessage.parts.filter(part => part instanceof RoleMessage.Text);
+	protected convertFromUserMessage(userMessage: RoleMessageStatic.User<Function.Declaration.From<fdm>>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
+		const textParts = userMessage.parts.filter(part => part instanceof RoleMessageStatic.PartStatic.Text);
 		const frs = userMessage.getFunctionResponses();
 		if (textParts.length && !frs.length)
 			return [{ role: 'user', content: textParts.map(part => ({ type: 'text', text: part.text })) }];
@@ -83,8 +83,8 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.D
 			return frs.map(fr => this.convertFromFunctionResponse(fr));
 		else throw new Error();
 	}
-	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
-		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessage.Text);
+	protected convertFromAIMessage(aiMessage: RoleMessageStatic.AI<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
+		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessageStatic.PartStatic.Text);
 		const fcParts = aiMessage.parts.filter(part => part instanceof Function.Call);
 		return {
 			role: 'assistant',
@@ -92,12 +92,12 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.D
 			tool_calls: fcParts.length ? fcParts.map(fc => this.convertFromFunctionCall(fc)) : undefined,
 		};
 	}
-	protected convertFromRoleMessage(roleMessage: RoleMessage<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageParam[] {
-		if (roleMessage instanceof RoleMessage.Developer)
+	protected convertFromRoleMessage(roleMessage: RoleMessage): OpenAI.ChatCompletionMessageParam[] {
+		if (roleMessage instanceof RoleMessageStatic.Developer)
 			return [this.convertFromDeveloperMessage(roleMessage)];
-		else if (roleMessage instanceof RoleMessage.User)
+		else if (roleMessage instanceof RoleMessageStatic.User)
 			return this.convertFromUserMessage(roleMessage);
-		else if (roleMessage instanceof RoleMessage.AI)
+		else if (roleMessage instanceof RoleMessageStatic.AI)
 			return [this.convertFromAIMessage(roleMessage)];
 		else throw new Error();
 	}

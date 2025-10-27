@@ -2,7 +2,7 @@ import { Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import { OpenAIChatCompletionsMonolithAPIBase } from './openai-chatcompletions-monolith-base.ts';
-import { RoleMessage } from '../session.ts';
+import { RoleMessageStatic } from '../session.ts';
 import assert from 'node:assert';
 import { TransientError } from './base.ts';
 
@@ -14,14 +14,14 @@ export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fdm extends Function.Dec
 		return api.monolith.bind(api);
 	}
 
-	protected override convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): OpenAI.ChatCompletionSystemMessageParam {
+	protected override convertFromDeveloperMessage(developerMessage: RoleMessageStatic.Developer): OpenAI.ChatCompletionSystemMessageParam {
 		return {
 			role: 'system',
 			content: developerMessage.getOnlyText(),
 		};
 	}
-	protected override convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
-		const textParts = userMessage.parts.filter(part => part instanceof RoleMessage.Text);
+	protected override convertFromUserMessage(userMessage: RoleMessageStatic.User<Function.Declaration.From<fdm>>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
+		const textParts = userMessage.parts.filter(part => part instanceof RoleMessageStatic.PartStatic.Text);
 		const frs = userMessage.getFunctionResponses();
 		if (textParts.length && !frs.length)
 			return [{ role: 'user', content: textParts.map(part => part.text).join('') }];
@@ -29,8 +29,8 @@ export class HuggingFaceCerebrasQwen3ThinkingAPI<in out fdm extends Function.Dec
 			return frs.map(fr => this.convertFromFunctionResponse(fr));
 		else throw new Error();
 	}
-	protected override convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
-		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessage.Text);
+	protected override convertFromAIMessage(aiMessage: RoleMessageStatic.AI<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
+		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessageStatic.PartStatic.Text);
 		const fcParts = aiMessage.parts.filter(part => part instanceof Function.Call);
 		return {
 			role: 'assistant',
