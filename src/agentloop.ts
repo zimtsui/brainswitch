@@ -1,5 +1,5 @@
 import { type InferenceContext } from './inference-context.ts';
-import { RoleMessageStatic, type Session } from './session.ts';
+import { RoleMessage, type Session } from './session.ts';
 import { Function } from './function.ts';
 import { Engine } from './engine.ts';
 import assert from 'node:assert';
@@ -21,7 +21,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 		if (fcs.length) {
 			const parts: Function.Response.Distributive<Function.Declaration.From<fdm>>[] = [];
 			for (const part of response.parts) {
-				if (part instanceof RoleMessageStatic.PartStatic.Text) {
+				if (part instanceof RoleMessage.Part.TextClass) {
 					yield part.text;
 				} else if (part instanceof Function.Call) {
 					const fc = part as Function.Call.Distributive<Function.Declaration.From<fdm>>;
@@ -37,7 +37,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 					parts.push(fr);
 				} else throw new Error();
 			}
-			session.chatMessages.push(new RoleMessageStatic.User<Function.Declaration.From<fdm>>(parts));
+			session.chatMessages.push(new RoleMessage.User<Function.Declaration.From<fdm>>(parts));
 		} else return yield response.getOnlyText();
 	}
 	throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');

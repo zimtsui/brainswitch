@@ -1,6 +1,6 @@
 import { APIBase } from './base.ts';
 import { Function } from '../function.ts';
-import { RoleMessageStatic, type ChatMessage, type Session } from '../session.ts';
+import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
 import { Engine } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
@@ -72,9 +72,9 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 		};
 	}
 
-	protected convertFromUserMessage(userMessage: RoleMessageStatic.User<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
+	protected convertFromUserMessage(userMessage: RoleMessage.UserClass<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		return userMessage.parts.map(part => {
-			if (part instanceof RoleMessageStatic.PartStatic.Text)
+			if (part instanceof RoleMessage.Part.TextClass)
 				return {
 					type: 'message',
 					role: 'user',
@@ -86,12 +86,12 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 		});
 	}
 
-	protected convertFromAIMessage(aiMessage: RoleMessageStatic.AI<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
+	protected convertFromAIMessage(aiMessage: RoleMessage.AIClass<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 		if (aiMessage instanceof OpenAIResponsesAIMessage)
 			return aiMessage.raw;
 		else {
 			return aiMessage.parts.map(part => {
-				if (part instanceof RoleMessageStatic.PartStatic.Text)
+				if (part instanceof RoleMessage.Part.TextClass)
 					return {
 						role: 'assistant',
 						content: part.text,
@@ -104,9 +104,9 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 	}
 
 	protected convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
-		if (chatMessage instanceof RoleMessageStatic.User)
+		if (chatMessage instanceof RoleMessage.UserClass)
 			return this.convertFromUserMessage(chatMessage);
-		else if (chatMessage instanceof RoleMessageStatic.AI)
+		else if (chatMessage instanceof RoleMessage.AIClass)
 			return this.convertFromAIMessage(chatMessage);
 		else throw new Error();
 	}
@@ -140,10 +140,10 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 
 	protected convertToAIMessage(output: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAIMessage<Function.Declaration.From<fdm>> {
-		const parts = output.flatMap((item): RoleMessageStatic.AIStatic.Part<Function.Declaration.From<fdm>>[] => {
+		const parts = output.flatMap((item): RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] => {
 			if (item.type === 'message') {
 				assert(item.content.every(part => part.type === 'output_text'));
-				return [new RoleMessageStatic.PartStatic.Text(item.content.map(part => part.text).join(''))];
+				return [new RoleMessage.Part.TextClass(item.content.map(part => part.text).join(''))];
 			} else if (item.type === 'function_call')
 				return [this.convertToFunctionCall(item)];
 			else if (item.type === 'reasoning')
@@ -178,7 +178,7 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 	protected async monolith(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-	): Promise<RoleMessageStatic.AI<Function.Declaration.From<fdm>>> {
+	): Promise<RoleMessage.AIClass<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,
@@ -224,9 +224,9 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 }
 
-export class OpenAIResponsesAIMessage<out fdu extends Function.Declaration> extends RoleMessageStatic.AI<fdu> {
+export class OpenAIResponsesAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AIClass<fdu> {
 	public constructor(
-		parts: RoleMessageStatic.AIStatic.Part<fdu>[],
+		parts: RoleMessage.AI.Part<fdu>[],
 		public raw: OpenAI.Responses.ResponseOutputItem[],
 	) {
 		super(parts);
@@ -235,15 +235,15 @@ export class OpenAIResponsesAIMessage<out fdu extends Function.Declaration> exte
 
 export namespace OpenAIResponsesAIMessage {
 	export interface Snapshot<in out fdu extends Function.Declaration = never> {
-		parts: RoleMessageStatic.AIStatic.PartStatic.Snapshot<fdu>[];
+		parts: RoleMessage.AI.Part.Snapshot<fdu>[];
 		raw: OpenAI.Responses.ResponseOutputItem[];
 	}
 	export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): OpenAIResponsesAIMessage<fdu> {
-		return new OpenAIResponsesAIMessage(RoleMessageStatic.AIStatic.restore<fdu>(snapshot.parts).parts, snapshot.raw);
+		return new OpenAIResponsesAIMessage(RoleMessage.AI.restore<fdu>(snapshot.parts).parts, snapshot.raw);
 	}
 	export function capture<fdu extends Function.Declaration>(message: OpenAIResponsesAIMessage<fdu>): Snapshot<fdu> {
 		return {
-			parts: RoleMessageStatic.AIStatic.capture(message),
+			parts: RoleMessage.AI.capture(message),
 			raw: message.raw,
 		};
 	}

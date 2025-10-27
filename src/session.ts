@@ -3,93 +3,93 @@ import { Function } from './function.ts';
 
 
 export interface Session<out fdu extends Function.Declaration = never> {
-	developerMessage?: RoleMessageStatic.Developer;
+	developerMessage?: RoleMessage.DeveloperClass;
 	chatMessages: ChatMessage<fdu>[];
 }
 export namespace SessionStatic {
 	export interface Snapshot<in out fdu extends Function.Declaration = never> {
-		developerMessage?: RoleMessageStatic.DeveloperStatic.Snapshot;
+		developerMessage?: RoleMessage.Developer.Snapshot;
 		chatMessages: ChatMessageStatic.Snapshot<fdu>[];
 	}
 	export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): Session<fdu> {
 		return {
-			developerMessage: snapshot.developerMessage && RoleMessageStatic.DeveloperStatic.restore(snapshot.developerMessage),
+			developerMessage: snapshot.developerMessage && RoleMessage.Developer.restore(snapshot.developerMessage),
 			chatMessages: snapshot.chatMessages.map(ChatMessageStatic.restore<fdu>),
 		};
 	}
 	export function capture<fdu extends Function.Declaration>(session: Session<fdu>): Snapshot<fdu> {
 		return {
-			developerMessage: session.developerMessage && RoleMessageStatic.DeveloperStatic.capture(session.developerMessage),
+			developerMessage: session.developerMessage && RoleMessage.Developer.capture(session.developerMessage),
 			chatMessages: session.chatMessages.map(ChatMessageStatic.capture<fdu>),
 		};
 	}
 }
 
-export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessageStatic.User<fdu> | RoleMessageStatic.AI<fdu>;
+export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.UserClass<fdu> | RoleMessage.AIClass<fdu>;
 export namespace ChatMessageStatic {
 	export type Snapshot<fdu extends Function.Declaration = never> =
 		| {
 			type: 'RoleMessage.User';
-			value: RoleMessageStatic.User.Snapshot<fdu>;
+			value: RoleMessage.User.Snapshot<fdu>;
 		}
 		| {
 			type: 'RoleMessage.AI';
-			value: RoleMessageStatic.AIStatic.Snapshot<fdu>;
+			value: RoleMessage.AI.Snapshot<fdu>;
 		}
 	;
 	export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): ChatMessage<fdu> {
 		if (snapshot.type === 'RoleMessage.User')
-			return RoleMessageStatic.User.restore(snapshot.value);
+			return RoleMessage.User.restore(snapshot.value);
 		else if (snapshot.type === 'RoleMessage.AI')
-			return RoleMessageStatic.AIStatic.restore(snapshot.value);
+			return RoleMessage.AI.restore(snapshot.value);
 		else throw new Error();
 	}
 	export function capture<fdu extends Function.Declaration>(chatMessage: ChatMessage<fdu>): Snapshot<fdu> {
-		return chatMessage instanceof RoleMessageStatic.User ? {
+		return chatMessage instanceof RoleMessage.UserClass ? {
 			type: 'RoleMessage.User',
-			value: RoleMessageStatic.User.capture(chatMessage),
+			value: RoleMessage.User.capture(chatMessage),
 		} : {
 			type: 'RoleMessage.AI',
-			value: RoleMessageStatic.AIStatic.capture(chatMessage),
+			value: RoleMessage.AI.capture(chatMessage),
 		};
 	}
 }
 
 
-export abstract class RoleMessage {
+export abstract class RoleMessageClass {
 	public static readonly ROLE_MESSAGE_NOMINAL = Symbol();
-	private declare readonly [RoleMessage.ROLE_MESSAGE_NOMINAL]: void;
+	private declare readonly [RoleMessageClass.ROLE_MESSAGE_NOMINAL]: void;
 }
 
-export namespace RoleMessageStatic {
-	export namespace PartStatic {
-		export class Text {
+export namespace RoleMessage {
+	export namespace Part {
+		export class TextClass {
 			public static readonly Text_NOMINAL = Symbol();
-			private declare readonly [Text.Text_NOMINAL]: void;
+			private declare readonly [TextClass.Text_NOMINAL]: void;
 			public constructor(public text: string) {}
 		}
-		export namespace TextStatic {
+		export namespace Text {
 			export type Snapshot = string;
-			export function capture(part: Text): TextStatic.Snapshot {
+			export function capture(part: TextClass): Text.Snapshot {
 				return part.text;
 			}
-			export function restore(snapshot: TextStatic.Snapshot): Text {
-				return new Text(snapshot);
+			export function restore(snapshot: Text.Snapshot): TextClass {
+				return new TextClass(snapshot);
 			}
 		}
 	}
 
-	export class AI<out fdu extends Function.Declaration = never> extends RoleMessage {
+	export class AIClass<out fdu extends Function.Declaration = never> extends RoleMessageClass {
 		public static readonly AI_NOMINAL = Symbol();
-		private declare readonly [AI.AI_NOMINAL]: void;
-		public constructor(public parts: AIStatic.Part<fdu>[]) {
+		private declare readonly [AIClass.AI_NOMINAL]: void;
+		public constructor(public parts: AI.Part<fdu>[]) {
 			super();
 		}
 		public getText(): string {
-			return this.parts.filter(part => part instanceof RoleMessageStatic.PartStatic.Text).map(part => part.text).join('');
+			return this.parts.filter(part => part instanceof RoleMessage.Part.TextClass).map(part => part.text).join('');
 		}
 		public getOnlyText(): string {
-			assert(this.parts.every(part => part instanceof RoleMessageStatic.PartStatic.Text));
+			assert(this.parts.every(part => part instanceof RoleMessage.Part.TextClass));
 			return this.getText();
 		}
 		public getOnlyFunctionCall(): Function.Call.Distributive<fdu> {
@@ -101,27 +101,27 @@ export namespace RoleMessageStatic {
 			return this.parts.filter(part => part instanceof Function.Call);
 		}
 	}
-	export namespace AIStatic {
-		export function capture<fdu extends Function.Declaration>(message: AI<fdu>): AIStatic.Snapshot<fdu> {
-			return message.parts.map(AIStatic.PartStatic.capture<fdu>);
+	export namespace AI {
+		export function capture<fdu extends Function.Declaration>(message: AIClass<fdu>): AI.Snapshot<fdu> {
+			return message.parts.map(AI.Part.capture<fdu>);
 		}
-		export function restore<fdu extends Function.Declaration>(snapshot: AIStatic.Snapshot<fdu>): AI<fdu> {
-			return new AI(snapshot.map(AIStatic.PartStatic.restore<fdu>));
+		export function restore<fdu extends Function.Declaration>(snapshot: AI.Snapshot<fdu>): AIClass<fdu> {
+			return new AIClass(snapshot.map(AI.Part.restore<fdu>));
 		}
-		export type Snapshot<fdu extends Function.Declaration = never> = PartStatic.Snapshot<fdu>[];
-		export type Part<fdu extends Function.Declaration = never> = RoleMessageStatic.PartStatic.Text | Function.Call.Distributive<fdu>;
-		export namespace PartStatic {
-			export function restore<fdu extends Function.Declaration>(snapshot: PartStatic.Snapshot<fdu>): Part<fdu> {
+		export type Snapshot<fdu extends Function.Declaration = never> = Part.Snapshot<fdu>[];
+		export type Part<fdu extends Function.Declaration = never> = RoleMessage.Part.TextClass | Function.Call.Distributive<fdu>;
+		export namespace Part {
+			export function restore<fdu extends Function.Declaration>(snapshot: Part.Snapshot<fdu>): Part<fdu> {
 				if (snapshot.type === 'RoleMessage.Part.Text')
-					return RoleMessageStatic.PartStatic.TextStatic.restore(snapshot.value);
+					return RoleMessage.Part.Text.restore(snapshot.value);
 				else if (snapshot.type === 'Function.Call')
 					return Function.Call.restore<fdu>(snapshot.value);
 				else throw new Error();
 			}
-			export function capture<fdu extends Function.Declaration>(part: Part<fdu>): PartStatic.Snapshot<fdu> {
-				return part instanceof RoleMessageStatic.PartStatic.Text ? {
+			export function capture<fdu extends Function.Declaration>(part: Part<fdu>): Part.Snapshot<fdu> {
+				return part instanceof RoleMessage.Part.TextClass ? {
 					type: 'RoleMessage.Part.Text',
-					value: RoleMessageStatic.PartStatic.TextStatic.capture(part),
+					value: RoleMessage.Part.Text.capture(part),
 				} : {
 					type: 'Function.Call',
 					value: Function.Call.capture(part),
@@ -130,7 +130,7 @@ export namespace RoleMessageStatic {
 			export type Snapshot<fdu extends Function.Declaration = never> =
 				| {
 					type: 'RoleMessage.Part.Text';
-					value: RoleMessageStatic.PartStatic.TextStatic.Snapshot;
+					value: RoleMessage.Part.Text.Snapshot;
 				}
 				| {
 					type: 'Function.Call';
@@ -140,17 +140,17 @@ export namespace RoleMessageStatic {
 		}
 	}
 
-	export class User<out fdu extends Function.Declaration = never> extends RoleMessage {
+	export class UserClass<out fdu extends Function.Declaration = never> extends RoleMessageClass {
 		public static readonly USER_NOMINAL = Symbol();
-		private declare readonly [User.USER_NOMINAL]: void;
+		private declare readonly [UserClass.USER_NOMINAL]: void;
 		public constructor(public parts: User.Part<fdu>[]) {
 			super();
 		}
 		public getText(): string {
-			return this.parts.filter(part => part instanceof RoleMessageStatic.PartStatic.Text).map(part => part.text).join('');
+			return this.parts.filter(part => part instanceof RoleMessage.Part.TextClass).map(part => part.text).join('');
 		}
 		public getOnlyText(): string {
-			assert(this.parts.every(part => part instanceof RoleMessageStatic.PartStatic.Text));
+			assert(this.parts.every(part => part instanceof RoleMessage.Part.TextClass));
 			return this.getText();
 		}
 		public getFunctionResponses(): Function.Response.Distributive<fdu>[] {
@@ -160,28 +160,28 @@ export namespace RoleMessageStatic {
 			assert(this.parts.length === 1 && this.parts[0] instanceof Function.Response);
 			return this.parts[0]! as Function.Response.Distributive<fdu>;
 		}
-		public static capture<fdu extends Function.Declaration>(message: User<fdu>): User.Snapshot<fdu> {
-			return message.parts.map(User.PartStatic.capture<fdu>);
-		}
-		public static restore<fdu extends Function.Declaration>(snapshot: User.Snapshot<fdu>): User<fdu> {
-			return new User(snapshot.map(User.PartStatic.restore<fdu>));
-		}
 	}
 	export namespace User {
-		export type Snapshot<fdu extends Function.Declaration = never> = PartStatic.Snapshot<fdu>[];
-		export type Part<fdu extends Function.Declaration = never> = RoleMessageStatic.PartStatic.Text | Function.Response.Distributive<fdu>;
-		export namespace PartStatic {
-			export function restore<fdu extends Function.Declaration>(snapshot: PartStatic.Snapshot<fdu>): Part<fdu> {
+		export function capture<fdu extends Function.Declaration>(message: UserClass<fdu>): User.Snapshot<fdu> {
+			return message.parts.map(User.Part.capture<fdu>);
+		}
+		export function restore<fdu extends Function.Declaration>(snapshot: User.Snapshot<fdu>): UserClass<fdu> {
+			return new UserClass(snapshot.map(User.Part.restore<fdu>));
+		}
+		export type Snapshot<fdu extends Function.Declaration = never> = Part.Snapshot<fdu>[];
+		export type Part<fdu extends Function.Declaration = never> = RoleMessage.Part.TextClass | Function.Response.Distributive<fdu>;
+		export namespace Part {
+			export function restore<fdu extends Function.Declaration>(snapshot: Part.Snapshot<fdu>): Part<fdu> {
 				if (snapshot.type === 'RoleMessage.Part.Text')
-					return RoleMessageStatic.PartStatic.TextStatic.restore(snapshot.value);
+					return RoleMessage.Part.Text.restore(snapshot.value);
 				else if (snapshot.type === 'Function.Response')
 					return Function.Response.restore<fdu>(snapshot.value);
 				else throw new Error();
 			}
-			export function capture<fdu extends Function.Declaration>(part: Part<fdu>): PartStatic.Snapshot<fdu> {
-				return part instanceof RoleMessageStatic.PartStatic.Text ? {
+			export function capture<fdu extends Function.Declaration>(part: Part<fdu>): Part.Snapshot<fdu> {
+				return part instanceof RoleMessage.Part.TextClass ? {
 					type: 'RoleMessage.Part.Text',
-					value: RoleMessageStatic.PartStatic.TextStatic.capture(part),
+					value: RoleMessage.Part.Text.capture(part),
 				} : {
 					type: 'Function.Response',
 					value: Function.Response.capture(part),
@@ -190,7 +190,7 @@ export namespace RoleMessageStatic {
 			export type Snapshot<fdu extends Function.Declaration = never> =
 				| {
 					type: 'RoleMessage.Part.Text';
-					value: RoleMessageStatic.PartStatic.TextStatic.Snapshot;
+					value: RoleMessage.Part.Text.Snapshot;
 				}
 				| {
 					type: 'Function.Response';
@@ -200,10 +200,10 @@ export namespace RoleMessageStatic {
 		}
 	}
 
-	export class Developer extends RoleMessage {
+	export class DeveloperClass extends RoleMessageClass {
 		public static readonly DEVELOPER_NOMINAL = Symbol();
-		private declare readonly [Developer.DEVELOPER_NOMINAL]: void;
-		public constructor(public parts: DeveloperStatic.Part[]) {
+		private declare readonly [DeveloperClass.DEVELOPER_NOMINAL]: void;
+		public constructor(public parts: Developer.Part[]) {
 			super();
 		}
 		public getText(): string {
@@ -213,14 +213,14 @@ export namespace RoleMessageStatic {
 			return this.getText();
 		}
 	}
-	export namespace DeveloperStatic {
-		export type Snapshot = RoleMessageStatic.PartStatic.TextStatic.Snapshot[];
-		export type Part = RoleMessageStatic.PartStatic.Text;
-		export function capture(message: Developer): DeveloperStatic.Snapshot {
-			return message.parts.map(RoleMessageStatic.PartStatic.TextStatic.capture);
+	export namespace Developer {
+		export type Snapshot = RoleMessage.Part.Text.Snapshot[];
+		export type Part = RoleMessage.Part.TextClass;
+		export function capture(message: DeveloperClass): Developer.Snapshot {
+			return message.parts.map(RoleMessage.Part.Text.capture);
 		}
-		export function restore(snapshot: DeveloperStatic.Snapshot): Developer {
-			return new Developer(snapshot.map(RoleMessageStatic.PartStatic.TextStatic.restore));
+		export function restore(snapshot: Developer.Snapshot): DeveloperClass {
+			return new DeveloperClass(snapshot.map(RoleMessage.Part.Text.restore));
 		}
 	}
 }
