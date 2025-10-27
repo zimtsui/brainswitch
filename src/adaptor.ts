@@ -33,7 +33,7 @@ export class Adaptor {
 		return this.throttles.get(baseUrl)!.get(model)!;
 	}
 
-	public createEngine<fdm extends Function.Declaration.Map = {}>(
+	public makeEngine<fdm extends Function.Declaration.Map = {}>(
 		endpoint: string,
 		functionDeclarationMap: fdm,
 		functionCallMode?: Function.ToolChoice<fdm>,

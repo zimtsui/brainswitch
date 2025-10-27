@@ -37,7 +37,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 					parts.push(fr);
 				} else throw new Error();
 			}
-			session.chatMessages.push(new RoleMessage.User.Constructor<Function.Declaration.From<fdm>>(parts));
+			session.chatMessages.push(RoleMessage.User.create<Function.Declaration.From<fdm>>(parts));
 		} else return yield response.getOnlyText();
 	}
 	throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');

@@ -3,7 +3,7 @@ import { Function } from './function.ts';
 
 
 export interface Session<out fdu extends Function.Declaration = never> {
-	developerMessage?: RoleMessage.Developer.Constructor;
+	developerMessage?: RoleMessage.Developer;
 	chatMessages: ChatMessage<fdu>[];
 }
 export namespace Session {
@@ -25,7 +25,7 @@ export namespace Session {
 	}
 }
 
-export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User.Constructor<fdu> | RoleMessage.AI.Constructor<fdu>;
+export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User<fdu> | RoleMessage.AI<fdu>;
 export namespace ChatMessage {
 	export type Snapshot<fdu extends Function.Declaration = never> =
 		| {

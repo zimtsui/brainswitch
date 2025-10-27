@@ -98,12 +98,12 @@ const config: Config = {
 				apiKey: process.env.OPENAI_API_KEY!,
 				model: 'o4-mini',
 			},
-			'gemini-2.0-flash': {
-				name: 'Gemini 2.0 Flash',
+			'gemini-2.5-flash': {
+				name: 'Gemini 2.5 Flash',
 				apiType: 'google',
 				baseUrl: 'https://generativelanguage.googleapis.com',
 				apiKey: process.env.GOOGLE_API_KEY!,
-				model: 'gemini-2.0-flash',
+				model: 'gemini-2.5-flash',
 			},
 		}
 	}
@@ -118,14 +118,29 @@ const fdm = {
 			unit: Type.Optional(Type.Union([Type.Literal('C'), Type.Literal('F')]))
 		}),
 	},
+	submit_result: {
+		description: '提交最终结果',
+		paraschema: Type.Object({
+			weather: Type.String(),
+			advice: Type.String(),
+		}),
+	},
 } satisfies Function.Declaration.Map;
 type fdm = typeof fdm;
 
+export class Submission extends Error {
+	public constructor(public weather: string, public advice: string) {
+		super(undefined);
+	}
+}
 const fnm: Function.Map<fdm> = {
 	async get_weather({ city, unit }) {
 		// 实际项目中此处调用真实 API，这里仅示例
 		const data = { city, unit: unit ?? 'C', temperature: 26, sky: 'sunny' };
 		return JSON.stringify(data);
+	},
+	async submit_result({ weather, advice }) {
+		throw new Submission(weather, advice);
 	},
 };
 
@@ -140,25 +155,25 @@ const ctx: InferenceContext = {
 
 // 创建会话
 const session = {
-	developerMessage: new RoleMessage.Developer([
-		new RoleMessage.Text('你是一个会使用工具的中文助理，遇到需要实时数据请调用工具，完成后用简洁中文回答。'),
+	developerMessage: RoleMessage.Developer.create([
+		RoleMessage.Part.Text.create('你的工作是为用户查询天气，并给出穿衣建议。'),
 	]),
 	chatMessages: [
-		new RoleMessage.User([ new RoleMessage.Text('帮我查一下明天北京的天气，并给穿衣建议。') ]),
+		RoleMessage.User.create([ RoleMessage.Part.Text.create('请查询现在北京的天气，并给穿衣建议。') ]),
 	],
 };
 
 // 选择推理引擎
 const adaptor = Adaptor.create(config);
-const engineReason = adaptor.createEngine('gemini-2.0-flash', fdm, ['get_weather']);
+const engine = adaptor.makeEngine('gpt-4o-mini', fdm, Function.ToolChoice.REQUIRED);
 
-// 使用 agentloop 驱动工具调用到完成，最多 8 轮对话
-for await (const text of agentloop(ctx, session, engineReason, fnm, 8)) console.log(text);
+// 使用 agentloop 驱动智能体循环，最多 8 轮对话
+try {
+	for await (const text of agentloop(ctx, session, engine, fnm, 8)) console.log(text);
+} catch (e) {
+	if (e instanceof Submission) {
+		console.log(e.weather);
+		console.log(e.advice);
+	} else throw e;
 
-// 在同一会话中切换到 OpenAI Responses 做结构化总结
-session.chatMessages.push(new RoleMessage.User([
-	new RoleMessage.Text('请把以上结论整理成 JSON：{"reason": string, "advice": string}')
-]));
-const engineStrict = adaptor.createEngine('gpt-4o-mini', fdm); // Responses API 在声明了工具时会强制严格模式
-for await (const text of agentloop(ctx, session, engineStrict, fnm, 4)) console.log(text);
 ```
