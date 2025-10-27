@@ -15,7 +15,7 @@ export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.D
 	protected client: OpenAI;
 	protected proxyAgent?: ProxyAgent;
 
-	protected constructor(options: Engine.Options<fdm>) {
+	public constructor(options: Engine.Options<fdm>) {
 		super(options);
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 		this.client = new OpenAI({

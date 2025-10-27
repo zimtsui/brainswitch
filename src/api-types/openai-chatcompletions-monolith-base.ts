@@ -39,7 +39,7 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Fu
 		};
 	}
 
-	protected async monolith(
+	public async monolith(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;

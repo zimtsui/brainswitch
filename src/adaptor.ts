@@ -48,19 +48,19 @@ export class Adaptor {
 			throttle,
 		};
 		if (endpointSpec.apiType === 'openai-responses')
-			return OpenAIResponsesAPI.create<fdm>(options);
+			return OpenAIResponsesAPI.makeEngine<fdm>(options);
 		else if (endpointSpec.apiType === 'openai-chatcompletions')
-			return OpenAIChatCompletionsAPI.create<fdm>(options);
+			return OpenAIChatCompletionsAPI.makeEngine<fdm>(options);
 		else if (endpointSpec.apiType === 'google')
-			return GoogleRESTfulAPI.create<fdm>(options);
+			return GoogleRESTfulAPI.makeEngine<fdm>(options);
 		else if (endpointSpec.apiType === 'qwen')
-			return QwenAPI.create<fdm>(options);
+			return QwenAPI.makeEngine<fdm>(options);
 		else if (endpointSpec.apiType === 'openrouter-monolith')
-			return OpenRouterMonolithAPI.create<fdm>(options);
+			return OpenRouterMonolithAPI.makeEngine<fdm>(options);
 		else if (endpointSpec.apiType === 'openrouter-stream')
-			return OpenRouterStreamAPI.create<fdm>(options);
+			return OpenRouterStreamAPI.makeEngine<fdm>(options);
 		else if (endpointSpec.apiType === 'huggingface-cerebras-qwen3-thinking')
-			return HuggingFaceCerebrasQwen3ThinkingAPI.create<fdm>(options);
+			return HuggingFaceCerebrasQwen3ThinkingAPI.makeEngine<fdm>(options);
 		else throw new Error();
 	}
 }
