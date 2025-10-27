@@ -1,8 +1,7 @@
 import { Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
-import { RoleMessage, type Session } from '../session.ts';
-import { type InferenceContext } from '../inference-context.ts';
+import { type Session } from '../session.ts';
 import { OpenAIChatCompletionsMonolithAPIBase } from './openai-chatcompletions-monolith-base.ts';
 
 const EXCHANGE_RATE_USD_CNY = 8;
@@ -71,16 +70,5 @@ export namespace OpenRouterMonolithAPI {
 				at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
 				at async consumeBody (node:internal/deps/undici/undici:5728:7)
 		*/
-		public override async monolith(
-			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-		): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
-			try {
-				return await super.monolith(ctx, session, retry);
-			} catch (e) {
-				if (e instanceof TypeError && e.message === 'terminated')
-					return await this.monolith(ctx, session, retry+1);
-				else throw e;
-			}
-		}
 	}
 }
