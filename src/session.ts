@@ -65,6 +65,9 @@ export namespace RoleMessage {
 	export namespace Part {
 		export type Text = Text.Constructor;
 		export namespace Text {
+			export function create(text: string): Text {
+				return new Constructor(text);
+			}
 			export class Constructor {
 				public static readonly Text_NOMINAL = Symbol();
 				private declare readonly [Constructor.Text_NOMINAL]: void;
@@ -82,9 +85,12 @@ export namespace RoleMessage {
 
 	export type AI<fdu extends Function.Declaration = never> = AI.Constructor<fdu>;
 	export namespace AI {
+		export function create<fdu extends Function.Declaration>(parts: AI.Part<fdu>[]): AI<fdu> {
+			return new Constructor(parts);
+		}
+		export const NOMINAL = Symbol();
 		export class Constructor<out fdu extends Function.Declaration = never> extends RoleMessage.Constructor {
-			public static readonly AI_NOMINAL = Symbol();
-			private declare readonly [Constructor.AI_NOMINAL]: void;
+			public declare readonly [NOMINAL]: void;
 			public constructor(public parts: AI.Part<fdu>[]) {
 				super();
 			}
@@ -144,6 +150,9 @@ export namespace RoleMessage {
 
 	export type User<fdu extends Function.Declaration = never> = User.Constructor<fdu>;
 	export namespace User {
+		export function create<fdu extends Function.Declaration>(parts: User.Part<fdu>[]): User<fdu> {
+			return new Constructor(parts);
+		}
 		export class Constructor<out fdu extends Function.Declaration = never> extends RoleMessage.Constructor {
 			public static readonly USER_NOMINAL = Symbol();
 			private declare readonly [Constructor.USER_NOMINAL]: void;
@@ -205,6 +214,9 @@ export namespace RoleMessage {
 
 	export type Developer = Developer.Constructor;
 	export namespace Developer {
+		export function create(parts: Developer.Part[]): Developer {
+			return new Constructor(parts);
+		}
 		export class Constructor extends RoleMessage.Constructor {
 			public static readonly DEVELOPER_NOMINAL = Symbol();
 			private declare readonly [Constructor.DEVELOPER_NOMINAL]: void;

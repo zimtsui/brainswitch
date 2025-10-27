@@ -12,13 +12,13 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Fu
 	protected convertToAIMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.AI<Function.Declaration.From<fdm>> {
 		const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
 		if (message.content)
-			parts.push(new RoleMessage.Part.Text.Constructor(this.extractContent(message.content)));
+			parts.push(RoleMessage.Part.Text.create(this.extractContent(message.content)));
 		if (message.tool_calls)
 			parts.push(...message.tool_calls.map(apifc => {
 				assert(apifc.type === 'function');
 				return this.convertToFunctionCall(apifc);
 			}));
-		return new RoleMessage.AI.Constructor(parts);
+		return RoleMessage.AI.create(parts);
 	}
 
 	protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {

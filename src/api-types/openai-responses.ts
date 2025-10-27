@@ -87,7 +87,7 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 	}
 
 	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
-		if (aiMessage instanceof OpenAIResponsesAIMessage)
+		if (aiMessage instanceof OpenAIResponsesAIMessage.Constructor)
 			return aiMessage.raw;
 		else {
 			return aiMessage.parts.map(part => {
@@ -143,14 +143,14 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 		const parts = output.flatMap((item): RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] => {
 			if (item.type === 'message') {
 				assert(item.content.every(part => part.type === 'output_text'));
-				return [new RoleMessage.Part.Text.Constructor(item.content.map(part => part.text).join(''))];
+				return [RoleMessage.Part.Text.create(item.content.map(part => part.text).join(''))];
 			} else if (item.type === 'function_call')
 				return [this.convertToFunctionCall(item)];
 			else if (item.type === 'reasoning')
 				return [];
 			else throw new Error();
 		});
-		return new OpenAIResponsesAIMessage(parts, output);
+		return OpenAIResponsesAIMessage.create(parts, output);
 	}
 
 
@@ -224,22 +224,28 @@ export class OpenAIResponsesAPI<in out fdm extends Function.Declaration.Map = {}
 
 }
 
-export class OpenAIResponsesAIMessage<out fdu extends Function.Declaration> extends RoleMessage.AI.Constructor<fdu> {
-	public constructor(
-		parts: RoleMessage.AI.Part<fdu>[],
-		public raw: OpenAI.Responses.ResponseOutputItem[],
-	) {
-		super(parts);
-	}
-}
 
+export type OpenAIResponsesAIMessage<fdu extends Function.Declaration> = OpenAIResponsesAIMessage.Constructor<fdu>;
 export namespace OpenAIResponsesAIMessage {
+	export function create<fdu extends Function.Declaration>(parts: RoleMessage.AI.Part<fdu>[], raw: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAIMessage<fdu> {
+		return new Constructor(parts, raw);
+	}
+	export const NOMINAL = Symbol();
+	export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.AI.Constructor<fdu> {
+		public declare readonly [NOMINAL]: void;
+		public constructor(
+			parts: RoleMessage.AI.Part<fdu>[],
+			public raw: OpenAI.Responses.ResponseOutputItem[],
+		) {
+			super(parts);
+		}
+	}
 	export interface Snapshot<in out fdu extends Function.Declaration = never> {
 		parts: RoleMessage.AI.Part.Snapshot<fdu>[];
 		raw: OpenAI.Responses.ResponseOutputItem[];
 	}
 	export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): OpenAIResponsesAIMessage<fdu> {
-		return new OpenAIResponsesAIMessage(RoleMessage.AI.restore<fdu>(snapshot.parts).parts, snapshot.raw);
+		return new Constructor(RoleMessage.AI.restore<fdu>(snapshot.parts).parts, snapshot.raw);
 	}
 	export function capture<fdu extends Function.Declaration>(message: OpenAIResponsesAIMessage<fdu>): Snapshot<fdu> {
 		return {

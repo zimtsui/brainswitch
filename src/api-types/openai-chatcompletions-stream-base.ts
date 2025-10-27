@@ -107,8 +107,8 @@ export abstract class OpenAIChatCompletionsStreamAPIBase<in out fdm extends Func
 			const fcs = toolCalls.map(apifc => this.convertToFunctionCallFromDelta(apifc));
 			this.validateFunctionCallByToolChoice(fcs);
 
-			return new RoleMessage.AI.Constructor([
-				new RoleMessage.Part.Text.Constructor(this.extractContent(text)),
+			return RoleMessage.AI.create([
+				RoleMessage.Part.Text.create(this.extractContent(text)),
 				...fcs,
 			]);
 		} catch (e) {
