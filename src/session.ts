@@ -68,6 +68,9 @@ export namespace RoleMessage {
 			export function create(text: string): Text {
 				return new Constructor(text);
 			}
+			export function paragraph(text: string): Text {
+				return new Constructor(text.trimEnd() + '\n\n');
+			}
 			export class Constructor {
 				public static readonly Text_NOMINAL = Symbol();
 				private declare readonly [Constructor.Text_NOMINAL]: void;
