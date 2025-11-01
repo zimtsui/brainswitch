@@ -13,54 +13,54 @@ import { Throttle } from './throttle.ts';
 
 
 export class Adaptor {
-	public static create(config: Config): Adaptor {
-		return new Adaptor(config);
-	}
+    public static create(config: Config): Adaptor {
+        return new Adaptor(config);
+    }
 
-	protected constructor(public config: Config) {}
+    protected constructor(public config: Config) {}
 
-	private throttles = new Map<string, Map<string, Throttle>>();
-	public getThrottle(endpointId: string): Throttle {
-		assert(endpointId in this.config.brainswitch.endpoints);
-		const baseUrl = this.config.brainswitch.endpoints[endpointId]!.baseUrl;
-		const model = this.config.brainswitch.endpoints[endpointId]!.model;
-		const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
-		const tpm = this.config.brainswitch.endpoints[endpointId]!.tpm ?? Number.POSITIVE_INFINITY;
-		if (!this.throttles.has(baseUrl))
-			this.throttles.set(baseUrl, new Map<string, Throttle>());
-		if (!this.throttles.get(baseUrl)!.has(model))
-			this.throttles.get(baseUrl)!.set(model, new Throttle(rpm, tpm));
-		return this.throttles.get(baseUrl)!.get(model)!;
-	}
+    private throttles = new Map<string, Map<string, Throttle>>();
+    public getThrottle(endpointId: string): Throttle {
+        assert(endpointId in this.config.brainswitch.endpoints);
+        const baseUrl = this.config.brainswitch.endpoints[endpointId]!.baseUrl;
+        const model = this.config.brainswitch.endpoints[endpointId]!.model;
+        const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
+        const tpm = this.config.brainswitch.endpoints[endpointId]!.tpm ?? Number.POSITIVE_INFINITY;
+        if (!this.throttles.has(baseUrl))
+            this.throttles.set(baseUrl, new Map<string, Throttle>());
+        if (!this.throttles.get(baseUrl)!.has(model))
+            this.throttles.get(baseUrl)!.set(model, new Throttle(rpm, tpm));
+        return this.throttles.get(baseUrl)!.get(model)!;
+    }
 
-	public makeEngine<fdm extends Function.Declaration.Map = {}>(
-		endpoint: string,
-		functionDeclarationMap: fdm,
-		functionCallMode?: Function.ToolChoice<fdm>,
-	): Engine<Function.Declaration.From<fdm>> {
-		assert(endpoint in this.config.brainswitch.endpoints);
-		const endpointSpec = this.config.brainswitch.endpoints[endpoint]!;
-		const throttle = this.getThrottle(endpoint);
-		const options: Engine.Options<fdm> = {
-			...endpointSpec,
-			functionDeclarationMap,
-			functionCallMode,
-			throttle,
-		};
-		if (endpointSpec.apiType === 'openai-responses')
-			return OpenAIResponsesAPI.makeEngine<fdm>(options);
-		else if (endpointSpec.apiType === 'openai-chatcompletions')
-			return OpenAIChatCompletionsAPI.makeEngine<fdm>(options);
-		else if (endpointSpec.apiType === 'google')
-			return GoogleRESTfulAPI.makeEngine<fdm>(options);
-		else if (endpointSpec.apiType === 'qwen')
-			return QwenAPI.makeEngine<fdm>(options);
-		else if (endpointSpec.apiType === 'openrouter-monolith')
-			return OpenRouterMonolithAPI.makeEngine<fdm>(options);
-		else if (endpointSpec.apiType === 'openrouter-stream')
-			return OpenRouterStreamAPI.makeEngine<fdm>(options);
-		else if (endpointSpec.apiType === 'huggingface-cerebras-qwen3-thinking')
-			return HuggingFaceCerebrasQwen3ThinkingAPI.makeEngine<fdm>(options);
-		else throw new Error();
-	}
+    public makeEngine<fdm extends Function.Declaration.Map = {}>(
+        endpoint: string,
+        functionDeclarationMap: fdm,
+        functionCallMode?: Function.ToolChoice<fdm>,
+    ): Engine<Function.Declaration.From<fdm>> {
+        assert(endpoint in this.config.brainswitch.endpoints);
+        const endpointSpec = this.config.brainswitch.endpoints[endpoint]!;
+        const throttle = this.getThrottle(endpoint);
+        const options: Engine.Options<fdm> = {
+            ...endpointSpec,
+            functionDeclarationMap,
+            functionCallMode,
+            throttle,
+        };
+        if (endpointSpec.apiType === 'openai-responses')
+            return OpenAIResponsesAPI.makeEngine<fdm>(options);
+        else if (endpointSpec.apiType === 'openai-chatcompletions')
+            return OpenAIChatCompletionsAPI.makeEngine<fdm>(options);
+        else if (endpointSpec.apiType === 'google')
+            return GoogleRESTfulAPI.makeEngine<fdm>(options);
+        else if (endpointSpec.apiType === 'qwen')
+            return QwenAPI.makeEngine<fdm>(options);
+        else if (endpointSpec.apiType === 'openrouter-monolith')
+            return OpenRouterMonolithAPI.makeEngine<fdm>(options);
+        else if (endpointSpec.apiType === 'openrouter-stream')
+            return OpenRouterStreamAPI.makeEngine<fdm>(options);
+        else if (endpointSpec.apiType === 'huggingface-cerebras-qwen3-thinking')
+            return HuggingFaceCerebrasQwen3ThinkingAPI.makeEngine<fdm>(options);
+        else throw new Error();
+    }
 }
