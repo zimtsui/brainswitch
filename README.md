@@ -8,7 +8,7 @@ Brainswitch 是一个为 AI 工作流设计的 LLM 推理 API 适配器，支持
 
 ## Motivation
 
-大多数 LLM 推理服务商不支持[严格函数调用](https://platform.openai.com/docs/guides/function-calling#strict-mode)，在 AI 批处理工作流中难以达到生产级的可靠性。如果仅使用 OpenAI、Google 等支持严格函数调用的服务商，那么可选的模型型号会大幅受限。
+大多数 LLM 推理服务商不支持[严格函数调用](https://platform.openai.com/docs/guides/function-calling#strict-mode)，在 AI 批处理工作流中难以达到生产级的可靠性。如果仅使用 OpenAI 等支持严格函数调用的服务商，那么可选的模型型号会大幅受限。
 
 Brainswitch 支持在一次会话中途切换模型并保持对话上下文，包括 OpenAI、Google 的深度思考模型的加密思考内容。有了 Brainswitch 就可以在会话的大量推理阶段使用最合适的模型生成自然语言结果，在最后的总结阶段切换成支持严格函数调用的模型进行结构化提交。
 
@@ -17,7 +17,7 @@ Brainswitch 支持在一次会话中途切换模型并保持对话上下文，�
 - OpenAI Chat Completions
 - OpenAI Responses
 - Google
-- Qwen
+- 百炼/火山引擎 OpenAI 兼容
 - OpenRouter
 - HuggingFace Cerebras Qwen3 Thinking
 
@@ -43,23 +43,23 @@ npm i @zimtsui/brainswitch
 
 ```ts
 export type Config = {
-	brainswitch: {
-		endpoints: Record<string, {
-			baseUrl: string;
-			apiKey: string;
-			model: string;
-			name: string;
-			apiType: 'openai-chatcompletions' | 'openai-responses' | 'google' | 'qwen' | 'openrouter-monolith' | 'openrouter-stream' | 'huggingface-cerebras-qwen3-thinking';
-			proxy?: string;
-			inputPrice?: number;    // 每百万输入 Token 人民币成本
-			outputPrice?: number;   // 每百万输出 Token 人民币成本
-			cachedPrice?: number;   // 每百万缓存命中 Token 人民币成本
-			customOptions?: Record<string, unknown>; // 直通服务商的自定义参数
-			rpm?: number;           // 每分钟请求次数上限
-			tpm?: number;           // 每分钟 Token 上限
-			timeout?: number;       // 单次请求超时（毫秒）
-		}>;
-	};
+    brainswitch: {
+        endpoints: Record<string, {
+            baseUrl: string;
+            apiKey: string;
+            model: string;
+            name: string;
+            apiType: 'openai-chatcompletions' | 'openai-responses' | 'google' | 'qwen' | 'openrouter-monolith' | 'openrouter-stream' | 'huggingface-cerebras-qwen3-thinking';
+            proxy?: string;
+            inputPrice?: number;    // 每百万输入 Token 人民币成本
+            outputPrice?: number;   // 每百万输出 Token 人民币成本
+            cachedPrice?: number;   // 每百万缓存命中 Token 人民币成本
+            customOptions?: Record<string, unknown>; // 直通服务商的自定义参数
+            rpm?: number;           // 每分钟请求次数上限
+            tpm?: number;           // 每分钟 Token 上限
+            timeout?: number;       // 单次请求超时（毫秒）
+        }>;
+    };
 }
 ```
 
@@ -80,87 +80,87 @@ import * as Presets from '@zimtsui/typelog/presets';
 
 // 配置
 const config: Config = {
-	brainswitch: {
-		endpoints: {
-			'gpt-4o-mini': {
-				name: 'GPT-4o mini',
-				apiType: 'openai-chatcompletions',
-				baseUrl: 'https://api.openai.com/v1',
-				apiKey: process.env.OPENAI_API_KEY!,
-				model: 'gpt-4o-mini',
-				inputPrice: 5, outputPrice: 15, cachedPrice: 1,
-				rpm: 3000, tpm: 1_000_000, timeout: 60_000,
-			},
-			'o4-mini': {
-				name: 'o4 mini',
-				apiType: 'openai-responses',
-				baseUrl: 'https://api.openai.com/v1',
-				apiKey: process.env.OPENAI_API_KEY!,
-				model: 'o4-mini',
-			},
-			'gemini-2.5-flash': {
-				name: 'Gemini 2.5 Flash',
-				apiType: 'google',
-				baseUrl: 'https://generativelanguage.googleapis.com',
-				apiKey: process.env.GOOGLE_API_KEY!,
-				model: 'gemini-2.5-flash',
-			},
-		}
-	}
+    brainswitch: {
+        endpoints: {
+            'gpt-4o-mini': {
+                name: 'GPT-4o mini',
+                apiType: 'openai-chatcompletions',
+                baseUrl: 'https://api.openai.com/v1',
+                apiKey: process.env.OPENAI_API_KEY!,
+                model: 'gpt-4o-mini',
+                inputPrice: 5, outputPrice: 15, cachedPrice: 1,
+                rpm: 3000, tpm: 1_000_000, timeout: 60_000,
+            },
+            'o4-mini': {
+                name: 'o4 mini',
+                apiType: 'openai-responses',
+                baseUrl: 'https://api.openai.com/v1',
+                apiKey: process.env.OPENAI_API_KEY!,
+                model: 'o4-mini',
+            },
+            'gemini-2.5-flash': {
+                name: 'Gemini 2.5 Flash',
+                apiType: 'google',
+                baseUrl: 'https://generativelanguage.googleapis.com',
+                apiKey: process.env.GOOGLE_API_KEY!,
+                model: 'gemini-2.5-flash',
+            },
+        }
+    }
 }
 
 // 声明函数工具
 const fdm = {
-	get_weather: {
-		description: '获取某城市的天气',
-		paraschema: Type.Object({
-			city: Type.String(),
-			unit: Type.Optional(Type.Union([Type.Literal('C'), Type.Literal('F')]))
-		}),
-	},
-	submit_result: {
-		description: '提交最终结果',
-		paraschema: Type.Object({
-			weather: Type.String(),
-			advice: Type.String(),
-		}),
-	},
+    get_weather: {
+        description: '获取某城市的天气',
+        paraschema: Type.Object({
+            city: Type.String(),
+            unit: Type.Optional(Type.Union([Type.Literal('C'), Type.Literal('F')]))
+        }),
+    },
+    submit_result: {
+        description: '提交最终结果',
+        paraschema: Type.Object({
+            weather: Type.String(),
+            advice: Type.String(),
+        }),
+    },
 } satisfies Function.Declaration.Map;
 type fdm = typeof fdm;
 
 export class Submission extends Error {
-	public constructor(public weather: string, public advice: string) {
-		super(undefined);
-	}
+    public constructor(public weather: string, public advice: string) {
+        super(undefined);
+    }
 }
 const fnm: Function.Map<fdm> = {
-	async get_weather({ city, unit }) {
-		// 实际项目中此处调用真实 API，这里仅示例
-		const data = { city, unit: unit ?? 'C', temperature: 26, sky: 'sunny' };
-		return JSON.stringify(data);
-	},
-	async submit_result({ weather, advice }) {
-		throw new Submission(weather, advice);
-	},
+    async get_weather({ city, unit }) {
+        // 实际项目中此处调用真实 API，这里仅示例
+        const data = { city, unit: unit ?? 'C', temperature: 26, sky: 'sunny' };
+        return JSON.stringify(data);
+    },
+    async submit_result({ weather, advice }) {
+        throw new Submission(weather, advice);
+    },
 };
 
 // 初始化工作流上下文
 const ctx: InferenceContext = {
-	busy: new RWLock(),
-	logger: {
-		message: new Channel(Presets.Level),
-		cost(deltaCost) { console.log((-deltaCost).toFixed(2)); },
-	},
+    busy: new RWLock(),
+    logger: {
+        message: new Channel(Presets.Level),
+        cost(deltaCost) { console.log((-deltaCost).toFixed(2)); },
+    },
 };
 
 // 创建会话
 const session = {
-	developerMessage: RoleMessage.Developer.create([
-		RoleMessage.Part.Text.create('你的工作是为用户查询天气，并给出穿衣建议。'),
-	]),
-	chatMessages: [
-		RoleMessage.User.create([ RoleMessage.Part.Text.create('请查询现在北京的天气，并给穿衣建议。') ]),
-	],
+    developerMessage: RoleMessage.Developer.create([
+        RoleMessage.Part.Text.create('你的工作是为用户查询天气，并给出穿衣建议。'),
+    ]),
+    chatMessages: [
+        RoleMessage.User.create([ RoleMessage.Part.Text.create('请查询现在北京的天气，并给穿衣建议。') ]),
+    ],
 };
 
 // 选择推理引擎
@@ -169,11 +169,10 @@ const engine = adaptor.makeEngine('gpt-4o-mini', fdm, Function.ToolChoice.REQUIR
 
 // 使用 agentloop 驱动智能体循环，最多 8 轮对话
 try {
-	for await (const text of agentloop(ctx, session, engine, fnm, 8)) console.log(text);
+    for await (const text of agentloop(ctx, session, engine, fnm, 8)) console.log(text);
 } catch (e) {
-	if (e instanceof Submission) {
-		console.log(e.weather);
-		console.log(e.advice);
-	} else throw e;
-
+    if (e instanceof Submission) {} else throw e;
+    console.log(e.weather);
+    console.log(e.advice);
+}
 ```
