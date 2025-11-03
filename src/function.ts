@@ -12,9 +12,9 @@ export namespace Function {
     }
 
     export namespace Declaration {
-        export type From<fdm extends Map, name extends Map.NameOf<fdm> = Map.NameOf<fdm>> = {
+        export type From<fdm extends Map, nameu extends Map.NameOf<fdm> = Map.NameOf<fdm>> = {
             [name in Map.NameOf<fdm>]: Declaration<name, fdm[name]['paraschema']>;
-        }[name];
+        }[nameu];
 
         export type Map = Record<string, Item<TSchema>>;
         export namespace Map {

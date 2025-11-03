@@ -15,31 +15,32 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
     functionMap: Function.Map<fdm>,
     limit = Number.POSITIVE_INFINITY,
 ): AsyncGenerator<string, string, void> {
+    type fdu = Function.Declaration.From<fdm>;
     for (let i = 0; i < limit; i++) {
         const response = await Engine.apply(ctx, session, engine);
         const fcs = response.getFunctionCalls();
         if (!fcs.length) return response.getOnlyText();
-        const pfrs: Promise<Function.Response.Distributive<Function.Declaration.From<fdm>>>[] = [];
+        const pfrs: Promise<Function.Response.Distributive<fdu>>[] = [];
         for (const part of response.parts) {
             if (part instanceof RoleMessage.Part.Text.Constructor) {
                 yield part.text;
             } else if (part instanceof Function.Call) {
-                const fc = part as Function.Call.Distributive<Function.Declaration.From<fdm>>;
+                const fc = part as Function.Call.Distributive<fdu>;
                 const f = functionMap[fc.name];
                 assert(f);
                 pfrs.push((async () => {
                     const rv = await f(fc.args);
                     ctx.logger.message?.debug('\n'+rv);
-                    return Function.Response.create({
+                    return Function.Response.create<fdu>({
                         id: fc.id,
                         name: fc.name,
                         text: rv,
-                    } as Function.Response.create.Options<Function.Declaration.From<fdm>>);
+                    } as Function.Response.create.Options<fdu>);
                 })());
             } else throw new Error();
         }
         const frs = await Promise.all(pfrs);
-        session.chatMessages.push(RoleMessage.User.create<Function.Declaration.From<fdm>>(frs));
+        session.chatMessages.push(RoleMessage.User.create<fdu>(frs));
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }
