@@ -72,7 +72,7 @@ export type Config = {
 下面演示：定义一个工具函数，先用 Google 做推理与工具调用，再在同一会话中切换到 OpenAI Responses 做最终的结构化总结。
 
 ```ts
-import { Adaptor, agentloop, RoleMessage, Function, type InferenceContext } from '@zimtsui/brainswitch';
+import { Adaptor, agentloop, RoleMessage, Function, type InferenceContext, type Config, Session } from '@zimtsui/brainswitch';
 import { Type } from '@sinclair/typebox';
 import { RWLock } from '@zimtsui/coroutine-locks';
 import { Channel } from '@zimtsui/typelog';
@@ -127,6 +127,7 @@ const fdm = {
     },
 } satisfies Function.Declaration.Map;
 type fdm = typeof fdm;
+type fdu = Function.Declaration.From<fdm>;
 
 export class Submission extends Error {
     public constructor(public weather: string, public advice: string) {
@@ -148,13 +149,13 @@ const fnm: Function.Map<fdm> = {
 const ctx: InferenceContext = {
     busy: new RWLock(),
     logger: {
-        message: new Channel(Presets.Level),
+        message: Channel.create(Presets.Level, message => console.log(message)),
         cost(deltaCost) { console.log((-deltaCost).toFixed(2)); },
     },
 };
 
 // 创建会话
-const session = {
+const session: Session<fdu> = {
     developerMessage: RoleMessage.Developer.create([
         RoleMessage.Part.Text.create('你的工作是为用户查询天气，并给出穿衣建议。'),
     ]),
