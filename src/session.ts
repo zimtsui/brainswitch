@@ -88,7 +88,7 @@ export namespace RoleMessage {
 
     export type AI<fdu extends Function.Declaration = never> = AI.Constructor<fdu>;
     export namespace AI {
-        export function create<fdu extends Function.Declaration>(parts: AI.Part<fdu>[]): AI<fdu> {
+        export function create<fdu extends Function.Declaration = never>(parts: AI.Part<fdu>[]): AI<fdu> {
             return new Constructor(parts);
         }
         export const NOMINAL = Symbol();
@@ -113,10 +113,10 @@ export namespace RoleMessage {
                 return this.parts.filter(part => part instanceof Function.Call);
             }
         }
-        export function capture<fdu extends Function.Declaration>(message: Constructor<fdu>): Snapshot<fdu> {
+        export function capture<fdu extends Function.Declaration>(message: AI<fdu>): Snapshot<fdu> {
             return message.parts.map(AI.Part.capture<fdu>);
         }
-        export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): Constructor<fdu> {
+        export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): AI<fdu> {
             return new Constructor(snapshot.map(AI.Part.restore<fdu>));
         }
         export type Snapshot<fdu extends Function.Declaration = never> = Part.Snapshot<fdu>[];
@@ -153,7 +153,7 @@ export namespace RoleMessage {
 
     export type User<fdu extends Function.Declaration = never> = User.Constructor<fdu>;
     export namespace User {
-        export function create<fdu extends Function.Declaration>(parts: User.Part<fdu>[]): User<fdu> {
+        export function create<fdu extends Function.Declaration = never>(parts: User.Part<fdu>[]): User<fdu> {
             return new Constructor(parts);
         }
         export class Constructor<out fdu extends Function.Declaration = never> extends RoleMessage.Constructor {
@@ -177,10 +177,10 @@ export namespace RoleMessage {
                 return this.parts[0]! as Function.Response.Distributive<fdu>;
             }
         }
-        export function capture<fdu extends Function.Declaration>(message: Constructor<fdu>): Snapshot<fdu> {
+        export function capture<fdu extends Function.Declaration>(message: User<fdu>): Snapshot<fdu> {
             return message.parts.map(User.Part.capture<fdu>);
         }
-        export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): Constructor<fdu> {
+        export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): User<fdu> {
             return new Constructor(snapshot.map(User.Part.restore<fdu>));
         }
         export type Snapshot<fdu extends Function.Declaration = never> = Part.Snapshot<fdu>[];
@@ -235,10 +235,10 @@ export namespace RoleMessage {
         }
         export type Snapshot = RoleMessage.Part.Text.Snapshot[];
         export type Part = RoleMessage.Part.Text.Constructor;
-        export function capture(message: Constructor): Snapshot {
+        export function capture(message: Developer): Snapshot {
             return message.parts.map(RoleMessage.Part.Text.capture);
         }
-        export function restore(snapshot: Snapshot): Constructor {
+        export function restore(snapshot: Snapshot): Developer {
             return new Constructor(snapshot.map(RoleMessage.Part.Text.restore));
         }
     }
