@@ -27,9 +27,9 @@ export namespace Engine {
     export async function apply<fdm extends Function.Declaration.Map = {}>(
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
-        cc: Engine<Function.Declaration.From<fdm>>,
+        engine: Engine<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
-        const response = await cc(ctx, session);
+        const response = await engine(ctx, session);
         session.chatMessages.push(response);
         return response;
     }
