@@ -29,12 +29,10 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
                 const f = functionMap[fc.name];
                 assert(f);
                 pfrs.push((async () => {
-                    const rv = await f(fc.args);
-                    ctx.logger.message?.debug('\n'+rv);
                     return Function.Response.create<fdu>({
                         id: fc.id,
                         name: fc.name,
-                        text: rv,
+                        text: await f(fc.args),
                     } as Function.Response.create.Options<fdu>);
                 })());
             } else throw new Error();
