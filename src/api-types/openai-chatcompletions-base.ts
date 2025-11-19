@@ -4,7 +4,6 @@ import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import { APIBase, TransientError } from './base.ts';
-import { ProxyAgent } from 'undici';
 import { Ajv } from 'ajv';
 
 

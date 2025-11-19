@@ -6,7 +6,7 @@ import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import { TransientError } from './base.ts';
-import { ProxyAgent, fetch } from 'undici';
+import { fetch } from 'undici';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
