@@ -192,8 +192,8 @@ export namespace OpenAIResponsesAPI {
 					}),
 					body: JSON.stringify(params),
 					dispatcher: this.proxyAgent,
-					signal: ctx.signal,
-				});
+					signal,
+				}).catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
 				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as OpenAI.Responses.Response;
 				ctx.logger.message?.trace(response);

@@ -96,11 +96,7 @@ export namespace GoogleRESTfulAPI {
 					body: JSON.stringify(reqbody),
 					dispatcher: this.proxyAgent,
 					signal,
-				}).catch(e => {
-					if (e instanceof TypeError)
-						throw new TransientError('Connection error', { cause: e });
-					else throw e;
-				});;
+				}).catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
 				ctx.logger.message?.trace(res);
 				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as Google.GenerateContentResponse;

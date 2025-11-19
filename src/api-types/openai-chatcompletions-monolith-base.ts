@@ -70,8 +70,8 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Fu
 				}),
 				body: JSON.stringify(params),
 				dispatcher: this.proxyAgent,
-				signal: ctx.signal,
-			});
+				signal,
+			}).catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
 			assert(res.ok, new Error(undefined, { cause: res }));
 			const completion = await res.json() as OpenAI.ChatCompletion;
 			ctx.logger.message?.trace(completion);
