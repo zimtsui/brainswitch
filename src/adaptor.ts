@@ -8,7 +8,6 @@ import { OpenRouterMonolithAPI } from './api-types/openrouter-monolith.ts';
 import { OpenRouterStreamAPI } from './api-types/openrouter-stream.ts';
 import { QwenAPI } from './api-types/qwen.ts';
 import { OpenAIResponsesAPI } from './api-types/openai-responses.ts';
-import { HuggingFaceCerebrasQwen3ThinkingAPI } from './api-types/huggingface-cerebras-qwen3-thinking.ts';
 import { Throttle } from './throttle.ts';
 
 
@@ -59,8 +58,6 @@ export class Adaptor {
             return OpenRouterMonolithAPI.makeEngine<fdm>(options);
         else if (endpointSpec.apiType === 'openrouter-stream')
             return OpenRouterStreamAPI.makeEngine<fdm>(options);
-        else if (endpointSpec.apiType === 'huggingface-cerebras-qwen3-thinking')
-            return HuggingFaceCerebrasQwen3ThinkingAPI.makeEngine<fdm>(options);
         else throw new Error();
     }
 }
