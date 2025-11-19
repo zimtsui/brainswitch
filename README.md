@@ -2,9 +2,9 @@
 
 # Brainswitch
 
-[![Npm package version](https://flat.badgen.net/npm/v/@zimtsui/brainswitch)](https://www.npmjs.com/package/@zimtsui/brainswitch)
+[![Npm package version](https://shields.io/npm/v/@zimtsui/brainswitch)](https://www.npmjs.com/package/@zimtsui/brainswitch)
 
-Brainswitch 是一个为 AI 工作流设计的 LLM 推理 API 适配器，支持在会话中切换模型。
+Brainswitch 是一个为 AI 工作流设计的 LLM 推理 API 适配器，支持在会话中途切换模型。
 
 ## Motivation
 
@@ -25,7 +25,7 @@ Brainswitch 支持在一次会话中途切换模型并保持对话上下文，�
 环境要求：Node.js >= 22。
 
 ```bash
-npm i @zimtsui/brainswitch
+npm install @zimtsui/brainswitch
 ```
 
 ## 核心概念
@@ -57,6 +57,7 @@ export type Config = {
             rpm?: number;           // 每分钟请求次数上限
             tpm?: number;           // 每分钟 Token 上限
             timeout?: number;       // 单次请求超时（毫秒）
+            tokenLimit?: number;    // 单次请求 Token 上限
         }>;
     };
 }
