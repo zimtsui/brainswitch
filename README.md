@@ -19,7 +19,6 @@ Brainswitch 支持在一次会话中途切换模型并保持对话上下文，�
 - Google
 - 百炼/火山引擎 OpenAI 兼容
 - OpenRouter
-- HuggingFace Cerebras Qwen3 Thinking
 
 ## 安装
 
@@ -31,11 +30,11 @@ npm i @zimtsui/brainswitch
 
 ## 核心概念
 
-- `Session`：会话状态，包含开发者提示词和往返消息。
-- `InferenceContext`：工作流上下文，包含 [TypeLog](https://github.com/zimtsui/typelog) Logger、`AbortSignal`、用户防止并发过载的[读写锁](https://github.com/zimtsui/coroutine-locks)。
-- `Engine`：一个函数 `(ctx, session) => Promise<AIMessage>`；实现了具体服务商的请求/响应适配。
-- `Endpoint`：一家服务商的某个模型的 API 端点。
-- `Adaptor`：创建使用某个 Endpoint 的 `Engine`。
+- `Session`：会话状态。
+- `InferenceContext`：工作流环境，包含 [TypeLog](https://github.com/zimtsui/typelog) Logger、`AbortSignal`、用户防止并发过载的[读写锁](https://github.com/zimtsui/coroutine-locks)。
+- `Engine`：推理引擎，从一个会话状态生成下一个会话状态。
+- `Endpoint`：代表一家服务商的一个个模型的 API 端点。
+- `Adaptor`：Engine 工厂。
 - `RoleMessage`：三类角色消息 `Developer`、`User`、`AI`，消息由 `Text` 与 `Function.Call/Response` 片段组成。
 - `Function.Declaration.Map`：函数工具声明集合，使用 [JSON Schema](https://json-schema.org/) 描述函数参数。
 
