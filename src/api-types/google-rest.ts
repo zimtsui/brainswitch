@@ -76,7 +76,10 @@ export namespace GoogleRESTfulAPI {
 						functionCallingConfig: this.convertFromFunctionCallMode(this.toolChoice),
 					} : undefined,
 					systemInstruction,
-					generationConfig: this.customOptions ?? undefined,
+					generationConfig: this.tokenLimit || this.customOptions ? {
+						maxOutputTokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
+						...this.customOptions,
+					} : undefined,
 				};
 
 				ctx.logger.message?.trace(reqbody);

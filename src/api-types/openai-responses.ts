@@ -136,6 +136,7 @@ export namespace OpenAIResponsesAPI {
 					) : undefined,
 				tool_choice: Object.keys(this.functionDeclarationMap).length ? 'required' : undefined,
 				parallel_tool_calls: Object.keys(this.functionDeclarationMap).length ? false : undefined,
+				max_output_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 				...this.customOptions,
 			};
 		}
@@ -203,6 +204,10 @@ export namespace OpenAIResponsesAPI {
 				const apifcs = response.output.filter(item => item.type === 'function_call');
 				for (const apifc of apifcs) ctx.logger.message?.debug(apifc);
 				assert(response.usage);
+				assert(
+					response.usage.output_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
+					new TransientError('Token limit exceeded.', { cause: response }),
+				);
 				const cost = this.calcCost(response.usage);
 				ctx.logger.cost?.(cost);
 				ctx.logger.message?.debug(response.usage);

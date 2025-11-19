@@ -15,6 +15,7 @@ export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> 
 	protected customOptions?: Record<string, unknown>;
 	protected throttle: Throttle;
 	protected timeout?: number;
+	protected tokenLimit?: number;
 
 	public constructor(options: Engine.Options<fdm>) {
 		this.baseUrl = options.baseUrl;
@@ -30,6 +31,7 @@ export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> 
 		this.customOptions = options.customOptions;
 		this.throttle = options.throttle;
 		this.timeout = options.timeout;
+		this.tokenLimit = options.tokenLimit;
 	}
 }
 

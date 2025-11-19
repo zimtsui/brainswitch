@@ -53,6 +53,7 @@ export namespace OpenRouterStreamAPI {
 				usage: {
 					include: true,
 				},
+				max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 				...this.customOptions,
 			};
 			return params;

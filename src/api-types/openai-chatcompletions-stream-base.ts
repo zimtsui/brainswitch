@@ -26,6 +26,7 @@ export abstract class OpenAIChatCompletionsStreamAPIBase<in out fdm extends Func
 			stream_options: {
 				include_usage: true
 			},
+			max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 			...this.customOptions,
 		};
 	}
@@ -100,6 +101,10 @@ export abstract class OpenAIChatCompletionsStreamAPIBase<in out fdm extends Func
 			);
 			ctx.logger.inference?.debug('\n');
 			assert(usage);
+			assert(
+				usage.completion_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
+				new TransientError('Token limit exceeded.', { cause: text }),
+			);
 			if (toolCalls.length) ctx.logger.message?.debug(toolCalls);
 			ctx.logger.message?.debug(usage);
 			ctx.logger.cost?.(cost);

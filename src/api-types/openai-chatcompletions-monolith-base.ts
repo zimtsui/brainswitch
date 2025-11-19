@@ -35,6 +35,7 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Fu
 				: undefined,
 			tool_choice: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
 			parallel_tool_calls: Object.keys(this.functionDeclarationMap).length ? false : undefined,
+			max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 			...this.customOptions,
 		};
 	}
@@ -63,6 +64,10 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Fu
 				new TransientError('Invalid finish reason', { cause: completion.choices[0]!.finish_reason }),
 			);
 			assert(completion.usage);
+			assert(
+				completion.usage.completion_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
+				new TransientError('Token limit exceeded.', { cause: completion }),
+			);
 			this.throttle.outputTokens(completion.usage.completion_tokens);
 
 			const cost = this.calcCost(completion.usage);

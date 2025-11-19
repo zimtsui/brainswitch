@@ -25,5 +25,6 @@ export namespace EndpointSpec {
         rpm: Type.Optional(Type.Number()),
         tpm: Type.Optional(Type.Number()),
         timeout: Type.Optional(Type.Number()),
+        tokenLimit: Type.Optional(Type.Number()),
     });
 }
