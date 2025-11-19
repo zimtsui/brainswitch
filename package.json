@@ -13,7 +13,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b ./src/tsconfig.json",
-    "clean": "rm -rf ./build",
+    "clean": "rm -rf ./build && rm -rf ./docs",
     "docs": "typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts"
   },
   "author": "Zim",
