@@ -6,7 +6,7 @@ import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import { TransientError } from './base.ts';
-import { ProxyAgent } from 'undici';
+import { ProxyAgent, fetch } from 'undici';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
@@ -19,20 +19,11 @@ export namespace OpenAIResponsesAPI {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
-		protected client: OpenAI;
-		protected proxyAgent?: ProxyAgent;
-
+		private apiURL: URL;
 
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
-			this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
-			this.client = new OpenAI({
-				baseURL: this.baseUrl,
-				apiKey: this.apiKey,
-				fetchOptions: {
-					dispatcher: this.proxyAgent,
-				},
-			});
+			this.apiURL = new URL(`${this.baseUrl}/responses`);
 		}
 
 		protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseFunctionToolCall {
@@ -193,8 +184,18 @@ export namespace OpenAIResponsesAPI {
 			await this.throttle.requests(ctx);
 			await this.throttle.inputTokens(this.tokenize(params), ctx);
 			try {
-				const response: OpenAI.Responses.Response = await this.client.responses.create(params, { signal })
-					.catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
+				const res = await fetch(this.apiURL, {
+					method: 'POST',
+					headers: new Headers({
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${this.apiKey}`,
+					}),
+					body: JSON.stringify(params),
+					dispatcher: this.proxyAgent,
+					signal: ctx.signal,
+				});
+				assert(res.ok, new Error(undefined, { cause: res }));
+				const response = await res.json() as OpenAI.Responses.Response;
 				ctx.logger.message?.trace(response);
 				const aiMessage = this.convertToAIMessage(response.output);
 

@@ -25,13 +25,12 @@ export namespace GoogleRESTfulAPI {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends GoogleAPIBase<fdm> {
-		private proxyAgent?: ProxyAgent;
 		private apiURL: URL;
 		private tokenizerURL: URL;
 
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
-			this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
+
 			this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
 			this.tokenizerURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:countTokens`);
 		}
@@ -103,7 +102,7 @@ export namespace GoogleRESTfulAPI {
 					else throw e;
 				});;
 				ctx.logger.message?.trace(res);
-				assert(res.ok, new TransientError(undefined, { cause: res }));
+				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as Google.GenerateContentResponse;
 
 				assert(response.candidates?.[0]?.content?.parts, new TransientError('No content parts', { cause: response }));

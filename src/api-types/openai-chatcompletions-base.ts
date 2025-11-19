@@ -12,19 +12,8 @@ const ajv = new Ajv();
 
 
 export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
-	protected client: OpenAI;
-	protected proxyAgent?: ProxyAgent;
-
 	public constructor(options: Engine.Options<fdm>) {
 		super(options);
-		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
-		this.client = new OpenAI({
-			baseURL: this.baseUrl,
-			apiKey: this.apiKey,
-			fetchOptions: {
-				dispatcher: this.proxyAgent,
-			},
-		});
 	}
 
 	protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageToolCall {

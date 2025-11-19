@@ -5,9 +5,17 @@ import assert from 'node:assert';
 import { TransientError } from './base.ts';
 import { OpenAIChatCompletionsAPIBase } from './openai-chatcompletions-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
+import { fetch } from 'undici';
+import { Engine } from '../engine.ts';
 
 
 export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsAPIBase<fdm> {
+	private apiURL: URL;
+
+	public constructor(options: Engine.Options<fdm>) {
+		super(options);
+		this.apiURL = new URL(`${this.baseUrl}/chat/completions`);
+	}
 
 	protected convertToAIMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.AI<Function.Declaration.From<fdm>> {
 		const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
@@ -54,8 +62,18 @@ export abstract class OpenAIChatCompletionsMonolithAPIBase<in out fdm extends Fu
 		await this.throttle.requests(ctx);
 		await this.throttle.inputTokens(this.tokenize(params), ctx);
 		try {
-			const completion: OpenAI.ChatCompletion = await this.client.chat.completions.create(params, { signal })
-				.catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
+			const res = await fetch(this.apiURL, {
+				method: 'POST',
+				headers: new Headers({
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${this.apiKey}`,
+				}),
+				body: JSON.stringify(params),
+				dispatcher: this.proxyAgent,
+				signal: ctx.signal,
+			});
+			assert(res.ok, new Error(undefined, { cause: res }));
+			const completion = await res.json() as OpenAI.ChatCompletion;
 			ctx.logger.message?.trace(completion);
 			assert(completion.choices[0], new TransientError('No choices', { cause: completion }));
 

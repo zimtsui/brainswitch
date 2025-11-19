@@ -1,6 +1,7 @@
 import { Function } from '../function.ts';
 import { Engine } from '../engine.ts';
 import { Throttle } from '../throttle.ts';
+import { ProxyAgent } from 'undici';
 
 
 export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> {
@@ -17,6 +18,8 @@ export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> 
 	protected timeout?: number;
 	protected tokenLimit?: number;
 
+	protected proxyAgent?: ProxyAgent;
+
 	public constructor(options: Engine.Options<fdm>) {
 		this.baseUrl = options.baseUrl;
 		this.apiKey = options.apiKey;
@@ -32,6 +35,7 @@ export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> 
 		this.throttle = options.throttle;
 		this.timeout = options.timeout;
 		this.tokenLimit = options.tokenLimit;
+		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 	}
 }
 
