@@ -101,7 +101,7 @@ export namespace GoogleRESTfulAPI {
 				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as Google.GenerateContentResponse;
 
-				assert(response.candidates?.[0]?.content?.parts, new TransientError('No content parts', { cause: response }));
+				assert(response.candidates?.[0]?.content?.parts?.length, new TransientError('No content parts', { cause: response }));
 				assert(response.candidates[0].finishReason === Google.FinishReason.STOP, new TransientError('Abnormal finish reason', { cause: response }));
 
 
