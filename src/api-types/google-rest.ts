@@ -107,7 +107,9 @@ export namespace GoogleRESTfulAPI {
 
 				const text = response.candidates[0].content.parts.filter(part => part.text).map(part => part.text).join('');
 				if (text) ctx.logger.inference?.debug(text+'\n');
-				const apiFunctionCalls = response.candidates[0].content.parts.filter(part => part.functionCall);
+				const apiFunctionCalls = response.candidates[0].content.parts
+					.filter(part => part.functionCall)
+					.map(part => part.functionCall);
 				if (apiFunctionCalls.length) ctx.logger.message?.debug(apiFunctionCalls);
 				ctx.logger.message?.debug(response.usageMetadata);
 
