@@ -35,10 +35,6 @@ export namespace GoogleRestfulEngine {
 			return this.monolith(ctx, session);
 		}
 
-		public override stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
-			return this.monolith(ctx, session);
-		}
-
 		public async monolith(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 		): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
