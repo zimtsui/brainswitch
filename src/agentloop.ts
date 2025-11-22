@@ -38,7 +38,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map, session e
             } else throw new Error();
         }
         const frs = await Promise.all(pfrs);
-        engine.append(session, RoleMessage.User.create<fdu>(frs));
+        engine.appendUserMessage(session, RoleMessage.User.create<fdu>(frs));
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }

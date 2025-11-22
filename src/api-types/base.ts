@@ -29,7 +29,7 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
         session.chatMessages.push(response);
         return response;
 	}
-	public append(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
+	public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
 		return {
 			...session,
 			chatMessages: [...session.chatMessages, message],
