@@ -8,10 +8,10 @@ import assert from 'node:assert';
 /**
  * @param session mutable
  */
-export async function *agentloop<fdm extends Function.Declaration.Map>(
+export async function *agentloop<fdm extends Function.Declaration.Map, session extends unknown = Session<Function.Declaration.From<fdm>>>(
     ctx: InferenceContext,
-    session: Session<Function.Declaration.From<fdm>>,
-    engine: Engine<Function.Declaration.From<fdm>>,
+    session: session,
+    engine: Engine<Function.Declaration.From<fdm>, session>,
     functionMap: Function.Map<fdm>,
     limit = Number.POSITIVE_INFINITY,
 ): AsyncGenerator<string, string, void> {
@@ -38,7 +38,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
             } else throw new Error();
         }
         const frs = await Promise.all(pfrs);
-        session.chatMessages.push(RoleMessage.User.create<fdu>(frs));
+        engine.append(session, RoleMessage.User.create<fdu>(frs));
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }
