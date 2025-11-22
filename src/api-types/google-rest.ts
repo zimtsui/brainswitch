@@ -24,13 +24,11 @@ export namespace GoogleRestfulEngine {
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends GoogleEngineBase<fdm> {
 		private apiURL: URL;
-		private tokenizerURL: URL;
 
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
 
 			this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
-			this.tokenizerURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:countTokens`);
 		}
 
 		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
@@ -44,6 +42,12 @@ export namespace GoogleRestfulEngine {
 		public async monolith(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 		): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
+			const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
+			const signal = ctx.signal && signalTimeout ? AbortSignal.any([
+				ctx.signal,
+				signalTimeout,
+			]) : ctx.signal || signalTimeout;
+
 			try {
 				const systemInstruction = session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage);
 				const contents = this.convertFromChatMessages(session.chatMessages);
@@ -69,10 +73,6 @@ export namespace GoogleRestfulEngine {
 
 				ctx.logger.message?.trace(reqbody);
 
-				const signal = this.timeout && ctx.signal ? AbortSignal.any([
-					ctx.signal,
-					AbortSignal.timeout(this.timeout),
-				]) : this.timeout ? AbortSignal.timeout(this.timeout) : ctx.signal;
 				const res = await fetch(this.apiURL, {
 					method: 'POST',
 					headers: new Headers({
@@ -119,8 +119,10 @@ export namespace GoogleRestfulEngine {
 				return aiMessage;
 
 			} catch (e) {
-				if (ctx.signal?.aborted) throw new DOMException(undefined, 'AbortError');
+				if (ctx.signal?.aborted) throw e;
+				else if (signalTimeout?.aborted) {}			// 推理超时
 				else if (e instanceof TransientError) {}	// 模型抽风
+				else if (e instanceof TypeError) {}			// 网络故障
 				else throw e;
 				ctx.logger.message?.warn(e);
 				if (retry < 3) return this.monolith(ctx, session, retry+1);

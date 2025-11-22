@@ -177,11 +177,12 @@ export namespace OpenAIResponsesEngine {
 				ctx.signal,
 				signalTimeout,
 			]) : ctx.signal || signalTimeout;
-			const params = this.makeMonolithParams(session);
-			ctx.logger.message?.trace(params);
 
-			await this.throttle.requests(ctx);
 			try {
+				const params = this.makeMonolithParams(session);
+				ctx.logger.message?.trace(params);
+
+				await this.throttle.requests(ctx);
 				const res = await fetch(this.apiURL, {
 					method: 'POST',
 					headers: new Headers({
@@ -216,9 +217,10 @@ export namespace OpenAIResponsesEngine {
 
 				return aiMessage;
 			} catch (e) {
-				if (ctx.signal?.aborted) throw new DOMException(undefined, 'AbortError');
-				else if (signalTimeout?.aborted) {}	// 推理超时
+				if (ctx.signal?.aborted) throw e;
+				else if (signalTimeout?.aborted) {}			// 推理超时
 				else if (e instanceof TransientError) {}	// 模型抽风
+				else if (e instanceof TypeError) {}			// 网络故障
 				else throw e;
 				ctx.logger.message?.warn(e);
 				if (retry < 3) return await this.monolith(ctx, session, retry+1);

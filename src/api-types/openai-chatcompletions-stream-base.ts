@@ -58,12 +58,13 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			ctx.signal,
 			signalTimeout,
 		]) : ctx.signal || signalTimeout;
-		const params = this.makeStreamParams(session);
-		ctx.logger.message?.trace(params);
-
-		await this.throttle.requests(ctx);
 
 		try {
+			const params = this.makeStreamParams(session);
+			ctx.logger.message?.trace(params);
+
+			await this.throttle.requests(ctx);
+
 			const stream = await this.client.chat.completions.create(params, { signal })
 				.catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
 
@@ -127,9 +128,10 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 				...fcs,
 			]);
 		} catch (e) {
-			if (ctx.signal?.aborted) throw new DOMException(undefined, 'AbortError');
-			else if (signalTimeout?.aborted) {} // 推理超时
+			if (ctx.signal?.aborted) throw e;
+			else if (signalTimeout?.aborted) {} 		// 推理超时
 			else if (e instanceof TransientError) {}	// 模型抽风
+			else if (e instanceof TypeError) {}			// 网络故障
 			else throw e;
 			ctx.logger.message?.warn(e);
 			if (retry < 3) return this.stream(ctx, session, retry+1);
