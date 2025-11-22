@@ -60,7 +60,6 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 		ctx.logger.message?.trace(params);
 
 		await this.throttle.requests(ctx);
-		await this.throttle.inputTokens(this.tokenize(params), ctx);
 		try {
 			const res = await fetch(this.apiURL, {
 				method: 'POST',
@@ -86,7 +85,6 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 				completion.usage.completion_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
 				new TransientError('Token limit exceeded.', { cause: completion }),
 			);
-			this.throttle.outputTokens(completion.usage.completion_tokens);
 
 			const cost = this.calcCost(completion.usage);
 			ctx.logger.cost?.(cost);

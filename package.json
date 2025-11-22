@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@google/genai": "^0.10.0",
-    "@zimtsui/deque": "^0.0.10",
     "ajv": "^8.17.1",
     "openai": "^5.15.0",
     "typedoc": "^0.28.13",

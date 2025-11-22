@@ -122,10 +122,6 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 			assert(!fcs.length, new TransientError());
 	}
 
-	protected tokenize(params: OpenAI.ChatCompletionCreateParams): number {
-		return JSON.stringify(params).length;
-	}
-
 	protected calcCost(usage: OpenAI.CompletionUsage): number {
 		const cacheHitTokenCount = usage.prompt_tokens_details?.cached_tokens ?? 0;
 		const cacheMissTokenCount = usage.prompt_tokens - cacheHitTokenCount;

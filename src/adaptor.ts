@@ -24,11 +24,10 @@ export class Adaptor {
         const baseUrl = this.config.brainswitch.endpoints[endpointId]!.baseUrl;
         const model = this.config.brainswitch.endpoints[endpointId]!.model;
         const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
-        const tpm = this.config.brainswitch.endpoints[endpointId]!.tpm ?? Number.POSITIVE_INFINITY;
         if (!this.throttles.has(baseUrl))
             this.throttles.set(baseUrl, new Map<string, Throttle>());
         if (!this.throttles.get(baseUrl)!.has(model))
-            this.throttles.get(baseUrl)!.set(model, new Throttle(rpm, tpm));
+            this.throttles.get(baseUrl)!.set(model, new Throttle(rpm));
         return this.throttles.get(baseUrl)!.get(model)!;
     }
 

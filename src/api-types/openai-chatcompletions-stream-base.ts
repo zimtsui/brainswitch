@@ -62,7 +62,6 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 		ctx.logger.message?.trace(params);
 
 		await this.throttle.requests(ctx);
-		await this.throttle.inputTokens(this.tokenize(params), ctx);
 
 		try {
 			const stream = await this.client.chat.completions.create(params, { signal })
@@ -95,7 +94,6 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
 				if (chunk.usage) cost = this.calcCost(chunk.usage);
 				const newUsage = chunk.usage || usage;
-				this.throttle.outputTokens(newUsage.completion_tokens - usage.completion_tokens);
 
 				finishReason = chunk.choices[0]?.finish_reason ?? finishReason;
 				ctx.logger.inference?.trace(deltaThoughts);

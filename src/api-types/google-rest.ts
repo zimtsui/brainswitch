@@ -9,8 +9,6 @@ import { type InferenceContext } from '../inference-context.ts';
 import { TransientError } from './base.ts';
 
 
-
-
 export namespace GoogleRestfulEngine {
 	export interface Request {
 		contents: Google.Content[];
@@ -43,24 +41,6 @@ export namespace GoogleRestfulEngine {
 			return this.monolith(ctx, session);
 		}
 
-		private async tokenize(contents: Google.ContentListUnion, ctx: InferenceContext): Promise<number> {
-			const reqbody = { contents };
-			const res = await fetch(this.tokenizerURL, {
-				method: 'POST',
-				headers: new Headers({
-					'Content-Type': 'application/json',
-					'x-goog-api-key': this.apiKey,
-				}),
-				body: JSON.stringify(reqbody),
-				dispatcher: this.proxyAgent,
-				signal: ctx.signal,
-			}).catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
-			assert(res.ok, new Error(undefined, { cause: res }));
-			const response = await res.json() as Google.CountTokensResponse;
-			assert(response.totalTokens, new Error(undefined, { cause: response }));
-			return response.totalTokens;
-		}
-
 		public async monolith(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 		): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
@@ -69,7 +49,6 @@ export namespace GoogleRestfulEngine {
 				const contents = this.convertFromChatMessages(session.chatMessages);
 
 				await this.throttle.requests(ctx);
-				await this.throttle.inputTokens(await this.tokenize(contents, ctx), ctx);
 
 				const reqbody: GoogleRestfulEngine.Request = {
 					contents,
@@ -126,8 +105,6 @@ export namespace GoogleRestfulEngine {
 				const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
 				const cacheMissTokenCount = response.usageMetadata.promptTokenCount - cacheHitTokenCount;
 				const thinkingTokenCount = response.usageMetadata.thoughtsTokenCount ?? 0;
-				this.throttle.outputTokens(candidatesTokenCount);
-				this.throttle.outputTokens(thinkingTokenCount);
 				const cost =
 					this.inputPrice * cacheMissTokenCount / 1e6 +
 					this.cachedPrice * cacheHitTokenCount / 1e6 +

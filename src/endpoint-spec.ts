@@ -22,7 +22,6 @@ export namespace EndpointSpec {
         cachedPrice: Type.Optional(Type.Number()),
         customOptions: Type.Optional(Type.Record(Type.String(), Type.Any())),
         rpm: Type.Optional(Type.Number()),
-        tpm: Type.Optional(Type.Number()),
         timeout: Type.Optional(Type.Number()),
         tokenLimit: Type.Optional(Type.Number()),
     });

@@ -169,10 +169,6 @@ export namespace OpenAIResponsesEngine {
 					this.outputPrice * usage.output_tokens / 1e6;
 		}
 
-		protected tokenize(params: OpenAI.Responses.ResponseCreateParams): number {
-			return JSON.stringify(params).length;
-		}
-
 		public async monolith(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 		): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
@@ -185,7 +181,6 @@ export namespace OpenAIResponsesEngine {
 			ctx.logger.message?.trace(params);
 
 			await this.throttle.requests(ctx);
-			await this.throttle.inputTokens(this.tokenize(params), ctx);
 			try {
 				const res = await fetch(this.apiURL, {
 					method: 'POST',
@@ -215,8 +210,6 @@ export namespace OpenAIResponsesEngine {
 				const cost = this.calcCost(response.usage);
 				ctx.logger.cost?.(cost);
 				ctx.logger.message?.debug(response.usage);
-
-				this.throttle.outputTokens(response.usage.output_tokens);
 
 				const functionCalls = aiMessage.getFunctionCalls();
 				this.validateFunctionCallByToolChoice(functionCalls);
