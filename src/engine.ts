@@ -5,8 +5,12 @@ import { type InferenceContext } from './inference-context.ts';
 import { Throttle } from './throttle.ts';
 
 
-export interface Engine<in out fdu extends Function.Declaration = never> {
-    (ctx: InferenceContext, session: Session<fdu>): Promise<RoleMessage.AI<fdu>>;
+export interface Engine<in out fdu extends Function.Declaration = never, session extends unknown = Session<fdu>> {
+    stateless(ctx: InferenceContext, session: session): Promise<RoleMessage.AI<fdu>>;
+    /**
+     * @param session mutable
+     */
+    stateful(ctx: InferenceContext, session: session): Promise<RoleMessage.AI<fdu>>;
 }
 
 export namespace Engine {
@@ -19,18 +23,5 @@ export namespace Engine {
 
     export interface Options<in out fdm extends Function.Declaration.Map = {}> extends EndpointSpec, Options.Functions<fdm> {
         throttle: Throttle;
-    }
-
-    /**
-     * @param session mutable
-     */
-    export async function apply<fdm extends Function.Declaration.Map = {}>(
-        ctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
-        engine: Engine<Function.Declaration.From<fdm>>,
-    ): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
-        const response = await engine(ctx, session);
-        session.chatMessages.push(response);
-        return response;
     }
 }

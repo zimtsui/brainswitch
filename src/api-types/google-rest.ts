@@ -1,30 +1,30 @@
-import { Engine } from '../engine.ts';
+import { type Engine } from '../engine.ts';
 import { type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
-import { GoogleAIMessage, GoogleAPIBase } from './google-base.ts';
-import { ProxyAgent, fetch } from 'undici';
+import { GoogleAIMessage, GoogleEngineBase } from './google-base.ts';
+import { fetch } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { TransientError } from './base.ts';
 
 
-export interface GoogleRESTfulRequest {
-	contents: Google.Content[];
-	tools?: Google.Tool[];
-	toolConfig?: Google.ToolConfig;
-	systemInstruction?: Google.Content;
-	generationConfig?: Google.GenerationConfig;
-}
 
 
-export namespace GoogleRESTfulAPI {
-	export function makeEngine<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
-		const api = new Constructor(options);
-		return api.monolith.bind(api);
+export namespace GoogleRestfulEngine {
+	export interface Request {
+		contents: Google.Content[];
+		tools?: Google.Tool[];
+		toolConfig?: Google.ToolConfig;
+		systemInstruction?: Google.Content;
+		generationConfig?: Google.GenerationConfig;
 	}
 
-	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends GoogleAPIBase<fdm> {
+	export function create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+		return new Constructor(options);
+	}
+
+	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends GoogleEngineBase<fdm> {
 		private apiURL: URL;
 		private tokenizerURL: URL;
 
@@ -35,6 +35,13 @@ export namespace GoogleRESTfulAPI {
 			this.tokenizerURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:countTokens`);
 		}
 
+		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
+			return this.monolith(ctx, session);
+		}
+
+		public override stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
+			return this.monolith(ctx, session);
+		}
 
 		private async tokenize(contents: Google.ContentListUnion, ctx: InferenceContext): Promise<number> {
 			const reqbody = { contents };
@@ -64,7 +71,7 @@ export namespace GoogleRESTfulAPI {
 				await this.throttle.requests(ctx);
 				await this.throttle.inputTokens(await this.tokenize(contents, ctx), ctx);
 
-				const reqbody: GoogleRESTfulRequest = {
+				const reqbody: GoogleRestfulEngine.Request = {
 					contents,
 					tools: Object.keys(this.functionDeclarationMap).length ? [{
 						functionDeclarations: Object.entries(this.functionDeclarationMap).map(

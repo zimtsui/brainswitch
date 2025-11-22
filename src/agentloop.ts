@@ -1,7 +1,7 @@
 import { type InferenceContext } from './inference-context.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Function } from './function.ts';
-import { Engine } from './engine.ts';
+import { type Engine } from './engine.ts';
 import assert from 'node:assert';
 
 
@@ -17,7 +17,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 ): AsyncGenerator<string, string, void> {
     type fdu = Function.Declaration.From<fdm>;
     for (let i = 0; i < limit; i++) {
-        const response = await Engine.apply(ctx, session, engine);
+        const response = await engine.stateful(ctx, session);
         const fcs = response.getFunctionCalls();
         if (!fcs.length) return response.getOnlyText();
         const pfrs: Promise<Function.Response.Distributive<fdu>>[] = [];

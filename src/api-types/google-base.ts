@@ -1,14 +1,14 @@
-import { Engine } from '../engine.ts';
+import { type Engine } from '../engine.ts';
 import { RoleMessage, type ChatMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
-import { APIBase, TransientError } from './base.ts';
+import { EngineBase, TransientError } from './base.ts';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
 
-export abstract class GoogleAPIBase<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
+export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
 	protected constructor(options: Engine.Options<fdm>) {
 		super(options);
 	}

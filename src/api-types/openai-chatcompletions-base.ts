@@ -1,16 +1,16 @@
-import { Engine } from '../engine.ts';
+import { type Engine } from '../engine.ts';
 import { RoleMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { APIBase, TransientError } from './base.ts';
+import { EngineBase, TransientError } from './base.ts';
 import { Ajv } from 'ajv';
 
 
 const ajv = new Ajv();
 
 
-export abstract class OpenAIChatCompletionsAPIBase<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
+export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
 	public constructor(options: Engine.Options<fdm>) {
 		super(options);
 	}

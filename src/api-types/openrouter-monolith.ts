@@ -1,8 +1,9 @@
-import { Engine } from '../engine.ts';
+import { type Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
-import { type Session } from '../session.ts';
-import { OpenAIChatCompletionsMonolithAPIBase } from './openai-chatcompletions-monolith-base.ts';
+import { type Session, type RoleMessage } from '../session.ts';
+import { OpenAIChatCompletionsMonolithEngineBase } from './openai-chatcompletions-monolith-base.ts';
+import { type InferenceContext } from '../inference-context.ts';
 
 const EXCHANGE_RATE_USD_CNY = 8;
 
@@ -15,13 +16,16 @@ export interface OpenRouterMonolithParams extends OpenAI.ChatCompletionCreatePar
 	};
 }
 
-export namespace OpenRouterMonolithAPI {
-	export function makeEngine<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
-		const api = new Constructor(options);
-		return api.monolith.bind(api);
+export namespace OpenRouterMonolithEngine {
+	export function create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+		return new Constructor<fdm>(options);
 	}
 
-	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithAPIBase<fdm> {
+	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithEngineBase<fdm> {
+		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+			return this.monolith(ctx, session);
+		}
+
 		protected override calcCost(usage: OpenAI.CompletionUsage): number {
 			return (usage as OpenRouterUsage).cost * EXCHANGE_RATE_USD_CNY;
 		}

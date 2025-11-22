@@ -1,13 +1,13 @@
 import { Config } from '#config';
 import { Function } from './function.ts';
-import { Engine } from './engine.ts';
+import { type Engine } from './engine.ts';
 import assert from 'node:assert';
-import { OpenAIChatCompletionsAPI } from './api-types/openai-chatcompletions.ts';
-import { GoogleRESTfulAPI } from './api-types/google-rest.ts';
-import { OpenRouterMonolithAPI } from './api-types/openrouter-monolith.ts';
-import { OpenRouterStreamAPI } from './api-types/openrouter-stream.ts';
-import { QwenAPI } from './api-types/qwen.ts';
-import { OpenAIResponsesAPI } from './api-types/openai-responses.ts';
+import { OpenAIChatCompletionsEngine } from './api-types/openai-chatcompletions.ts';
+import { GoogleRestfulEngine } from './api-types/google-rest.ts';
+import { OpenRouterMonolithEngine } from './api-types/openrouter-monolith.ts';
+import { OpenRouterStreamEngine } from './api-types/openrouter-stream.ts';
+import { AliyunStreamEngine } from './api-types/aliyun-stream.ts';
+import { OpenAIResponsesEngine } from './api-types/openai-responses.ts';
 import { Throttle } from './throttle.ts';
 
 
@@ -47,17 +47,17 @@ export class Adaptor {
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')
-            return OpenAIResponsesAPI.makeEngine<fdm>(options);
+            return OpenAIResponsesEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openai-chatcompletions')
-            return OpenAIChatCompletionsAPI.makeEngine<fdm>(options);
+            return OpenAIChatCompletionsEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'google')
-            return GoogleRESTfulAPI.makeEngine<fdm>(options);
-        else if (endpointSpec.apiType === 'qwen')
-            return QwenAPI.makeEngine<fdm>(options);
+            return GoogleRestfulEngine.create<fdm>(options);
+        else if (endpointSpec.apiType === 'aliyun-stream')
+            return AliyunStreamEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openrouter-monolith')
-            return OpenRouterMonolithAPI.makeEngine<fdm>(options);
+            return OpenRouterMonolithEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openrouter-stream')
-            return OpenRouterStreamAPI.makeEngine<fdm>(options);
+            return OpenRouterStreamEngine.create<fdm>(options);
         else throw new Error();
     }
 }

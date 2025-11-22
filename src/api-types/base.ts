@@ -1,10 +1,13 @@
 import { Function } from '../function.ts';
-import { Engine } from '../engine.ts';
+import { type Engine } from '../engine.ts';
 import { Throttle } from '../throttle.ts';
 import { ProxyAgent } from 'undici';
+import { type InferenceContext } from '../inference-context.ts';
+import { type Session, type RoleMessage } from '../session.ts';
 
-
-export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> {
+export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {}>
+	implements Engine<Function.Declaration.From<fdm>>
+{
 	protected baseUrl: string;
 	protected apiKey: string;
 	protected model: string;
@@ -19,6 +22,13 @@ export abstract class APIBase<in out fdm extends Function.Declaration.Map = {}> 
 	protected tokenLimit?: number;
 
 	protected proxyAgent?: ProxyAgent;
+
+	public abstract stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>>;
+	public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+		const response = await this.stateless(ctx, session);
+        session.chatMessages.push(response);
+        return response;
+	}
 
 	public constructor(options: Engine.Options<fdm>) {
 		this.baseUrl = options.baseUrl;

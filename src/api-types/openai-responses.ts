@@ -1,7 +1,7 @@
-import { APIBase } from './base.ts';
+import { EngineBase } from './base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
-import { Engine } from '../engine.ts';
+import { type Engine } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
@@ -12,18 +12,21 @@ import Ajv from 'ajv';
 const ajv = new Ajv();
 
 
-export namespace OpenAIResponsesAPI {
-	export function makeEngine<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
-		const api = new OpenAIResponsesAPI.Constructor<fdm>(options);
-		return api.monolith.bind(api);
+export namespace OpenAIResponsesEngine {
+	export function create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+		return new Constructor<fdm>(options);
 	}
 
-	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends APIBase<fdm> {
+	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
 		private apiURL: URL;
 
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
 			this.apiURL = new URL(`${this.baseUrl}/responses`);
+		}
+
+		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+			return this.monolith(ctx, session);
 		}
 
 		protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseFunctionToolCall {

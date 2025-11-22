@@ -2,13 +2,13 @@ import { RoleMessage, type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { OpenAIChatCompletionsAPIBase } from './openai-chatcompletions-base.ts';
+import { OpenAIChatCompletionsEngineBase } from './openai-chatcompletions-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import { TransientError } from './base.ts';
-import { Engine } from '../engine.ts';
+import { type Engine } from '../engine.ts';
 
 
-export abstract class OpenAIChatCompletionsStreamAPIBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsAPIBase<fdm> {
+export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsEngineBase<fdm> {
 	private client: OpenAI;
 
 	public constructor(options: Engine.Options<fdm>) {
