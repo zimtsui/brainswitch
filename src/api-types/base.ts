@@ -11,9 +11,10 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 	protected baseUrl: string;
 	protected apiKey: string;
 	protected model: string;
-	protected inputPrice: number;
-	protected outputPrice: number;
-	protected cachedPrice: number;
+	public name: string;
+	public inputPrice: number;
+	public outputPrice: number;
+	public cachedPrice: number;
 	protected functionDeclarationMap: fdm;
 	protected toolChoice: Function.ToolChoice<fdm>;
 	protected customOptions?: Record<string, unknown>;
@@ -40,6 +41,7 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 		this.baseUrl = options.baseUrl;
 		this.apiKey = options.apiKey;
 		this.model = options.model;
+		this.name = options.name;
 		this.inputPrice = options.inputPrice ?? 0;
 		this.outputPrice = options.outputPrice ?? 0;
 		this.cachedPrice = options.cachedPrice ?? this.inputPrice;
