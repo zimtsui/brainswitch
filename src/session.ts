@@ -122,6 +122,7 @@ export namespace RoleMessage {
         export type Snapshot<fdu extends Function.Declaration = never> = Part.Snapshot<fdu>[];
         export type Part<fdu extends Function.Declaration = never> = RoleMessage.Part.Text | Function.Call.Distributive<fdu>;
         export namespace Part {
+            export import Text = RoleMessage.Part.Text;
             export function restore<fdu extends Function.Declaration>(snapshot: Part.Snapshot<fdu>): Part<fdu> {
                 if (snapshot.type === 'RoleMessage.Part.Text')
                     return RoleMessage.Part.Text.restore(snapshot.value);
@@ -186,6 +187,7 @@ export namespace RoleMessage {
         export type Snapshot<fdu extends Function.Declaration = never> = Part.Snapshot<fdu>[];
         export type Part<fdu extends Function.Declaration = never> = RoleMessage.Part.Text | Function.Response.Distributive<fdu>;
         export namespace Part {
+            export import Text = RoleMessage.Part.Text;
             export function restore<fdu extends Function.Declaration>(snapshot: Part.Snapshot<fdu>): Part<fdu> {
                 if (snapshot.type === 'RoleMessage.Part.Text')
                     return RoleMessage.Part.Text.restore(snapshot.value);
@@ -234,7 +236,10 @@ export namespace RoleMessage {
             }
         }
         export type Snapshot = RoleMessage.Part.Text.Snapshot[];
-        export type Part = RoleMessage.Part.Text;
+        export type Part = Part.Text;
+        export namespace Part {
+            export import Text = RoleMessage.Part.Text;
+        }
         export function capture(message: Developer): Snapshot {
             return message.parts.map(RoleMessage.Part.Text.capture);
         }
