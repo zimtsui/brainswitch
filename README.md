@@ -55,7 +55,6 @@ export type Config = {
             cachedPrice?: number;   // 每百万缓存命中 Token 人民币成本
             customOptions?: Record<string, unknown>; // 直通服务商的自定义参数
             rpm?: number;           // 每分钟请求次数上限
-            tpm?: number;           // 每分钟 Token 上限
             timeout?: number;       // 单次请求超时（毫秒）
             tokenLimit?: number;    // 单次请求 Token 上限
         }>;
