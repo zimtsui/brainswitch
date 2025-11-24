@@ -73,15 +73,15 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			let finishReason: OpenAI.ChatCompletionChunk.Choice['finish_reason'] = null;
 
 			const toolCalls: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall[] = [];
-			let thoughts = '', text = '', cost = 0, thinking = true;
+			let thoughts = '', content = '', cost = 0, thinking = true;
 			ctx.logger.inference?.trace('<think>\n');
 
 			for await (chunk of stream) {
 				const deltaThoughts = chunk.choices[0] ? this.getDeltaThoughts(chunk.choices[0].delta) : '';
 				thoughts += deltaThoughts;
 
-				const deltaText = chunk.choices[0]?.delta.content ?? '';
-				text += deltaText;
+				const deltaContent = chunk.choices[0]?.delta.content ?? '';
+				content += deltaContent;
 
 				const deltaToolCalls = chunk.choices[0]?.delta.tool_calls ?? [];
 				for (const deltaToolCall of deltaToolCalls) {
@@ -98,11 +98,11 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
 				finishReason = chunk.choices[0]?.finish_reason ?? finishReason;
 				ctx.logger.inference?.trace(deltaThoughts);
-				if (thinking && (deltaText || deltaToolCalls.length)) {
+				if (thinking && (deltaContent || deltaToolCalls.length)) {
 					thinking = false;
 					ctx.logger.inference?.trace('\n</think>\n');
 				}
-				ctx.logger.inference?.debug(deltaText);
+				ctx.logger.inference?.debug(deltaContent);
 
 				usage = newUsage;
 			}
@@ -114,7 +114,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			assert(usage);
 			assert(
 				usage.completion_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
-				new TransientError('Token limit exceeded.', { cause: text }),
+				new TransientError('Token limit exceeded.', { cause: content }),
 			);
 			if (toolCalls.length) ctx.logger.message?.debug(toolCalls);
 			ctx.logger.message?.debug(usage);
@@ -123,10 +123,12 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			const fcs = toolCalls.map(apifc => this.convertToFunctionCallFromDelta(apifc));
 			this.validateFunctionCallByToolChoice(fcs);
 
-			return RoleMessage.Ai.create([
-				RoleMessage.Part.Text.create(this.extractContent(text)),
-				...fcs,
-			]);
+			const text = this.extractContent(content);
+			return RoleMessage.Ai.create(
+				text
+					? [RoleMessage.Part.Text.create(text), ...fcs]
+					: fcs,
+			);
 		} catch (e) {
 			if (ctx.signal?.aborted) throw e;
 			else if (signalTimeout?.aborted) {} 		// 推理超时
