@@ -12,6 +12,10 @@ export interface Engine<in out fdu extends Function.Declaration = never, session
      */
     stateful(ctx: InferenceContext, session: session): Promise<RoleMessage.Ai<fdu>>;
     appendUserMessage(session: session, message: RoleMessage.User<fdu>): session;
+    /**
+     * @param session mutable
+     */
+    pushUserMessage(session: session, message: RoleMessage.User<fdu>): session;
     name: string;
 }
 

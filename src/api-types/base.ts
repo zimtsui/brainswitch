@@ -36,6 +36,10 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 			chatMessages: [...session.chatMessages, message],
 		};
 	}
+	public pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
+		session.chatMessages.push(message);
+		return session;
+	}
 
 	public constructor(options: Engine.Options<fdm>) {
 		this.baseUrl = options.baseUrl;
