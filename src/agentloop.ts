@@ -8,11 +8,14 @@ import assert from 'node:assert';
 /**
  * @param session mutable
  */
-export async function *agentloop<fdm extends Function.Declaration.Map, session extends unknown = Session<Function.Declaration.From<fdm>>>(
+export async function *agentloop<
+    fdm extends Function.Declaration.Map,
+    session extends unknown = Session<Function.Declaration.From<fdm>>
+>(
     ctx: InferenceContext,
     session: session,
     engine: Engine<Function.Declaration.From<fdm>, session>,
-    functionMap: Function.Map<fdm>,
+    fnm: Function.Map<fdm>,
     limit = Number.POSITIVE_INFINITY,
 ): AsyncGenerator<string, string, void> {
     type fdu = Function.Declaration.From<fdm>;
@@ -26,13 +29,13 @@ export async function *agentloop<fdm extends Function.Declaration.Map, session e
                 yield part.text;
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.Distributive<fdu>;
-                const f = functionMap[fc.name];
+                const f = fnm[fc.name];
                 assert(f);
                 pfrs.push((async () => {
                     return Function.Response.create<fdu>({
                         id: fc.id,
                         name: fc.name,
-                        text: await f(fc.args),
+                        text: await f.call(fnm, fc.args),
                     } as Function.Response.create.Options<fdu>);
                 })());
             } else throw new Error();
