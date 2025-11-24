@@ -234,7 +234,7 @@ export namespace RoleMessage {
             }
         }
         export type Snapshot = RoleMessage.Part.Text.Snapshot[];
-        export type Part = RoleMessage.Part.Text.Constructor;
+        export type Part = RoleMessage.Part.Text;
         export function capture(message: Developer): Snapshot {
             return message.parts.map(RoleMessage.Part.Text.capture);
         }
