@@ -62,25 +62,16 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 			content: developerMessage.getOnlyText(),
 		};
 	}
-	// protected convertFromUserMessage(
-	// 	userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
-	// ): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
-	// 	const textParts = userMessage.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
-	// 	const frs = userMessage.getFunctionResponses();
-	// 	if (textParts.length && !frs.length)
-	// 		return [{ role: 'user', content: textParts.map(part => ({ type: 'text', text: part.text })) }];
-	// 	else if (!textParts.length && frs.length)
-	// 		return frs.map(fr => this.convertFromFunctionResponse(fr));
-	// 	else throw new Error();
-	// }
 	protected convertFromUserMessage(
 		userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
-	): (OpenAI.ChatCompletionUserMessageParam | OpenAI.ChatCompletionToolMessageParam)[] {
-		return userMessage.parts.map(
-			part => part instanceof RoleMessage.Part.Text.Constructor
-				? { role: 'user', content: part.text }
-				: this.convertFromFunctionResponse(part),
-		);
+	): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
+		const textParts = userMessage.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
+		const frs = userMessage.getFunctionResponses();
+		if (textParts.length && !frs.length)
+			return [{ role: 'user', content: textParts.map(part => ({ type: 'text', text: part.text })) }];
+		else if (!textParts.length && frs.length)
+			return frs.map(fr => this.convertFromFunctionResponse(fr));
+		else throw new Error();
 	}
 	protected convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
 		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
