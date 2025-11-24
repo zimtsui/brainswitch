@@ -1,6 +1,6 @@
 {
   "name": "@zimtsui/brainswitch",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "exports": "./build/exports.js",
   "imports": {
     "#config": "./build/config.js"
