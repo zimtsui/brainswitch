@@ -22,7 +22,7 @@ export namespace OpenRouterMonolithEngine {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithEngineBase<fdm> {
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 			return this.monolith(ctx, session);
 		}
 

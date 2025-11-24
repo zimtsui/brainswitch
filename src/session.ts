@@ -25,7 +25,7 @@ export namespace Session {
     }
 }
 
-export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User<fdu> | RoleMessage.AI<fdu>;
+export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User<fdu> | RoleMessage.Ai<fdu>;
 export namespace ChatMessage {
     export type Snapshot<fdu extends Function.Declaration = never> =
         | {
@@ -33,15 +33,15 @@ export namespace ChatMessage {
             value: RoleMessage.User.Snapshot<fdu>;
         }
         | {
-            type: 'RoleMessage.AI';
-            value: RoleMessage.AI.Snapshot<fdu>;
+            type: 'RoleMessage.Ai';
+            value: RoleMessage.Ai.Snapshot<fdu>;
         }
     ;
     export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): ChatMessage<fdu> {
         if (snapshot.type === 'RoleMessage.User')
             return RoleMessage.User.restore(snapshot.value);
-        else if (snapshot.type === 'RoleMessage.AI')
-            return RoleMessage.AI.restore(snapshot.value);
+        else if (snapshot.type === 'RoleMessage.Ai')
+            return RoleMessage.Ai.restore(snapshot.value);
         else throw new Error();
     }
     export function capture<fdu extends Function.Declaration>(chatMessage: ChatMessage<fdu>): Snapshot<fdu> {
@@ -49,8 +49,8 @@ export namespace ChatMessage {
             type: 'RoleMessage.User',
             value: RoleMessage.User.capture(chatMessage),
         } : {
-            type: 'RoleMessage.AI',
-            value: RoleMessage.AI.capture(chatMessage),
+            type: 'RoleMessage.Ai',
+            value: RoleMessage.Ai.capture(chatMessage),
         };
     }
 }
@@ -86,15 +86,15 @@ export namespace RoleMessage {
         }
     }
 
-    export type AI<fdu extends Function.Declaration = never> = AI.Constructor<fdu>;
-    export namespace AI {
-        export function create<fdu extends Function.Declaration = never>(parts: AI.Part<fdu>[]): AI<fdu> {
+    export type Ai<fdu extends Function.Declaration = never> = Ai.Constructor<fdu>;
+    export namespace Ai {
+        export function create<fdu extends Function.Declaration = never>(parts: Ai.Part<fdu>[]): Ai<fdu> {
             return new Constructor(parts);
         }
         export const NOMINAL = Symbol();
         export class Constructor<out fdu extends Function.Declaration = never> extends RoleMessage.Constructor {
             public declare readonly [NOMINAL]: void;
-            public constructor(public parts: AI.Part<fdu>[]) {
+            public constructor(public parts: Ai.Part<fdu>[]) {
                 super();
             }
             public getText(): string {
@@ -113,11 +113,11 @@ export namespace RoleMessage {
                 return this.parts.filter(part => part instanceof Function.Call);
             }
         }
-        export function capture<fdu extends Function.Declaration>(message: AI<fdu>): Snapshot<fdu> {
-            return message.parts.map(AI.Part.capture<fdu>);
+        export function capture<fdu extends Function.Declaration>(message: Ai<fdu>): Snapshot<fdu> {
+            return message.parts.map(Ai.Part.capture<fdu>);
         }
-        export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): AI<fdu> {
-            return new Constructor(snapshot.map(AI.Part.restore<fdu>));
+        export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): Ai<fdu> {
+            return new Constructor(snapshot.map(Ai.Part.restore<fdu>));
         }
         export type Snapshot<fdu extends Function.Declaration = never> = Part.Snapshot<fdu>[];
         export type Part<fdu extends Function.Declaration = never> = RoleMessage.Part.Text | Function.Call.Distributive<fdu>;

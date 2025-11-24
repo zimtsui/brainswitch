@@ -52,7 +52,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
 	protected abstract getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
 
-	public async stream(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+	public async stream(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,
@@ -123,7 +123,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			const fcs = toolCalls.map(apifc => this.convertToFunctionCallFromDelta(apifc));
 			this.validateFunctionCallByToolChoice(fcs);
 
-			return RoleMessage.AI.create([
+			return RoleMessage.Ai.create([
 				RoleMessage.Part.Text.create(this.extractContent(text)),
 				...fcs,
 			]);

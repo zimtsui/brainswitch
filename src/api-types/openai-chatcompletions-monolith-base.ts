@@ -17,8 +17,8 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 		this.apiURL = new URL(`${this.baseUrl}/chat/completions`);
 	}
 
-	protected convertToAIMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.AI<Function.Declaration.From<fdm>> {
-		const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
+	protected convertToAiMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>> {
+		const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
 		if (message.content)
 			parts.push(RoleMessage.Part.Text.create(this.extractContent(message.content)));
 		if (message.tool_calls)
@@ -26,7 +26,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 				assert(apifc.type === 'function');
 				return this.convertToFunctionCall(apifc);
 			}));
-		return RoleMessage.AI.create(parts);
+		return RoleMessage.Ai.create(parts);
 	}
 
 	protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
@@ -50,7 +50,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 
 	public async monolith(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-	): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+	): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,
@@ -89,7 +89,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 			const cost = this.calcCost(completion.usage);
 			ctx.logger.cost?.(cost);
 
-			const aiMessage = this.convertToAIMessage(completion.choices[0]!.message);
+			const aiMessage = this.convertToAiMessage(completion.choices[0]!.message);
 
 			const text = aiMessage.getText();
 			if (text) ctx.logger.inference?.debug(text + '\n');

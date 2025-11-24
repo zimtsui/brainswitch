@@ -24,8 +24,8 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 
 	protected proxyAgent?: ProxyAgent;
 
-	public abstract stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>>;
-	public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+	public abstract stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+	public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 		const response = await this.stateless(ctx, session);
         session.chatMessages.push(response);
         return response;

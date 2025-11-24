@@ -3,7 +3,7 @@ import { type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
-import { GoogleAIMessage, GoogleEngineBase } from './google-base.ts';
+import { GoogleAiMessage, GoogleEngineBase } from './google-base.ts';
 import { fetch } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { TransientError } from './base.ts';
@@ -31,13 +31,13 @@ export namespace GoogleRestfulEngine {
 			this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
 		}
 
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
+		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
 			return this.monolith(ctx, session);
 		}
 
 		public async monolith(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-		): Promise<GoogleAIMessage<Function.Declaration.From<fdm>>> {
+		): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
 			const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 			const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 				ctx.signal,
@@ -87,16 +87,13 @@ export namespace GoogleRestfulEngine {
 				assert(response.candidates[0].finishReason === Google.FinishReason.STOP, new TransientError('Abnormal finish reason', { cause: response }));
 
 
-				const text = response.candidates[0].content.parts.filter(part => part.text).map(part => part.text).join('');
-				if (text) ctx.logger.inference?.debug(text+'\n');
-				const apiFunctionCalls = response.candidates[0].content.parts
-					.filter(part => part.functionCall)
-					.map(part => part.functionCall);
-				if (apiFunctionCalls.length) ctx.logger.message?.debug(apiFunctionCalls);
+				for (const part of response.candidates[0].content.parts) {
+					if (part.text) ctx.logger.inference?.debug(part.text+'\n');
+					if (part.functionCall) ctx.logger.message?.debug(part.functionCall);
+				}
+				assert(response.usageMetadata?.promptTokenCount, new Error('Prompt token count absent', { cause: response }));
 				ctx.logger.message?.debug(response.usageMetadata);
 
-
-				assert(response.usageMetadata?.promptTokenCount, new Error('Prompt token count absent', { cause: response }));
 				const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
 				const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
 				const cacheMissTokenCount = response.usageMetadata.promptTokenCount - cacheHitTokenCount;
@@ -108,10 +105,8 @@ export namespace GoogleRestfulEngine {
 					this.outputPrice * thinkingTokenCount / 1e6;
 				ctx.logger.cost?.(cost);
 
-
-				const aiMessage = this.convertToAIMessage(response.candidates[0].content);
+				const aiMessage = this.convertToAiMessage(response.candidates[0].content);
 				this.validateFunctionCallByToolChoice(aiMessage);
-
 				return aiMessage;
 
 			} catch (e) {

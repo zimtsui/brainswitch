@@ -44,8 +44,8 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
 		});
 		return Google.createUserContent(parts);
 	}
-	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): Google.Content {
-		if (aiMessage instanceof GoogleAIMessage.Constructor)
+	protected convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Google.Content {
+		if (aiMessage instanceof GoogleAiMessage.Constructor)
 			return aiMessage.raw;
 		else {
 			const parts = aiMessage.parts.map(part => {
@@ -66,15 +66,15 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
 	protected convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[] {
 		return chatMessages.map(chatMessage => {
 			if (chatMessage instanceof RoleMessage.User.Constructor) return this.convertFromUserMessage(chatMessage);
-			else if (chatMessage instanceof RoleMessage.AI.Constructor) return this.convertFromAIMessage(chatMessage);
+			else if (chatMessage instanceof RoleMessage.Ai.Constructor) return this.convertFromAiMessage(chatMessage);
 			else throw new Error();
 		});
 	}
 
-	protected convertToAIMessage(content: Google.Content): GoogleAIMessage<Function.Declaration.From<fdm>> {
+	protected convertToAiMessage(content: Google.Content): GoogleAiMessage<Function.Declaration.From<fdm>> {
 		assert(content.parts);
-		return GoogleAIMessage.create(content.parts.flatMap(part => {
-			const parts: RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] = [];
+		return GoogleAiMessage.create(content.parts.flatMap(part => {
+			const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
 			if (part.text) parts.push(RoleMessage.Part.Text.create(part.text));
 			if (part.functionCall) parts.push(this.convertToFunctionCall(part.functionCall));
 			return parts;
@@ -109,7 +109,7 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
 		else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...mode] };
 	}
 
-	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): void {
+	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): void {
 		const functionCalls = aiMessage.getFunctionCalls();
 		if (this.toolChoice === Function.ToolChoice.REQUIRED)
 			assert(functionCalls.length, new TransientError('No function call'));
@@ -121,28 +121,28 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
 }
 
 
-export type GoogleAIMessage<fdu extends Function.Declaration> = GoogleAIMessage.Constructor<fdu>;
-export namespace GoogleAIMessage {
-	export function create<fdu extends Function.Declaration>(parts: RoleMessage.AI.Part<fdu>[], raw: Google.Content): GoogleAIMessage<fdu> {
+export type GoogleAiMessage<fdu extends Function.Declaration> = GoogleAiMessage.Constructor<fdu>;
+export namespace GoogleAiMessage {
+	export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[], raw: Google.Content): GoogleAiMessage<fdu> {
 		return new Constructor(parts, raw);
 	}
 	export const NOMINAL = Symbol();
-	export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.AI.Constructor<fdu> {
+	export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
 		public declare readonly [NOMINAL]: void;
-		public constructor(parts: RoleMessage.AI.Part<fdu>[], public raw: Google.Content) {
+		public constructor(parts: RoleMessage.Ai.Part<fdu>[], public raw: Google.Content) {
 			super(parts);
 		}
 	}
 	export interface Snapshot<in out fdu extends Function.Declaration = never> {
-		parts: RoleMessage.AI.Part.Snapshot<fdu>[];
+		parts: RoleMessage.Ai.Part.Snapshot<fdu>[];
 		raw: Google.Content;
 	}
-	export function restore<fdu extends Function.Declaration>(snapshot: GoogleAIMessage.Snapshot<fdu>): GoogleAIMessage<fdu> {
-		return new Constructor(RoleMessage.AI.restore<fdu>(snapshot.parts).parts, snapshot.raw);
+	export function restore<fdu extends Function.Declaration>(snapshot: GoogleAiMessage.Snapshot<fdu>): GoogleAiMessage<fdu> {
+		return new Constructor(RoleMessage.Ai.restore<fdu>(snapshot.parts).parts, snapshot.raw);
 	}
-	export function capture<fdu extends Function.Declaration>(message: GoogleAIMessage<fdu>): GoogleAIMessage.Snapshot<fdu> {
+	export function capture<fdu extends Function.Declaration>(message: GoogleAiMessage<fdu>): GoogleAiMessage.Snapshot<fdu> {
 		return {
-			parts: RoleMessage.AI.capture(message),
+			parts: RoleMessage.Ai.capture(message),
 			raw: message.raw,
 		};
 	}

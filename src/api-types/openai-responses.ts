@@ -25,7 +25,7 @@ export namespace OpenAIResponsesEngine {
 			this.apiURL = new URL(`${this.baseUrl}/responses`);
 		}
 
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 			return this.monolith(ctx, session);
 		}
 
@@ -82,8 +82,8 @@ export namespace OpenAIResponsesEngine {
 			});
 		}
 
-		protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
-			if (aiMessage instanceof OpenAIResponsesAIMessage.Constructor)
+		protected convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
+			if (aiMessage instanceof OpenAIResponsesAiMessage.Constructor)
 				return aiMessage.raw;
 			else {
 				return aiMessage.parts.map(part => {
@@ -102,8 +102,8 @@ export namespace OpenAIResponsesEngine {
 		protected convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
 			if (chatMessage instanceof RoleMessage.User.Constructor)
 				return this.convertFromUserMessage(chatMessage);
-			else if (chatMessage instanceof RoleMessage.AI.Constructor)
-				return this.convertFromAIMessage(chatMessage);
+			else if (chatMessage instanceof RoleMessage.Ai.Constructor)
+				return this.convertFromAiMessage(chatMessage);
 			else throw new Error();
 		}
 
@@ -136,8 +136,17 @@ export namespace OpenAIResponsesEngine {
 		}
 
 
-		protected convertToAIMessage(output: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAIMessage<Function.Declaration.From<fdm>> {
-			const parts = output.flatMap((item): RoleMessage.AI.Part<Function.Declaration.From<fdm>>[] => {
+		protected logApiAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void {
+			for (const item of output)
+				if (item.type === 'message') {
+					assert(item.content.every(part => part.type === 'output_text'));
+					ctx.logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
+				} else if (item.type === 'function_call')
+					ctx.logger.message?.debug(item);
+		}
+
+		protected convertToAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAiMessage<Function.Declaration.From<fdm>> {
+			const parts = output.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
 				if (item.type === 'message') {
 					assert(item.content.every(part => part.type === 'output_text'));
 					return [RoleMessage.Part.Text.create(item.content.map(part => part.text).join(''))];
@@ -147,7 +156,7 @@ export namespace OpenAIResponsesEngine {
 					return [];
 				else throw new Error();
 			});
-			return OpenAIResponsesAIMessage.create(parts, output);
+			return OpenAIResponsesAiMessage.create(parts, output);
 		}
 
 
@@ -171,7 +180,7 @@ export namespace OpenAIResponsesEngine {
 
 		public async monolith(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-		): Promise<RoleMessage.AI<Function.Declaration.From<fdm>>> {
+		): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 			const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 			const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 				ctx.signal,
@@ -196,13 +205,9 @@ export namespace OpenAIResponsesEngine {
 				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as OpenAI.Responses.Response;
 				ctx.logger.message?.trace(response);
-				const aiMessage = this.convertToAIMessage(response.output);
 
+				this.logApiAiMessage(ctx, response.output);
 
-				const text = aiMessage.getText();
-				if (text) ctx.logger.inference?.debug(text + '\n');
-				const apifcs = response.output.filter(item => item.type === 'function_call');
-				for (const apifc of apifcs) ctx.logger.message?.debug(apifc);
 				assert(response.usage);
 				assert(
 					response.usage.output_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
@@ -212,8 +217,8 @@ export namespace OpenAIResponsesEngine {
 				ctx.logger.cost?.(cost);
 				ctx.logger.message?.debug(response.usage);
 
-				const functionCalls = aiMessage.getFunctionCalls();
-				this.validateFunctionCallByToolChoice(functionCalls);
+				const aiMessage = this.convertToAiMessage(response.output);
+				this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
 
 				return aiMessage;
 			} catch (e) {
@@ -232,31 +237,31 @@ export namespace OpenAIResponsesEngine {
 }
 
 
-export type OpenAIResponsesAIMessage<fdu extends Function.Declaration> = OpenAIResponsesAIMessage.Constructor<fdu>;
-export namespace OpenAIResponsesAIMessage {
-	export function create<fdu extends Function.Declaration>(parts: RoleMessage.AI.Part<fdu>[], raw: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAIMessage<fdu> {
+export type OpenAIResponsesAiMessage<fdu extends Function.Declaration> = OpenAIResponsesAiMessage.Constructor<fdu>;
+export namespace OpenAIResponsesAiMessage {
+	export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[], raw: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesAiMessage<fdu> {
 		return new Constructor(parts, raw);
 	}
 	export const NOMINAL = Symbol();
-	export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.AI.Constructor<fdu> {
+	export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
 		public declare readonly [NOMINAL]: void;
 		public constructor(
-			parts: RoleMessage.AI.Part<fdu>[],
+			parts: RoleMessage.Ai.Part<fdu>[],
 			public raw: OpenAI.Responses.ResponseOutputItem[],
 		) {
 			super(parts);
 		}
 	}
 	export interface Snapshot<in out fdu extends Function.Declaration = never> {
-		parts: RoleMessage.AI.Part.Snapshot<fdu>[];
+		parts: RoleMessage.Ai.Part.Snapshot<fdu>[];
 		raw: OpenAI.Responses.ResponseOutputItem[];
 	}
-	export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): OpenAIResponsesAIMessage<fdu> {
-		return new Constructor(RoleMessage.AI.restore<fdu>(snapshot.parts).parts, snapshot.raw);
+	export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): OpenAIResponsesAiMessage<fdu> {
+		return new Constructor(RoleMessage.Ai.restore<fdu>(snapshot.parts).parts, snapshot.raw);
 	}
-	export function capture<fdu extends Function.Declaration>(message: OpenAIResponsesAIMessage<fdu>): Snapshot<fdu> {
+	export function capture<fdu extends Function.Declaration>(message: OpenAIResponsesAiMessage<fdu>): Snapshot<fdu> {
 		return {
-			parts: RoleMessage.AI.capture(message),
+			parts: RoleMessage.Ai.capture(message),
 			raw: message.raw,
 		};
 	}

@@ -6,11 +6,11 @@ import { Throttle } from './throttle.ts';
 
 
 export interface Engine<in out fdu extends Function.Declaration = never, session extends unknown = Session<fdu>> {
-    stateless(ctx: InferenceContext, session: session): Promise<RoleMessage.AI<fdu>>;
+    stateless(ctx: InferenceContext, session: session): Promise<RoleMessage.Ai<fdu>>;
     /**
      * @param session mutable
      */
-    stateful(ctx: InferenceContext, session: session): Promise<RoleMessage.AI<fdu>>;
+    stateful(ctx: InferenceContext, session: session): Promise<RoleMessage.Ai<fdu>>;
     appendUserMessage(session: session, message: RoleMessage.User<fdu>): session;
     name: string;
 }

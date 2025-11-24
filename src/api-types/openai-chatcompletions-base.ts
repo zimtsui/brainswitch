@@ -71,7 +71,7 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 			return frs.map(fr => this.convertFromFunctionResponse(fr));
 		else throw new Error();
 	}
-	protected convertFromAIMessage(aiMessage: RoleMessage.AI<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
+	protected convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
 		const textParts = aiMessage.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
 		const fcParts = aiMessage.parts.filter(part => part instanceof Function.Call);
 		return {
@@ -85,8 +85,8 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 			return [this.convertFromDeveloperMessage(roleMessage)];
 		else if (roleMessage instanceof RoleMessage.User.Constructor)
 			return this.convertFromUserMessage(roleMessage);
-		else if (roleMessage instanceof RoleMessage.AI.Constructor)
-			return [this.convertFromAIMessage(roleMessage)];
+		else if (roleMessage instanceof RoleMessage.Ai.Constructor)
+			return [this.convertFromAiMessage(roleMessage)];
 		else throw new Error();
 	}
 
