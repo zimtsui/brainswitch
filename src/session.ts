@@ -61,6 +61,8 @@ export namespace RoleMessage {
     export abstract class Constructor {
         public static readonly ROLE_MESSAGE_NOMINAL = Symbol();
         private declare readonly [Constructor.ROLE_MESSAGE_NOMINAL]: void;
+        public abstract getText(): string;
+        public abstract getOnlyText(): string;
     }
     export namespace Part {
         export type Text = Text.Constructor;
@@ -97,10 +99,10 @@ export namespace RoleMessage {
             public constructor(public parts: Ai.Part<fdu>[]) {
                 super();
             }
-            public getText(): string {
+            public override getText(): string {
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor).map(part => part.text).join('');
             }
-            public getOnlyText(): string {
+            public override getOnlyText(): string {
                 assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Constructor));
                 return this.getText();
             }
@@ -163,10 +165,10 @@ export namespace RoleMessage {
             public constructor(public parts: User.Part<fdu>[]) {
                 super();
             }
-            public getText(): string {
+            public override getText(): string {
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor).map(part => part.text).join('');
             }
-            public getOnlyText(): string {
+            public override getOnlyText(): string {
                 assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Constructor));
                 return this.getText();
             }
@@ -228,10 +230,10 @@ export namespace RoleMessage {
             public constructor(public parts: Developer.Part[]) {
                 super();
             }
-            public getText(): string {
+            public override getText(): string {
                 return this.parts.map(part => part.text).join('');
             }
-            public getOnlyText(): string {
+            public override getOnlyText(): string {
                 return this.getText();
             }
         }
