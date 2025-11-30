@@ -206,7 +206,7 @@ export namespace AnthropicEngine {
 								assert(contentBlock?.type === 'text');
 								contentBlock.text += event.delta.text;
 							} else if (event.delta.type === 'thinking_delta') {
-								ctx.logger.inference?.debug(event.delta.thinking);
+								ctx.logger.inference?.trace(event.delta.thinking);
 								assert(contentBlock?.type === 'thinking');
 								contentBlock.thinking += event.delta.thinking;
 							} else if (event.delta.type === 'signature_delta') {
