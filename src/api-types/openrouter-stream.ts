@@ -32,12 +32,12 @@ export namespace OpenRouterStreamEngine {
 			return this.stream(ctx, session);
 		}
 
-		protected override calcCost(usage: OpenAI.CompletionUsage): number {
-			return (usage as OpenRouterUsage).cost * EXCHANGE_RATE_USD_CNY;
+		protected override calcCost(usage: OpenRouterUsage): number {
+			return usage.cost * EXCHANGE_RATE_USD_CNY;
 		}
 
-		protected override getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
-			return (delta as OpenRouterChatCompletionChunkChoiceDelta).reasoning ?? '';
+		protected override getDeltaThoughts(delta: OpenRouterChatCompletionChunkChoiceDelta): string {
+			return delta.reasoning ?? '';
 		}
 
 		protected override makeStreamParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {

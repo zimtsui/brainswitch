@@ -26,8 +26,8 @@ export namespace OpenRouterMonolithEngine {
 			return this.monolith(ctx, session);
 		}
 
-		protected override calcCost(usage: OpenAI.CompletionUsage): number {
-			return (usage as OpenRouterUsage).cost * EXCHANGE_RATE_USD_CNY;
+		protected override calcCost(usage: OpenRouterUsage): number {
+			return usage.cost * EXCHANGE_RATE_USD_CNY;
 		}
 
 		protected override makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
