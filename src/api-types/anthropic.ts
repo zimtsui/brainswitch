@@ -137,7 +137,7 @@ export namespace AnthropicEngine {
 
 		protected logApiAiMessage(ctx: InferenceContext, raw: Anthropic.ContentBlock[]): void {
 			for (const item of raw)
-				if (item.type === 'text') ctx.logger.inference?.debug(item.text);
+				if (item.type === 'text') ctx.logger.inference?.debug(item.text+'\n');
 				else if (item.type === 'tool_use') ctx.logger.message?.debug(item);
 		}
 
