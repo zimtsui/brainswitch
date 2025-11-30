@@ -8,7 +8,7 @@ Brainswitch 是一个为 AI 工作流设计的 LLM 推理 API 适配器，支持
 
 ## Motivation
 
-大多数 LLM 推理服务商不支持[严格函数调用](https://platform.openai.com/docs/guides/function-calling#strict-mode)，在 AI 批处理工作流中难以达到生产级的可靠性。如果仅使用 OpenAI 等支持严格函数调用的服务商，那么可选的模型型号会大幅受限。
+大多数 LLM 的聊天模板 [ChatML](https://huggingface.co/learn/llm-course/en/chapter11/2#common-template-formats) 原生不支持[严格函数调用](https://platform.openai.com/docs/guides/function-calling#strict-mode)，在批处理 AI 工作流中难以达到生产级可靠性。如果仅使用 OpenAI 等支持严格函数调用的服务商，那么可选的模型型号会大幅受限。
 
 Brainswitch 支持在一次会话中途切换模型并保持对话上下文，包括 OpenAI、Google、Anthropic 的深度思考模型的加密思考内容。有了 Brainswitch 就可以在会话的大量推理阶段使用最合适的模型生成自然语言结果，在最后的总结阶段切换成支持严格函数调用的模型进行结构化提交。
 
@@ -34,7 +34,7 @@ npm install @zimtsui/brainswitch
 - `Session`：会话状态。
 - `InferenceContext`：工作流环境，包含 [TypeLog](https://github.com/zimtsui/typelog) Logger、`AbortSignal`、用户防止并发过载的[读写锁](https://github.com/zimtsui/coroutine-locks)。
 - `Engine`：推理引擎，从一个会话状态生成下一个会话状态。
-- `Endpoint`：代表一家服务商的一个个模型的 API 端点。
+- `Endpoint`：代表一家服务商的一个模型的 API 端点。
 - `Adaptor`：Engine 工厂。
 - `RoleMessage`：三类角色消息 `Developer`、`User`、`AI`，消息由 `Text/Function.Call/Response` 片段组成。
 - `Function.Declaration.Map`：函数工具声明集合，使用 [JSON Schema](https://json-schema.org/) 描述函数参数。
@@ -144,7 +144,6 @@ export class Submission extends Error {
 }
 const fnm: Function.Map<fdm> = {
     async get_weather({ city, unit }) {
-        // 实际项目中此处调用真实 API，这里仅示例
         const data = { city, unit: unit ?? 'C', temperature: 26, sky: 'sunny' };
         return JSON.stringify(data);
     },
