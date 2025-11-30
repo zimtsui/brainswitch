@@ -22,7 +22,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 		});
 	}
 
-	protected makeStreamParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {
+	protected makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {
 		const fdentries = Object.entries(this.fdm);
 		const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
 		return {
@@ -60,7 +60,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 		]) : ctx.signal || signalTimeout;
 
 		try {
-			const params = this.makeStreamParams(session);
+			const params = this.makeParams(session);
 			ctx.logger.message?.trace(params);
 
 			await this.throttle.requests(ctx);

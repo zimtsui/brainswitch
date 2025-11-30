@@ -56,23 +56,12 @@ export namespace OpenRouterStreamEngine {
 			return delta.reasoning ?? '';
 		}
 
-		protected override makeStreamParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {
-			const fdentries = Object.entries(this.fdm);
-			const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
+		protected override makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {
 			const params: OpenRouterStreamParams = {
-				model: this.model,
-				messages: [
-					...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
-					...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
-				],
-				tools: tools.length ? tools : undefined,
-				tool_choice: tools.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
-				parallel_tool_calls: tools.length ? this.parallel : undefined,
-				stream: true,
+				...super.makeParams(session),
 				usage: {
 					include: true,
 				},
-				max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 				...this.additionalOptions,
 			};
 			return params;

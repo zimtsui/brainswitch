@@ -15,6 +15,10 @@ export interface OpenRouterMonolithParams extends OpenAI.ChatCompletionCreatePar
 	usage?: {
 		include: boolean;
 	};
+	reasoning?: {};
+}
+export interface OpenRouterChatCompletionChoice extends OpenAI.ChatCompletion.Choice {
+	reasoning?: string;
 }
 
 export namespace OpenRouterMonolithEngine {
@@ -47,23 +51,12 @@ export namespace OpenRouterMonolithEngine {
 			return usage.cost * EXCHANGE_RATE_USD_CNY;
 		}
 
-		protected override makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
-			const fdentries = Object.entries(this.fdm);
-			const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
+		protected override makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
 			const params: OpenRouterMonolithParams = {
-				model: this.model,
-				messages: [
-					...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
-					...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
-				],
-				tools: tools.length ? tools : undefined,
-				tool_choice: tools.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
-				parallel_tool_calls: tools.length ? this.parallel : undefined,
-				stream: false,
+				...super.makeParams(session),
 				usage: {
 					include: true,
 				},
-				max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 				...this.additionalOptions,
 			};
 			return params;

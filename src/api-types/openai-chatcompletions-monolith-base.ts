@@ -29,11 +29,12 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 		return RoleMessage.Ai.create(parts);
 	}
 
-	protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
+	protected makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
 		const fdentries = Object.entries(this.fdm);
 		const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
 		return {
 			model: this.model,
+			stream: false,
 			messages: [
 				...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
 				...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
@@ -55,7 +56,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 			signalTimeout,
 		]) : ctx.signal || signalTimeout;
 		try {
-			const params = this.makeMonolithParams(session);
+			const params = this.makeParams(session);
 			ctx.logger.message?.trace(params);
 
 			await this.throttle.requests(ctx);
