@@ -23,7 +23,7 @@ export namespace Engine {
     export namespace Options {
         export interface Functions<in out fdm extends Function.Declaration.Map = {}> {
             functionDeclarationMap: fdm;
-            functionCallMode?: Function.ToolChoice<fdm>;
+            toolChoice?: Function.ToolChoice<fdm>;
         }
     }
 

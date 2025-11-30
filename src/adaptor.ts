@@ -35,7 +35,7 @@ export class Adaptor {
     public makeEngine<fdm extends Function.Declaration.Map = {}>(
         endpoint: string,
         functionDeclarationMap: fdm,
-        functionCallMode?: Function.ToolChoice<fdm>,
+        toolChoice?: Function.ToolChoice<fdm>,
     ): Engine<Function.Declaration.From<fdm>> {
         assert(endpoint in this.config.brainswitch.endpoints);
         const endpointSpec = this.config.brainswitch.endpoints[endpoint]!;
@@ -43,7 +43,7 @@ export class Adaptor {
         const options: Engine.Options<fdm> = {
             ...endpointSpec,
             functionDeclarationMap,
-            functionCallMode,
+            toolChoice,
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')

@@ -117,19 +117,31 @@ export namespace OpenAIResponsesEngine {
 			};
 		}
 
+		protected convertFromToolChoice(mode: Function.ToolChoice<fdm>): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed {
+			if (mode === Function.ToolChoice.NONE) return 'none';
+			else if (mode === Function.ToolChoice.REQUIRED) return 'required';
+			else if (mode === Function.ToolChoice.AUTO) return 'auto';
+			else {
+				return {
+					type: 'allowed_tools',
+					mode: 'required',
+					tools: mode.map(name => ({ type: 'function', name })),
+				};
+			}
+		}
+
 		protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseCreateParamsNonStreaming {
+			const fdentries = Object.entries(this.functionDeclarationMap);
+			const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
 			return {
 				model: this.model,
 				include: ['reasoning.encrypted_content'],
 				store: false,
 				input: session.chatMessages.flatMap(chatMessage => this.convertFromChatMessage(chatMessage)),
 				instructions: session.developerMessage?.getOnlyText(),
-				tools: Object.keys(this.functionDeclarationMap).length
-					? Object.entries(this.functionDeclarationMap).map(
-						fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
-					) : undefined,
-				tool_choice: Object.keys(this.functionDeclarationMap).length ? 'required' : undefined,
-				parallel_tool_calls: Object.keys(this.functionDeclarationMap).length ? false : undefined,
+				tools: tools.length ? tools : undefined,
+				tool_choice: fdentries.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
+				parallel_tool_calls: fdentries.length ? false : undefined,
 				max_output_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 				...this.customOptions,
 			};
@@ -205,6 +217,10 @@ export namespace OpenAIResponsesEngine {
 				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as OpenAI.Responses.Response;
 				ctx.logger.message?.trace(response);
+				assert(
+					response.status === 'completed',
+					new TransientError('Abnormal response status', { cause: response }),
+				);
 
 				this.logApiAiMessage(ctx, response.output);
 

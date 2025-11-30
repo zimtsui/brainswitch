@@ -31,18 +31,16 @@ export namespace OpenRouterMonolithEngine {
 		}
 
 		protected override makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
+			const fdentries = Object.entries(this.functionDeclarationMap);
+			const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
 			const params: OpenRouterMonolithParams = {
 				model: this.model,
 				messages: [
 					...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
 					...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
 				],
-				tools: Object.keys(this.functionDeclarationMap).length
-					? Object.entries(this.functionDeclarationMap).map(
-						fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
-					)
-					: undefined,
-				tool_choice: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
+				tools: tools.length ? tools : undefined,
+				tool_choice: tools.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
 				stream: false,
 				usage: {
 					include: true,

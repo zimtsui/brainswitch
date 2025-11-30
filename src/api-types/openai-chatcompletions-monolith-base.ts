@@ -30,19 +30,17 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 	}
 
 	protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
+		const fdentries = Object.entries(this.functionDeclarationMap);
+		const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
 		return {
 			model: this.model,
 			messages: [
 				...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
 				...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
 			],
-			tools: Object.keys(this.functionDeclarationMap).length
-				? Object.entries(this.functionDeclarationMap).map(
-					fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
-				)
-				: undefined,
-			tool_choice: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? this.convertFromFunctionCallMode(this.toolChoice) : undefined,
-			parallel_tool_calls: Object.keys(this.functionDeclarationMap).length ? false : undefined,
+			tools: tools.length ? tools : undefined,
+			tool_choice: fdentries.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
+			parallel_tool_calls: fdentries.length ? false : undefined,
 			max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
 			...this.customOptions,
 		};

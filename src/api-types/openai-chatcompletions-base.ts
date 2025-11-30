@@ -104,7 +104,7 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 		};
 	}
 
-	protected convertFromFunctionCallMode(mode: Function.ToolChoice<fdm>): OpenAI.ChatCompletionToolChoiceOption {
+	protected convertFromToolChoice(mode: Function.ToolChoice<fdm>): OpenAI.ChatCompletionToolChoiceOption {
 		if (mode === Function.ToolChoice.NONE) return 'none';
 		else if (mode === Function.ToolChoice.REQUIRED) return 'required';
 		else if (mode === Function.ToolChoice.AUTO) return 'auto';
