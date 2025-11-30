@@ -56,7 +56,6 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 		const stockChoice = stock?.choices[0];
 		assert(stockChoice?.finish_reason);
 		assert(stockChoice.delta.content !== undefined);
-		assert(stockChoice.delta.tool_calls);
 		assert(stockChoice.delta.refusal !== undefined);
 		assert(stockChoice.logprobs);
 
@@ -71,7 +70,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 				message: {
 					role: 'assistant',
 					content: stockChoice.delta.content,
-					tool_calls: stockChoice.delta.tool_calls.map(
+					tool_calls: stockChoice.delta.tool_calls?.map(
 						apifc => {
 							assert(apifc.id !== undefined);
 							assert(apifc.function?.name !== undefined);
