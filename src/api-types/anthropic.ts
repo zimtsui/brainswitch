@@ -199,31 +199,41 @@ export namespace AnthropicEngine {
 					} else {
 						assert(response);
 						if (event.type === 'message_delta') {
+							ctx.logger.message?.trace(event);
 							response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
 							response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
 						} else if (event.type === 'message_stop') {
+							ctx.logger.message?.trace(event);
 						} else if (event.type === 'content_block_start') {
+							ctx.logger.message?.trace(event);
 							const contentBlock = event.content_block;
 							response.content.push(contentBlock);
 							if (contentBlock.type === 'tool_use') contentBlock.input = '';
 						} else if (event.type === 'content_block_delta') {
 							const contentBlock = response.content[event.index];
 							if (event.delta.type === 'text_delta'){
+								ctx.logger.inference?.debug(event.delta.text);
 								assert(contentBlock?.type === 'text');
 								contentBlock.text += event.delta.text;
 							} else if (event.delta.type === 'thinking_delta') {
+								ctx.logger.inference?.debug(event.delta.thinking);
 								assert(contentBlock?.type === 'thinking');
 								contentBlock.thinking += event.delta.thinking;
 							} else if (event.delta.type === 'signature_delta') {
 								assert(contentBlock?.type === 'thinking');
 								contentBlock.signature += event.delta.signature;
 							} else if (event.delta.type === 'input_json_delta') {
+								ctx.logger.inference?.debug(event.delta.partial_json);
 								assert(contentBlock?.type === 'tool_use');
 								assert(typeof  contentBlock.input === 'string');
 								contentBlock.input += event.delta.partial_json;
 							} else throw new Error('Unknown type of content block delta', { cause: event.delta });
 						} else if (event.type === 'content_block_stop') {
 							const contentBlock = response.content[event.index];
+							if (contentBlock?.type === 'text') ctx.logger.inference?.debug('\n');
+							else if (contentBlock?.type === 'thinking') ctx.logger.inference?.trace('\n');
+							else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
+							ctx.logger.message?.trace(event);
 							if (contentBlock?.type === 'tool_use') {
 								assert(typeof contentBlock.input === 'string');
 								contentBlock.input = JSON.parse(contentBlock.input);
