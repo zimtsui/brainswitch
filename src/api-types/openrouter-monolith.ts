@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import { type Session, type RoleMessage } from '../session.ts';
 import { OpenAIChatCompletionsMonolithEngineBase } from './openai-chatcompletions-monolith-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
+import assert from 'node:assert';
 
 const EXCHANGE_RATE_USD_CNY = 8;
 
@@ -22,6 +23,22 @@ export namespace OpenRouterMonolithEngine {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithEngineBase<fdm> {
+		public constructor(options: Engine.Options<fdm>) {
+			super(options);
+			assert(
+				options.inputPrice === undefined,
+				new Error('OpenRouter does not support `inputPrice` option')
+			);
+            assert(
+				options.outputPrice === undefined,
+				new Error('OpenRouter does not support `outputPrice` option')
+			);
+            assert(
+				options.cachePrice === undefined,
+				new Error('OpenRouter does not support `cachePrice` option')
+			);
+		}
+
 		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 			return this.monolith(ctx, session);
 		}

@@ -28,6 +28,22 @@ export namespace OpenRouterStreamEngine {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsStreamEngineBase<fdm> {
+		public constructor(options: Engine.Options<fdm>) {
+			super(options);
+			assert(
+				options.inputPrice === undefined,
+				new Error('OpenRouter does not support `inputPrice` option')
+			);
+            assert(
+				options.outputPrice === undefined,
+				new Error('OpenRouter does not support `outputPrice` option')
+			);
+            assert(
+				options.cachePrice === undefined,
+				new Error('OpenRouter does not support `cachePrice` option')
+			);
+		}
+
 		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 			return this.stream(ctx, session);
 		}
