@@ -123,9 +123,10 @@ export namespace AnthropicEngine {
 			}
 		}
 
-		protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): Anthropic.MessageCreateParamsNonStreaming {
+		protected makeParams(session: Session<Function.Declaration.From<fdm>>): Anthropic.MessageCreateParamsStreaming {
 			return {
 				model: this.model,
+				stream: true,
 				messages: session.chatMessages.map(chatMessage => this.convertFromChatMessage(chatMessage)),
 				system: session.developerMessage?.parts.map(part => ({ type: 'text', text: part.text})),
 				tools: Object.keys(this.fdm).length
@@ -185,11 +186,52 @@ export namespace AnthropicEngine {
 			]) : ctx.signal || signalTimeout;
 			try {
 
-				const params = this.makeMonolithParams(session);
+				const params = this.makeParams(session);
 				ctx.logger.message?.trace(params);
 
 				await this.throttle.requests(ctx);
-				const response = await this.anthropic.messages.create(params, { signal });
+				const stream = this.anthropic.messages.stream(params, { signal });
+
+				let response: Anthropic.Message | null = null;
+				for await (const event of stream) {
+					if (event.type === 'message_start') {
+						response = event.message;
+					} else {
+						assert(response);
+						if (event.type === 'message_delta') {
+							response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
+							response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
+						} else if (event.type === 'message_stop') {
+						} else if (event.type === 'content_block_start') {
+							const contentBlock = event.content_block;
+							response.content.push(contentBlock);
+							if (contentBlock.type === 'tool_use') contentBlock.input = '';
+						} else if (event.type === 'content_block_delta') {
+							const contentBlock = response.content[event.index];
+							if (event.delta.type === 'text_delta'){
+								assert(contentBlock?.type === 'text');
+								contentBlock.text += event.delta.text;
+							} else if (event.delta.type === 'thinking_delta') {
+								assert(contentBlock?.type === 'thinking');
+								contentBlock.thinking += event.delta.thinking;
+							} else if (event.delta.type === 'signature_delta') {
+								assert(contentBlock?.type === 'thinking');
+								contentBlock.signature += event.delta.signature;
+							} else if (event.delta.type === 'input_json_delta') {
+								assert(contentBlock?.type === 'tool_use');
+								assert(typeof  contentBlock.input === 'string');
+								contentBlock.input += event.delta.partial_json;
+							} else throw new Error('Unknown type of content block delta', { cause: event.delta });
+						} else if (event.type === 'content_block_stop') {
+							const contentBlock = response.content[event.index];
+							if (contentBlock?.type === 'tool_use') {
+								assert(typeof contentBlock.input === 'string');
+								contentBlock.input = JSON.parse(contentBlock.input);
+							}
+						} else throw new Error('Unknown stream event', { cause: event });
+					}
+				}
+				assert(response);
 				ctx.logger.message?.trace(response);
 				assert(
 					response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use',
