@@ -50,7 +50,49 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 		return this.convertToFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
 	}
 
-	protected abstract getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
+	protected abstract getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string | null;
+
+	protected convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion {
+		const stockChoice = stock?.choices[0];
+		assert(stockChoice?.finish_reason);
+		assert(stockChoice.delta.content !== undefined);
+		assert(stockChoice.delta.tool_calls);
+		assert(stockChoice.delta.refusal !== undefined);
+		assert(stockChoice.logprobs);
+
+		const completion: OpenAI.ChatCompletion = {
+			id: stock.id,
+			object: 'chat.completion',
+			created: stock.created,
+			model: stock.model,
+			choices: [{
+				index: 0,
+				finish_reason: stockChoice.finish_reason,
+				message: {
+					role: 'assistant',
+					content: stockChoice.delta.content,
+					tool_calls: stockChoice.delta.tool_calls.map(
+						apifc => {
+							assert(apifc.id !== undefined);
+							assert(apifc.function?.name !== undefined);
+							assert(apifc.function?.arguments !== undefined);
+							return {
+								id: apifc.id,
+								function: {
+									name: apifc.function.name,
+									arguments: apifc.function.arguments,
+								},
+								type: 'function',
+							};
+						},
+					),
+					refusal: stockChoice.delta.refusal,
+				},
+				logprobs: stockChoice.logprobs,
+			}]
+		};
+		return completion;
+	}
 
 	public async stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
@@ -68,67 +110,104 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			const stream = await this.client.chat.completions.create(params, { signal })
 				.catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
 
-			let chunk: OpenAI.ChatCompletionChunk | null = null;
-			let usage: OpenAI.CompletionUsage = { completion_tokens: 0, prompt_tokens: 0, total_tokens: 0 };
-			let finishReason: OpenAI.ChatCompletionChunk.Choice['finish_reason'] = null;
+			let stock: OpenAI.ChatCompletionChunk | null = null;
+			let thoughts: string | null = null, thinking = false;
 
-			const toolCalls: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall[] = [];
-			let thoughts = '', content = '', cost = 0, thinking = true;
-			ctx.logger.inference?.trace('<think>\n');
+			for await (const chunk of stream) {
+				stock ??= {
+					id: chunk.id,
+					created: chunk.created,
+					model: chunk.model,
+					choices: [],
+					object: 'chat.completion.chunk',
+				};
 
-			for await (chunk of stream) {
-				const deltaThoughts = chunk.choices[0] ? this.getDeltaThoughts(chunk.choices[0].delta) : '';
-				thoughts += deltaThoughts;
+				// choice
+				const deltaChoice = chunk.choices[0];
+				if (deltaChoice) {
+					if (!stock.choices.length)
+						stock.choices.push({
+							index: 0,
+							finish_reason: null,
+							delta: {},
+						});
 
-				const deltaContent = chunk.choices[0]?.delta.content ?? '';
-				content += deltaContent;
+					// thoughts
+					const deltaThoughts = this.getDeltaThoughts(deltaChoice.delta);
+					if (deltaThoughts) {
+						if (!thinking) {
+							thinking = true;
+							ctx.logger.inference?.trace('<think>\n');
+						}
+						ctx.logger.inference?.trace(deltaThoughts);
+						thoughts ??= '';
+						thoughts += deltaThoughts;
+					}
 
-				const deltaToolCalls = chunk.choices[0]?.delta.tool_calls ?? [];
-				for (const deltaToolCall of deltaToolCalls) {
-					toolCalls[deltaToolCall.index] ||= { index: deltaToolCall.index };
-					toolCalls[deltaToolCall.index]!.id ||= deltaToolCall.id;
-					toolCalls[deltaToolCall.index]!.function ||= {};
-					toolCalls[deltaToolCall.index]!.function!.name ||= deltaToolCall.function?.name;
-					toolCalls[deltaToolCall.index]!.function!.arguments ||= '';
-					toolCalls[deltaToolCall.index]!.function!.arguments! += deltaToolCall.function?.arguments || '';
+					// content
+					if (deltaChoice.delta.content) {
+						if (thinking) {
+							thinking = false;
+							ctx.logger.inference?.trace('\n</think>\n');
+						}
+						ctx.logger.inference?.debug(deltaChoice.delta.content);
+						stock.choices[0]!.delta.content ??= '';
+						stock.choices[0]!.delta.content! += deltaChoice.delta.content;
+					}
+
+					// function calls
+					if (deltaChoice.delta.tool_calls) {
+						if (thinking) {
+							thinking = false;
+							ctx.logger.inference?.trace('\n</think>\n');
+						}
+						stock.choices[0]!.delta.tool_calls ??= [];
+						for (const deltaToolCall of deltaChoice.delta.tool_calls) {
+							const toolCalls = stock.choices[0]!.delta.tool_calls!;
+							toolCalls[deltaToolCall.index] ??= { index: deltaToolCall.index };
+							toolCalls[deltaToolCall.index]!.id ??= deltaToolCall.id;
+							if (deltaToolCall.function) {
+								toolCalls[deltaToolCall.index]!.function ??= {};
+								toolCalls[deltaToolCall.index]!.function!.name ??= deltaToolCall.function.name;
+								if (deltaToolCall.function.arguments) {
+									toolCalls[deltaToolCall.index]!.function!.arguments ??= '';
+									toolCalls[deltaToolCall.index]!.function!.arguments! += deltaToolCall.function?.arguments || '';
+								}
+							}
+						}
+					}
+
+					// finish reason
+					stock.choices[0]!.finish_reason ??= deltaChoice.finish_reason;
 				}
 
-				if (chunk.usage) cost = this.calcCost(chunk.usage);
-				const newUsage = chunk.usage || usage;
-
-				finishReason = chunk.choices[0]?.finish_reason ?? finishReason;
-				ctx.logger.inference?.trace(deltaThoughts);
-				if (thinking && (deltaContent || deltaToolCalls.length)) {
-					thinking = false;
-					ctx.logger.inference?.trace('\n</think>\n');
-				}
-				ctx.logger.inference?.debug(deltaContent);
-
-				usage = newUsage;
+				// usage
+				stock.usage ??= chunk.usage;
 			}
-			assert(
-				finishReason && ['stop', 'tool_calls'].includes(finishReason),
-				new TransientError('Invalid finish reason', { cause: finishReason }),
-			);
-			ctx.logger.inference?.debug('\n');
-			assert(usage);
-			assert(
-				usage.completion_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
-				new TransientError('Token limit exceeded.', { cause: content }),
-			);
-			if (toolCalls.length) ctx.logger.message?.debug(toolCalls);
-			ctx.logger.message?.debug(usage);
+
+			assert(stock);
+			const completion = this.convertCompletionStockToCompletion(stock);
+
+			const choice = completion.choices[0];
+			assert(choice, new TransientError('No choices', { cause: completion }));
+
+			this.handleFinishReason(completion, choice.finish_reason);
+
+			assert(completion.usage);
+			const cost = this.calcCost(completion.usage);
 			ctx.logger.cost?.(cost);
 
-			const fcs = toolCalls.map(apifc => this.convertToFunctionCallFromDelta(apifc));
-			this.validateFunctionCallByToolChoice(fcs);
+			const aiMessage = this.convertToAiMessage(choice.message);
 
-			const text = this.extractContent(content);
-			return RoleMessage.Ai.create(
-				text
-					? [RoleMessage.Part.Text.create(text), ...fcs]
-					: fcs,
-			);
+			// logging
+			if (choice.message.content) ctx.logger.inference?.debug('\n');
+			const apifcs = choice.message.tool_calls;
+			if (apifcs?.length) ctx.logger.message?.debug(apifcs);
+			ctx.logger.message?.debug(completion.usage);
+
+			this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+
+			return aiMessage;
 		} catch (e) {
 			if (ctx.signal?.aborted) throw e;
 			else if (signalTimeout?.aborted) {} 		// 推理超时

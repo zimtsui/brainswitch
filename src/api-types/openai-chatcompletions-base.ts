@@ -4,6 +4,7 @@ import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import { EngineBase, TransientError } from './base.ts';
+import { type InferenceContext } from '../inference-context.ts';
 import { Ajv } from 'ajv';
 
 
@@ -16,6 +17,18 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 	public constructor(options: Engine.Options<fdm>) {
 		super(options);
 		this.parallel = options.parallelFunctionCall ?? false;
+	}
+
+	protected convertToAiMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>> {
+		const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
+		if (message.content)
+			parts.push(RoleMessage.Part.Text.create(this.extractContent(message.content)));
+		if (message.tool_calls)
+			parts.push(...message.tool_calls.map(apifc => {
+				assert(apifc.type === 'function');
+				return this.convertToFunctionCall(apifc);
+			}));
+		return RoleMessage.Ai.create(parts);
 	}
 
 	protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageToolCall {
@@ -137,5 +150,14 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 
 	protected extractContent(completionContent: string): string {
 		return completionContent;
+	}
+
+	protected handleFinishReason(completion: OpenAI.ChatCompletion, finishReason: OpenAI.ChatCompletion.Choice['finish_reason']): void {
+		if (finishReason === 'length')
+			throw new TransientError('Token limit exceeded.', { cause: completion });
+		assert(
+			['stop', 'tool_calls'].includes(finishReason),
+			new TransientError('Invalid finish reason', { cause: finishReason }),
+		);
 	}
 }

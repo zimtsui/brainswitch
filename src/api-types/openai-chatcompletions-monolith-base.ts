@@ -17,18 +17,6 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 		this.apiURL = new URL(`${this.baseUrl}/chat/completions`);
 	}
 
-	protected convertToAiMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>> {
-		const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
-		if (message.content)
-			parts.push(RoleMessage.Part.Text.create(this.extractContent(message.content)));
-		if (message.tool_calls)
-			parts.push(...message.tool_calls.map(apifc => {
-				assert(apifc.type === 'function');
-				return this.convertToFunctionCall(apifc);
-			}));
-		return RoleMessage.Ai.create(parts);
-	}
-
 	protected makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
 		const fdentries = Object.entries(this.fdm);
 		const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
@@ -42,7 +30,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 			tools: tools.length ? tools : undefined,
 			tool_choice: fdentries.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
 			parallel_tool_calls: tools.length ? this.parallel : undefined,
-			max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
+			max_completion_tokens: this.tokenLimit ?? undefined,
 			...this.additionalOptions,
 		};
 	}
@@ -73,27 +61,23 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 			assert(res.ok, new Error(undefined, { cause: res }));
 			const completion = await res.json() as OpenAI.ChatCompletion;
 			ctx.logger.message?.trace(completion);
-			assert(completion.choices[0], new TransientError('No choices', { cause: completion }));
 
-			assert(
-				completion.choices[0]!.finish_reason && ['stop', 'tool_calls'].includes(completion.choices[0]!.finish_reason),
-				new TransientError('Invalid finish reason', { cause: completion.choices[0]!.finish_reason }),
-			);
+			const choice = completion.choices[0];
+			assert(choice, new TransientError('No choices', { cause: completion }));
+
+			this.handleFinishReason(completion, choice.finish_reason);
+
 			assert(completion.usage);
-			assert(
-				completion.usage.completion_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
-				new TransientError('Token limit exceeded.', { cause: completion }),
-			);
-
 			const cost = this.calcCost(completion.usage);
 			ctx.logger.cost?.(cost);
 
-			const aiMessage = this.convertToAiMessage(completion.choices[0]!.message);
+			const aiMessage = this.convertToAiMessage(choice.message);
 
+			// logging
 			const text = aiMessage.getText();
 			if (text) ctx.logger.inference?.debug(text + '\n');
-			const apifcs = completion.choices[0]!.message.tool_calls || [];
-			if (apifcs.length) ctx.logger.message?.debug(apifcs);
+			const apifcs = choice.message.tool_calls;
+			if (apifcs?.length) ctx.logger.message?.debug(apifcs);
 			ctx.logger.message?.debug(completion.usage);
 
 			this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
