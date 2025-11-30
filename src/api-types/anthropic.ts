@@ -134,13 +134,6 @@ export namespace AnthropicEngine {
 			};
 		}
 
-
-		protected logApiAiMessage(ctx: InferenceContext, raw: Anthropic.ContentBlock[]): void {
-			for (const item of raw)
-				if (item.type === 'text') ctx.logger.inference?.debug(item.text+'\n');
-				else if (item.type === 'tool_use') ctx.logger.message?.debug(item);
-		}
-
 		protected convertToAiMessage(raw: Anthropic.ContentBlock[]): AnthropicAiMessage<Function.Declaration.From<fdm>> {
 			const parts = raw.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
 				if (item.type === 'text') {
@@ -239,7 +232,6 @@ export namespace AnthropicEngine {
 					}
 				}
 				assert(response);
-				ctx.logger.message?.trace(response);
 				if (response.stop_reason === 'max_tokens')
 					throw new TransientError('Token limit exceeded.', { cause: response });
 				assert(
@@ -247,7 +239,6 @@ export namespace AnthropicEngine {
 					new TransientError('Abnormal stop reason', { cause: response }),
 				);
 
-				this.logApiAiMessage(ctx, response.content);
 				const cost = this.calcCost(response.usage);
 				ctx.logger.cost?.(cost);
 				ctx.logger.message?.debug(response.usage);
