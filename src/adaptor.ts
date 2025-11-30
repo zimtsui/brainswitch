@@ -2,13 +2,14 @@ import { Config } from '#config';
 import { Function } from './function.ts';
 import { type Engine } from './engine.ts';
 import assert from 'node:assert';
+import { Throttle } from './throttle.ts';
 import { OpenAIChatCompletionsEngine } from './api-types/openai-chatcompletions.ts';
 import { GoogleRestfulEngine } from './api-types/google-rest.ts';
 import { OpenRouterMonolithEngine } from './api-types/openrouter-monolith.ts';
 import { OpenRouterStreamEngine } from './api-types/openrouter-stream.ts';
 import { AliyunEngine } from './api-types/aliyun.ts';
 import { OpenAIResponsesEngine } from './api-types/openai-responses.ts';
-import { Throttle } from './throttle.ts';
+import { MinimaxEngine } from './api-types/minimax.ts';
 
 
 export class Adaptor {
@@ -57,6 +58,8 @@ export class Adaptor {
             return OpenRouterMonolithEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openrouter-stream')
             return OpenRouterStreamEngine.create<fdm>(options);
+        else if (endpointSpec.apiType === 'minimax')
+            return MinimaxEngine.create<fdm>(options);
         else throw new Error();
     }
 }

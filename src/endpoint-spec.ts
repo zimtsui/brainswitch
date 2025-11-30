@@ -16,6 +16,7 @@ export namespace EndpointSpec {
             Type.Literal('aliyun'),
             Type.Literal('openrouter-monolith'),
             Type.Literal('openrouter-stream'),
+            Type.Literal('minimax'),
         ]),
         inputPrice: Type.Optional(Type.Number()),
         outputPrice: Type.Optional(Type.Number()),
