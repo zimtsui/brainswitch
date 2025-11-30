@@ -210,19 +210,19 @@ export namespace AnthropicEngine {
 							const contentBlock = response.content[event.index];
 							if (event.delta.type === 'text_delta'){
 								ctx.logger.inference?.debug(event.delta.text);
-								assert(contentBlock?.type === 'text', new Error('Mismatched content block type', { cause: event }));
+								assert(contentBlock?.type === 'text', new Error('Mismatched content block type', { cause: contentBlock }));
 								contentBlock.text += event.delta.text;
 							} else if (event.delta.type === 'thinking_delta') {
 								ctx.logger.inference?.debug(event.delta.thinking);
-								assert(contentBlock?.type === 'thinking', new Error('Mismatched content block type', { cause: event }));
+								assert(contentBlock?.type === 'thinking', new Error('Mismatched content block type', { cause: contentBlock }));
 								contentBlock.thinking += event.delta.thinking;
 							} else if (event.delta.type === 'signature_delta') {
-								assert(contentBlock?.type === 'thinking', new Error('Mismatched content block type', { cause: event }));
+								assert(contentBlock?.type === 'thinking', new Error('Mismatched content block type', { cause: contentBlock }));
 								contentBlock.signature += event.delta.signature;
 							} else if (event.delta.type === 'input_json_delta') {
 								ctx.logger.inference?.debug(event.delta.partial_json);
-								assert(contentBlock?.type === 'tool_use', new Error('Mismatched content block type', { cause: event }));
-								assert(typeof contentBlock.input === 'string', new Error('Incomplete tool use input is not string', { cause: event }));
+								assert(contentBlock?.type === 'tool_use', new Error('Mismatched content block type', { cause: contentBlock }));
+								assert(typeof contentBlock.input === 'string', new Error('Incomplete tool use input is not string', { cause: contentBlock }));
 								contentBlock.input += event.delta.partial_json;
 							} else throw new Error('Unknown type of content block delta', { cause: event.delta });
 						} else if (event.type === 'content_block_stop') {
@@ -232,7 +232,7 @@ export namespace AnthropicEngine {
 							else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
 							ctx.logger.message?.trace(event);
 							if (contentBlock?.type === 'tool_use') {
-								assert(typeof contentBlock.input === 'string', new Error('Incomplete tool use input is not string', { cause: event }));
+								assert(typeof contentBlock.input === 'string', new Error('Incomplete tool use input is not string', { cause: contentBlock }));
 								contentBlock.input = JSON.parse(contentBlock.input);
 							}
 						} else throw new Error('Unknown stream event', { cause: event });
