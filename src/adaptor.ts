@@ -9,7 +9,6 @@ import { OpenRouterMonolithEngine } from './api-types/openrouter-monolith.ts';
 import { OpenRouterStreamEngine } from './api-types/openrouter-stream.ts';
 import { AliyunEngine } from './api-types/aliyun.ts';
 import { OpenAIResponsesEngine } from './api-types/openai-responses.ts';
-import { MinimaxEngine } from './api-types/minimax.ts';
 import { AnthropicEngine } from './api-types/anthropic.ts';
 
 
@@ -61,8 +60,6 @@ export class Adaptor {
             return OpenRouterMonolithEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openrouter-stream')
             return OpenRouterStreamEngine.create<fdm>(options);
-        else if (endpointSpec.apiType === 'minimax')
-            return MinimaxEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'anthropic')
             return AnthropicEngine.create<fdm>(options);
         else throw new Error();
