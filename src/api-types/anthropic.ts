@@ -129,7 +129,7 @@ export namespace AnthropicEngine {
 					? Object.entries(this.fdm).map(
 						fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
 					) : undefined,
-				max_tokens: this.tokenLimit ? this.tokenLimit+1 : 32768,
+				max_tokens: this.tokenLimit ?? 64 * 1024,
 				...this.additionalOptions,
 			};
 		}
@@ -240,16 +240,14 @@ export namespace AnthropicEngine {
 				}
 				assert(response);
 				ctx.logger.message?.trace(response);
+				if (response.stop_reason === 'max_tokens')
+					throw new TransientError('Token limit exceeded.', { cause: response });
 				assert(
 					response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use',
 					new TransientError('Abnormal stop reason', { cause: response }),
 				);
 
 				this.logApiAiMessage(ctx, response.content);
-				assert(
-					response.usage.output_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
-					new TransientError('Token limit exceeded.', { cause: response }),
-				);
 				const cost = this.calcCost(response.usage);
 				ctx.logger.cost?.(cost);
 				ctx.logger.message?.debug(response.usage);
