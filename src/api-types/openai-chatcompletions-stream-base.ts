@@ -55,9 +55,6 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 	protected convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion {
 		const stockChoice = stock?.choices[0];
 		assert(stockChoice?.finish_reason);
-		assert(stockChoice.delta.content !== undefined);
-		assert(stockChoice.delta.refusal !== undefined);
-		assert(stockChoice.logprobs);
 
 		const completion: OpenAI.ChatCompletion = {
 			id: stock.id,
@@ -69,7 +66,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 				finish_reason: stockChoice.finish_reason,
 				message: {
 					role: 'assistant',
-					content: stockChoice.delta.content,
+					content: stockChoice.delta.content ?? null,
 					tool_calls: stockChoice.delta.tool_calls?.map(
 						apifc => {
 							assert(apifc.id !== undefined);
@@ -85,9 +82,9 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 							};
 						},
 					),
-					refusal: stockChoice.delta.refusal,
+					refusal: stockChoice.delta.refusal ?? null,
 				},
-				logprobs: stockChoice.logprobs,
+				logprobs: stockChoice.logprobs ?? null,
 			}]
 		};
 		return completion;
