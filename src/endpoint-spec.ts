@@ -17,6 +17,7 @@ export namespace EndpointSpec {
             Type.Literal('openrouter-monolith'),
             Type.Literal('openrouter-stream'),
             Type.Literal('minimax'),
+            Type.Literal('anthropic'),
         ]),
         inputPrice: Type.Optional(Type.Number()),
         outputPrice: Type.Optional(Type.Number()),
