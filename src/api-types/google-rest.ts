@@ -31,11 +31,7 @@ export namespace GoogleRestfulEngine {
 			this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
 		}
 
-		public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
-			return this.monolith(ctx, session);
-		}
-
-		public async monolith(
+		public async stateless(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 		): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
 			const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
@@ -62,7 +58,7 @@ export namespace GoogleRestfulEngine {
 					} : undefined,
 					systemInstruction,
 					generationConfig: this.tokenLimit || this.additionalOptions ? {
-						maxOutputTokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
+						maxOutputTokens: this.tokenLimit ?? undefined,
 						...this.additionalOptions,
 					} : undefined,
 				};
@@ -84,7 +80,12 @@ export namespace GoogleRestfulEngine {
 				const response = await res.json() as Google.GenerateContentResponse;
 
 				assert(response.candidates?.[0]?.content?.parts?.length, new TransientError('No content parts', { cause: response }));
-				assert(response.candidates[0].finishReason === Google.FinishReason.STOP, new TransientError('Abnormal finish reason', { cause: response }));
+				if (response.candidates[0].finishReason === Google.FinishReason.MAX_TOKENS)
+					throw new TransientError('Token limit exceeded.', { cause: response });
+				assert(
+					response.candidates[0].finishReason === Google.FinishReason.STOP,
+					new TransientError('Abnormal finish reason', { cause: response }),
+				);
 
 
 				for (const part of response.candidates[0].content.parts) {
@@ -116,7 +117,7 @@ export namespace GoogleRestfulEngine {
 				else if (e instanceof TypeError) {}			// 网络故障
 				else throw e;
 				ctx.logger.message?.warn(e);
-				if (retry < 3) return this.monolith(ctx, session, retry+1);
+				if (retry < 3) return this.stateless(ctx, session, retry+1);
 				else throw e;
 			}
 		}

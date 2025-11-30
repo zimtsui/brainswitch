@@ -38,7 +38,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			stream_options: {
 				include_usage: true
 			},
-			max_completion_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
+			max_completion_tokens: this.tokenLimit ?? undefined,
 			...this.additionalOptions,
 		};
 	}
