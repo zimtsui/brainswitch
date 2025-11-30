@@ -99,10 +99,10 @@ export namespace RoleMessage {
             public constructor(public parts: Ai.Part<fdu>[]) {
                 super();
             }
-            public override getText(): string {
+            public getText(): string {
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor).map(part => part.text).join('');
             }
-            public override getOnlyText(): string {
+            public getOnlyText(): string {
                 assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Constructor));
                 return this.getText();
             }
@@ -165,10 +165,10 @@ export namespace RoleMessage {
             public constructor(public parts: User.Part<fdu>[]) {
                 super();
             }
-            public override getText(): string {
+            public getText(): string {
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor).map(part => part.text).join('');
             }
-            public override getOnlyText(): string {
+            public getOnlyText(): string {
                 assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Constructor));
                 return this.getText();
             }
@@ -230,10 +230,10 @@ export namespace RoleMessage {
             public constructor(public parts: Developer.Part[]) {
                 super();
             }
-            public override getText(): string {
+            public getText(): string {
                 return this.parts.map(part => part.text).join('');
             }
-            public override getOnlyText(): string {
+            public getOnlyText(): string {
                 return this.getText();
             }
         }

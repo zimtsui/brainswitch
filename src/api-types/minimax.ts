@@ -20,10 +20,6 @@ export namespace MinimaxEngine {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithEngineBase<fdm> {
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-			return this.monolith(ctx, session);
-		}
-
 		protected override convertToAiMessage(message: MinimaxEngine.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>> {
 			return MinimaxAiMessage.create(super.convertToAiMessage(message).parts, message);
 		}

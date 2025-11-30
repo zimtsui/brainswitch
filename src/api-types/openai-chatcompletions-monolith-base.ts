@@ -47,7 +47,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 		};
 	}
 
-	public async monolith(
+	public async stateless(
 		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 	): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
@@ -106,7 +106,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
 			else if (e instanceof TypeError) {}			// 网络故障
 			else throw e;
 			ctx.logger.message?.warn(e);
-			if (retry < 3) return await this.monolith(ctx, session, retry+1);
+			if (retry < 3) return await this.stateless(ctx, session, retry+1);
 			else throw e;
 		}
 	}

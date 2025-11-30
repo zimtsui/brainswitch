@@ -19,16 +19,12 @@ export namespace OpenAIResponsesEngine {
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
 		protected apiURL: URL;
-		protected override parallel: boolean;
+		protected parallel: boolean;
 
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
 			this.apiURL = new URL(`${this.baseUrl}/responses`);
 			this.parallel = options.parallelFunctionCall ?? false;
-		}
-
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-			return this.monolith(ctx, session);
 		}
 
 		protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseFunctionToolCall {
@@ -192,7 +188,7 @@ export namespace OpenAIResponsesEngine {
 					this.outputPrice * usage.output_tokens / 1e6;
 		}
 
-		public async monolith(
+		public async stateless(
 			ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
 		): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 			const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
@@ -246,7 +242,7 @@ export namespace OpenAIResponsesEngine {
 				else if (e instanceof TypeError) {}			// 网络故障
 				else throw e;
 				ctx.logger.message?.warn(e);
-				if (retry < 3) return await this.monolith(ctx, session, retry+1);
+				if (retry < 3) return await this.stateless(ctx, session, retry+1);
 				else throw e;
 			}
 		}

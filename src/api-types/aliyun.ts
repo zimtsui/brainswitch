@@ -17,10 +17,7 @@ export namespace AliyunEngine {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsStreamEngineBase<fdm> {
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-			return this.stream(ctx, session);
-		}
-		protected override getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
+		protected getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
 			return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
 		}
 	}

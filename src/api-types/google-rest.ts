@@ -31,7 +31,7 @@ export namespace GoogleRestfulEngine {
 			this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
 		}
 
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
+		public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
 			return this.monolith(ctx, session);
 		}
 

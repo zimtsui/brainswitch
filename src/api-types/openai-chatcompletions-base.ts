@@ -11,7 +11,7 @@ const ajv = new Ajv();
 
 
 export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
-	protected override parallel: boolean;
+	protected parallel: boolean;
 
 	public constructor(options: Engine.Options<fdm>) {
 		super(options);

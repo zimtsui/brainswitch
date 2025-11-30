@@ -9,7 +9,7 @@ import Ajv from 'ajv';
 const ajv = new Ajv();
 
 export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
-	protected override parallel: boolean;
+	protected parallel: boolean;
 
 	protected constructor(options: Engine.Options<fdm>) {
 		super(options);

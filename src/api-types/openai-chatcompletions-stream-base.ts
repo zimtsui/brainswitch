@@ -52,7 +52,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
 	protected abstract getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
 
-	public async stream(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+	public async stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
 		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
 			ctx.signal,
@@ -136,7 +136,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			else if (e instanceof TypeError) {}			// 网络故障
 			else throw e;
 			ctx.logger.message?.warn(e);
-			if (retry < 3) return this.stream(ctx, session, retry+1);
+			if (retry < 3) return this.stateless(ctx, session, retry+1);
 			else throw e;
 		}
 	}

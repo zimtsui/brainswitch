@@ -43,10 +43,6 @@ export namespace OpenRouterMonolithEngine {
 			);
 		}
 
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-			return this.monolith(ctx, session);
-		}
-
 		protected override calcCost(usage: OpenRouterUsage): number {
 			return usage.cost * EXCHANGE_RATE_USD_CNY;
 		}
@@ -63,10 +59,9 @@ export namespace OpenRouterMonolithEngine {
 		}
 
 		protected override convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-			if (apifc.function.arguments)
-				return super.convertToFunctionCall(apifc);
-			else
-				return super.convertToFunctionCall({
+			return apifc.function.arguments
+				? super.convertToFunctionCall(apifc)
+				: super.convertToFunctionCall({
 					...apifc,
 					function: {
 						...apifc.function,

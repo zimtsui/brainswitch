@@ -44,15 +44,11 @@ export namespace OpenRouterStreamEngine {
 			);
 		}
 
-		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-			return this.stream(ctx, session);
-		}
-
 		protected override calcCost(usage: OpenRouterUsage): number {
 			return usage.cost * EXCHANGE_RATE_USD_CNY;
 		}
 
-		protected override getDeltaThoughts(delta: OpenRouterChatCompletionChunkChoiceDelta): string {
+		protected getDeltaThoughts(delta: OpenRouterChatCompletionChunkChoiceDelta): string {
 			return delta.reasoning ?? '';
 		}
 
