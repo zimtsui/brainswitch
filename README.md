@@ -10,15 +10,16 @@ Brainswitch 是一个为 AI 工作流设计的 LLM 推理 API 适配器，支持
 
 大多数 LLM 推理服务商不支持[严格函数调用](https://platform.openai.com/docs/guides/function-calling#strict-mode)，在 AI 批处理工作流中难以达到生产级的可靠性。如果仅使用 OpenAI 等支持严格函数调用的服务商，那么可选的模型型号会大幅受限。
 
-Brainswitch 支持在一次会话中途切换模型并保持对话上下文，包括 OpenAI、Google 的深度思考模型的加密思考内容。有了 Brainswitch 就可以在会话的大量推理阶段使用最合适的模型生成自然语言结果，在最后的总结阶段切换成支持严格函数调用的模型进行结构化提交。
+Brainswitch 支持在一次会话中途切换模型并保持对话上下文，包括 OpenAI、Google、Anthropic 的深度思考模型的加密思考内容。有了 Brainswitch 就可以在会话的大量推理阶段使用最合适的模型生成自然语言结果，在最后的总结阶段切换成支持严格函数调用的模型进行结构化提交。
 
 ## 支持服务商 API 类型
 
-- OpenAI Chat Completions
-- OpenAI Responses
-- Google
-- 百炼/火山引擎 OpenAI 兼容
-- OpenRouter
+-   OpenAI Chat Completions
+-   OpenAI Responses
+-   Google
+-   百炼/火山引擎
+-   OpenRouter
+-   Anthropic
 
 ## 安装
 
@@ -35,7 +36,7 @@ npm install @zimtsui/brainswitch
 - `Engine`：推理引擎，从一个会话状态生成下一个会话状态。
 - `Endpoint`：代表一家服务商的一个个模型的 API 端点。
 - `Adaptor`：Engine 工厂。
-- `RoleMessage`：三类角色消息 `Developer`、`User`、`AI`，消息由 `Text` 与 `Function.Call/Response` 片段组成。
+- `RoleMessage`：三类角色消息 `Developer`、`User`、`AI`，消息由 `Text/Function.Call/Response` 片段组成。
 - `Function.Declaration.Map`：函数工具声明集合，使用 [JSON Schema](https://json-schema.org/) 描述函数参数。
 
 ## 配置
@@ -48,23 +49,31 @@ export type Config = {
             apiKey: string;
             model: string;
             name: string;
-            apiType: 'openai-chatcompletions' | 'openai-responses' | 'google' | 'qwen' | 'openrouter-monolith' | 'openrouter-stream' | 'huggingface-cerebras-qwen3-thinking';
+            apiType:
+                | 'openai-chatcompletions'
+                | 'openai-responses'
+                | 'google'
+                | 'aliyun'
+                | 'openrouter-monolith'
+                | 'openrouter-stream'
+                | 'anthropic'
+            ;
             proxy?: string;
-            inputPrice?: number;    // 每百万输入 Token 人民币成本
-            outputPrice?: number;   // 每百万输出 Token 人民币成本
-            cachedPrice?: number;   // 每百万缓存命中 Token 人民币成本
-            customOptions?: Record<string, unknown>; // 直通服务商的自定义参数
-            rpm?: number;           // 每分钟请求次数上限
-            timeout?: number;       // 单次请求超时（毫秒）
-            tokenLimit?: number;    // 单次请求 Token 上限
-        }>;
+            inputPrice?: number;    // CNY per MToken
+            outputPrice?: number;   // CNY per MToken
+            cachePrice?: number;    // CNY per MToken
+            rpm?: number;           // Requests per minute
+            timeout?: number;       // Time limit in milliseconds
+            maxTokens?: number;     // Maximum number of generated tokens
+            additionalOptions?: Record<string, unknown>;
+        };
     };
 }
 ```
 
 ### 计费说明
 
-`inputPrice`/`outputPrice`/`cachedPrice` 的单位均为「人民币每百万 Token」。OpenRouter 的成本会自动按服务器返回的 USD 成本并使用固定汇率（源码中默认 8）换算为 CNY 记账。
+OpenRouter 的成本会自动按服务器返回的 USD 成本并使用固定汇率（源码中默认 8）换算为 CNY 记账。
 
 ## 快速上手
 
@@ -88,7 +97,7 @@ const config: Config = {
                 apiKey: process.env.OPENAI_API_KEY!,
                 model: 'gpt-4o-mini',
                 inputPrice: 5, outputPrice: 15, cachedPrice: 1,
-                rpm: 3000, tpm: 1_000_000, timeout: 60_000,
+                rpm: 3000, timeout: 60_000,
             },
             'o4-mini': {
                 name: 'o4 mini',
