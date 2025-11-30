@@ -23,8 +23,12 @@ export namespace AnthropicEngine {
 			apiKey: this.apiKey,
 			fetchOptions: { dispatcher: this.proxyAgent },
 		});
+
+		protected override parallel: boolean;
+
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
+			this.parallel = options.parallelFunctionCall ?? false;
 		}
 
 		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -41,7 +45,7 @@ export namespace AnthropicEngine {
 			};
 		}
 		protected convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-			const fditem = this.functionDeclarationMap[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
+			const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
 			assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
 			assert(
 				ajv.validate(fditem.paraschema, apifc.input),
@@ -124,12 +128,12 @@ export namespace AnthropicEngine {
 				model: this.model,
 				messages: session.chatMessages.map(chatMessage => this.convertFromChatMessage(chatMessage)),
 				system: session.developerMessage?.parts.map(part => ({ type: 'text', text: part.text})),
-				tools: Object.keys(this.functionDeclarationMap).length
-					? Object.entries(this.functionDeclarationMap).map(
+				tools: Object.keys(this.fdm).length
+					? Object.entries(this.fdm).map(
 						fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
 					) : undefined,
 				max_tokens: this.tokenLimit ? this.tokenLimit+1 : 32768,
-				...this.customOptions,
+				...this.additionalOptions,
 			};
 		}
 

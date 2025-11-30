@@ -23,7 +23,7 @@ export namespace GoogleRestfulEngine {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends GoogleEngineBase<fdm> {
-		private apiURL: URL;
+		protected apiURL: URL;
 
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
@@ -52,18 +52,18 @@ export namespace GoogleRestfulEngine {
 
 				const reqbody: GoogleRestfulEngine.Request = {
 					contents,
-					tools: Object.keys(this.functionDeclarationMap).length ? [{
-						functionDeclarations: Object.entries(this.functionDeclarationMap).map(
+					tools: Object.keys(this.fdm).length ? [{
+						functionDeclarations: Object.entries(this.fdm).map(
 							fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
 						),
 					}] : undefined,
-					toolConfig: Object.keys(this.functionDeclarationMap).length && this.toolChoice ? {
+					toolConfig: Object.keys(this.fdm).length && this.toolChoice ? {
 						functionCallingConfig: this.convertFromFunctionCallMode(this.toolChoice),
 					} : undefined,
 					systemInstruction,
-					generationConfig: this.tokenLimit || this.customOptions ? {
+					generationConfig: this.tokenLimit || this.additionalOptions ? {
 						maxOutputTokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
-						...this.customOptions,
+						...this.additionalOptions,
 					} : undefined,
 				};
 

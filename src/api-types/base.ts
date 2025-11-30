@@ -15,9 +15,10 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 	protected inputPrice: number;
 	protected outputPrice: number;
 	protected cachedPrice: number;
-	protected functionDeclarationMap: fdm;
+	protected fdm: fdm;
 	protected toolChoice: Function.ToolChoice<fdm>;
-	protected customOptions?: Record<string, unknown>;
+	protected abstract parallel: boolean;
+	protected additionalOptions?: Record<string, unknown>;
 	protected throttle: Throttle;
 	protected timeout?: number;
 	protected tokenLimit?: number;
@@ -48,15 +49,15 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 		this.name = options.name;
 		this.inputPrice = options.inputPrice ?? 0;
 		this.outputPrice = options.outputPrice ?? 0;
-		this.cachedPrice = options.cachedPrice ?? this.inputPrice;
-		this.functionDeclarationMap = options.functionDeclarationMap;
-		if (Object.keys(this.functionDeclarationMap).length)
+		this.cachedPrice = options.cachePrice ?? this.inputPrice;
+		this.fdm = options.functionDeclarationMap;
+		if (Object.keys(this.fdm).length)
 			this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
 		else this.toolChoice = Function.ToolChoice.NONE;
-		this.customOptions = options.customOptions;
+		this.additionalOptions = options.additionalOptions;
 		this.throttle = options.throttle;
 		this.timeout = options.timeout;
-		this.tokenLimit = options.tokenLimit;
+		this.tokenLimit = options.maxTokens;
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
 	}
 }

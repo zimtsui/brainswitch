@@ -20,10 +20,10 @@ export namespace EndpointSpec {
         ]),
         inputPrice: Type.Optional(Type.Number()),
         outputPrice: Type.Optional(Type.Number()),
-        cachedPrice: Type.Optional(Type.Number()),
-        customOptions: Type.Optional(Type.Record(Type.String(), Type.Any())),
+        cachePrice: Type.Optional(Type.Number()),
+        additionalOptions: Type.Optional(Type.Record(Type.String(), Type.Any())),
         rpm: Type.Optional(Type.Number()),
         timeout: Type.Optional(Type.Number()),
-        tokenLimit: Type.Optional(Type.Number()),
+        maxTokens: Type.Optional(Type.Number()),
     });
 }

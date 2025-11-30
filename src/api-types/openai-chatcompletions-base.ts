@@ -11,8 +11,11 @@ const ajv = new Ajv();
 
 
 export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
+	protected override parallel: boolean;
+
 	public constructor(options: Engine.Options<fdm>) {
 		super(options);
+		this.parallel = options.parallelFunctionCall ?? false;
 	}
 
 	protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageToolCall {
@@ -27,7 +30,7 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 		};
 	}
 	protected convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-		const fditem = this.functionDeclarationMap[apifc.function.name] as Function.Declaration.Item.From<fdm>;
+		const fditem = this.fdm[apifc.function.name] as Function.Declaration.Item.From<fdm>;
 		assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
 		const args = (() => {
 			try {

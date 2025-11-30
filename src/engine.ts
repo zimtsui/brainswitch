@@ -24,6 +24,7 @@ export namespace Engine {
         export interface Functions<in out fdm extends Function.Declaration.Map = {}> {
             functionDeclarationMap: fdm;
             toolChoice?: Function.ToolChoice<fdm>;
+            parallelFunctionCall?: boolean;
         }
     }
 

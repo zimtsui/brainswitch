@@ -18,11 +18,13 @@ export namespace OpenAIResponsesEngine {
 	}
 
 	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
-		private apiURL: URL;
+		protected apiURL: URL;
+		protected override parallel: boolean;
 
 		public constructor(options: Engine.Options<fdm>) {
 			super(options);
 			this.apiURL = new URL(`${this.baseUrl}/responses`);
+			this.parallel = options.parallelFunctionCall ?? false;
 		}
 
 		public override stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -39,7 +41,7 @@ export namespace OpenAIResponsesEngine {
 			};
 		}
 		protected convertToFunctionCall(apifc: OpenAI.Responses.ResponseFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-			const fditem = this.functionDeclarationMap[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
+			const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
 			assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
 			const args = (() => {
 				try {
@@ -131,7 +133,7 @@ export namespace OpenAIResponsesEngine {
 		}
 
 		protected makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseCreateParamsNonStreaming {
-			const fdentries = Object.entries(this.functionDeclarationMap);
+			const fdentries = Object.entries(this.fdm);
 			const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
 			return {
 				model: this.model,
@@ -141,9 +143,9 @@ export namespace OpenAIResponsesEngine {
 				instructions: session.developerMessage?.getOnlyText(),
 				tools: tools.length ? tools : undefined,
 				tool_choice: fdentries.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
-				parallel_tool_calls: fdentries.length ? false : undefined,
+				parallel_tool_calls: fdentries.length ? this.parallel : undefined,
 				max_output_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
-				...this.customOptions,
+				...this.additionalOptions,
 			};
 		}
 

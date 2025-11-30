@@ -9,8 +9,12 @@ import Ajv from 'ajv';
 const ajv = new Ajv();
 
 export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
+	protected override parallel: boolean;
+
 	protected constructor(options: Engine.Options<fdm>) {
 		super(options);
+		this.parallel = options.parallelFunctionCall ?? true;
+		assert(this.parallel, new Error('Google Engine supports only parallel function calls.'));
 	}
 
 	protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall {
@@ -22,7 +26,7 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
 	}
 	protected convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		assert(googlefc.name);
-		const fditem = this.functionDeclarationMap[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
+		const fditem = this.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
 		assert(fditem);
 		assert(ajv.validate(fditem.paraschema, googlefc.args), new TransientError('Invalid function call', { cause: googlefc }));
 		return Function.Call.create({

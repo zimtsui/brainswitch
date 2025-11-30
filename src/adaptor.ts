@@ -36,6 +36,7 @@ export class Adaptor {
         endpoint: string,
         functionDeclarationMap: fdm,
         toolChoice?: Function.ToolChoice<fdm>,
+        parallelFunctionCall?: boolean,
     ): Engine<Function.Declaration.From<fdm>> {
         assert(endpoint in this.config.brainswitch.endpoints);
         const endpointSpec = this.config.brainswitch.endpoints[endpoint]!;
@@ -44,6 +45,7 @@ export class Adaptor {
             ...endpointSpec,
             functionDeclarationMap,
             toolChoice,
+            parallelFunctionCall,
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')
