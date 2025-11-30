@@ -85,7 +85,8 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 					refusal: stockChoice.delta.refusal ?? null,
 				},
 				logprobs: stockChoice.logprobs ?? null,
-			}]
+			}],
+			usage: stock.usage ?? undefined,
 		};
 		return completion;
 	}
@@ -186,6 +187,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
 			const choice = completion.choices[0];
 			assert(choice, new TransientError('No choices', { cause: completion }));
+			if (choice.message.content) ctx.logger.inference?.debug('\n');
 
 			this.handleFinishReason(completion, choice.finish_reason);
 
@@ -196,7 +198,6 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			const aiMessage = this.convertToAiMessage(choice.message);
 
 			// logging
-			if (choice.message.content) ctx.logger.inference?.debug('\n');
 			const apifcs = choice.message.tool_calls;
 			if (apifcs?.length) ctx.logger.message?.debug(apifcs);
 			ctx.logger.message?.debug(completion.usage);
