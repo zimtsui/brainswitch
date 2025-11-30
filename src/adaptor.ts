@@ -6,7 +6,7 @@ import { OpenAIChatCompletionsEngine } from './api-types/openai-chatcompletions.
 import { GoogleRestfulEngine } from './api-types/google-rest.ts';
 import { OpenRouterMonolithEngine } from './api-types/openrouter-monolith.ts';
 import { OpenRouterStreamEngine } from './api-types/openrouter-stream.ts';
-import { AliyunStreamEngine } from './api-types/aliyun-stream.ts';
+import { AliyunEngine } from './api-types/aliyun.ts';
 import { OpenAIResponsesEngine } from './api-types/openai-responses.ts';
 import { Throttle } from './throttle.ts';
 
@@ -51,8 +51,8 @@ export class Adaptor {
             return OpenAIChatCompletionsEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'google')
             return GoogleRestfulEngine.create<fdm>(options);
-        else if (endpointSpec.apiType === 'aliyun-stream')
-            return AliyunStreamEngine.create<fdm>(options);
+        else if (endpointSpec.apiType === 'aliyun')
+            return AliyunEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openrouter-monolith')
             return OpenRouterMonolithEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openrouter-stream')

@@ -7,7 +7,7 @@ import { type Session, type RoleMessage } from '../session.ts';
 
 
 
-export namespace AliyunStreamEngine {
+export namespace AliyunEngine {
 	export interface ChatCompletionChunkChoiceDelta extends OpenAI.ChatCompletionChunk.Choice.Delta {
 		reasoning_content?: string;
 	}
@@ -21,7 +21,7 @@ export namespace AliyunStreamEngine {
 			return this.stream(ctx, session);
 		}
 		protected override getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
-			return (delta as AliyunStreamEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
+			return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
 		}
 	}
 }

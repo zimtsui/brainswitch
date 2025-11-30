@@ -13,7 +13,7 @@ export namespace EndpointSpec {
             Type.Literal('openai-chatcompletions'),
             Type.Literal('openai-responses'),
             Type.Literal('google'),
-            Type.Literal('aliyun-stream'),
+            Type.Literal('aliyun'),
             Type.Literal('openrouter-monolith'),
             Type.Literal('openrouter-stream'),
         ]),
