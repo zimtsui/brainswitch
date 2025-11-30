@@ -192,7 +192,7 @@ export namespace AnthropicEngine {
 				for await (const event of stream) {
 					if (event.type === 'message_start') {
 						ctx.logger.message?.trace(event);
-						response = event.message;
+						response = structuredClone(event.message);
 					} else {
 						assert(response);
 						if (event.type === 'message_delta') {
@@ -203,26 +203,26 @@ export namespace AnthropicEngine {
 							ctx.logger.message?.trace(event);
 						} else if (event.type === 'content_block_start') {
 							ctx.logger.message?.trace(event);
-							const contentBlock = event.content_block;
+							const contentBlock = structuredClone(event.content_block);
 							response.content.push(contentBlock);
 							if (contentBlock.type === 'tool_use') contentBlock.input = '';
 						} else if (event.type === 'content_block_delta') {
 							const contentBlock = response.content[event.index];
 							if (event.delta.type === 'text_delta'){
 								ctx.logger.inference?.debug(event.delta.text);
-								assert(contentBlock?.type === 'text', new Error('Mismatched content block type', { cause: contentBlock }));
+								assert(contentBlock?.type === 'text');
 								contentBlock.text += event.delta.text;
 							} else if (event.delta.type === 'thinking_delta') {
 								ctx.logger.inference?.debug(event.delta.thinking);
-								assert(contentBlock?.type === 'thinking', new Error('Mismatched content block type', { cause: contentBlock }));
+								assert(contentBlock?.type === 'thinking');
 								contentBlock.thinking += event.delta.thinking;
 							} else if (event.delta.type === 'signature_delta') {
-								assert(contentBlock?.type === 'thinking', new Error('Mismatched content block type', { cause: contentBlock }));
+								assert(contentBlock?.type === 'thinking');
 								contentBlock.signature += event.delta.signature;
 							} else if (event.delta.type === 'input_json_delta') {
 								ctx.logger.inference?.debug(event.delta.partial_json);
-								assert(contentBlock?.type === 'tool_use', new Error('Mismatched content block type', { cause: contentBlock }));
-								assert(typeof contentBlock.input === 'string', new Error('Incomplete tool use input is not string', { cause: contentBlock }));
+								assert(contentBlock?.type === 'tool_use');
+								assert(typeof contentBlock.input === 'string');
 								contentBlock.input += event.delta.partial_json;
 							} else throw new Error('Unknown type of content block delta', { cause: event.delta });
 						} else if (event.type === 'content_block_stop') {
@@ -232,7 +232,7 @@ export namespace AnthropicEngine {
 							else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
 							ctx.logger.message?.trace(event);
 							if (contentBlock?.type === 'tool_use') {
-								assert(typeof contentBlock.input === 'string', new Error('Incomplete tool use input is not string', { cause: contentBlock }));
+								assert(typeof contentBlock.input === 'string');
 								contentBlock.input = JSON.parse(contentBlock.input);
 							}
 						} else throw new Error('Unknown stream event', { cause: event });
@@ -276,7 +276,10 @@ export namespace AnthropicEngine {
 
 export type AnthropicAiMessage<fdu extends Function.Declaration> = AnthropicAiMessage.Constructor<fdu>;
 export namespace AnthropicAiMessage {
-	export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[], raw: Anthropic.ContentBlock[]): AnthropicAiMessage<fdu> {
+	export function create<fdu extends Function.Declaration>(
+		parts: RoleMessage.Ai.Part<fdu>[],
+		raw: Anthropic.ContentBlock[],
+	): AnthropicAiMessage<fdu> {
 		return new Constructor(parts, raw);
 	}
 	export const NOMINAL = Symbol();
