@@ -43,8 +43,15 @@ export namespace AnthropicEngine {
 		protected convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 			const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
 			assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
+			const args = (() => {
+				try {
+					return JSON.parse(apifc.input as string);
+				} catch (e) {
+					return new TransientError('Invalid function call', { cause: apifc });
+				}
+			})();
 			assert(
-				ajv.validate(fditem.paraschema, apifc.input),
+				ajv.validate(fditem.paraschema, args),
 				new TransientError('Invalid function call', { cause: apifc }),
 			);
 			return Function.Call.create({
@@ -231,7 +238,6 @@ export namespace AnthropicEngine {
 							ctx.logger.message?.trace(event);
 							if (contentBlock?.type === 'tool_use') {
 								assert(typeof contentBlock.input === 'string');
-								contentBlock.input = JSON.parse(contentBlock.input);
 								ctx.logger.message?.debug(contentBlock);
 							}
 						} else throw new Error('Unknown stream event', { cause: event });
