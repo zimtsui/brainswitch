@@ -57,7 +57,7 @@ export namespace AnthropicEngine {
 			return Function.Call.create({
 				id: apifc.id,
 				name: apifc.name,
-				args: apifc.input,
+				args,
 			} as Function.Call.create.Options<Function.Declaration.From<fdm>>);
 		}
 
