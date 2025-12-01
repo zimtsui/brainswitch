@@ -127,15 +127,14 @@ export namespace AnthropicEngine {
 		}
 
 		protected makeParams(session: Session<Function.Declaration.From<fdm>>): Anthropic.MessageCreateParamsStreaming {
+			const fdentries = Object.entries(this.fdm);
+			const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
 			return {
 				model: this.model,
 				stream: true,
 				messages: session.chatMessages.map(chatMessage => this.convertFromChatMessage(chatMessage)),
 				system: session.developerMessage?.parts.map(part => ({ type: 'text', text: part.text})),
-				tools: Object.keys(this.fdm).length
-					? Object.entries(this.fdm).map(
-						fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
-					) : undefined,
+				tools: tools.length ? tools : undefined,
 				max_tokens: this.tokenLimit ?? 64 * 1024,
 				...this.additionalOptions,
 			};
