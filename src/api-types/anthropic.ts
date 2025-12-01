@@ -213,7 +213,7 @@ export namespace AnthropicEngine {
 								assert(contentBlock?.type === 'thinking');
 								contentBlock.signature += event.delta.signature;
 							} else if (event.delta.type === 'input_json_delta') {
-								ctx.logger.inference?.debug(event.delta.partial_json);
+								ctx.logger.inference?.trace(event.delta.partial_json);
 								assert(contentBlock?.type === 'tool_use');
 								assert(typeof contentBlock.input === 'string');
 								contentBlock.input += event.delta.partial_json;
@@ -227,6 +227,7 @@ export namespace AnthropicEngine {
 							if (contentBlock?.type === 'tool_use') {
 								assert(typeof contentBlock.input === 'string');
 								contentBlock.input = JSON.parse(contentBlock.input);
+								ctx.logger.message?.debug(contentBlock);
 							}
 						} else throw new Error('Unknown stream event', { cause: event });
 					}
