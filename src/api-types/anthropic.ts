@@ -192,6 +192,11 @@ export namespace AnthropicEngine {
 							ctx.logger.message?.trace(event);
 							response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
 							response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
+							response.usage.input_tokens = response.usage.input_tokens;
+							response.usage.output_tokens = response.usage.output_tokens;
+							response.usage.cache_read_input_tokens = event.usage.cache_read_input_tokens ?? response.usage.cache_read_input_tokens;
+							response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
+							response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
 						} else if (event.type === 'message_stop') {
 							ctx.logger.message?.trace(event);
 						} else if (event.type === 'content_block_start') {
