@@ -10,90 +10,90 @@ import { type Engine } from '../engine.ts';
 
 
 export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsEngineBase<fdm> {
-	private apiURL: URL;
+    private apiURL: URL;
 
-	public constructor(options: Engine.Options<fdm>) {
-		super(options);
-		this.apiURL = new URL(`${this.baseUrl}/chat/completions`);
-	}
+    public constructor(options: Engine.Options<fdm>) {
+        super(options);
+        this.apiURL = new URL(`${this.baseUrl}/chat/completions`);
+    }
 
-	protected makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
-		const fdentries = Object.entries(this.fdm);
-		const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
-		return {
-			model: this.model,
-			stream: false,
-			messages: [
-				...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
-				...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
-			],
-			tools: tools.length ? tools : undefined,
-			tool_choice: fdentries.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
-			parallel_tool_calls: tools.length ? this.parallel : undefined,
-			max_completion_tokens: this.maxTokens ?? undefined,
-			...this.additionalOptions,
-		};
-	}
+    protected makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
+        const fdentries = Object.entries(this.fdm);
+        const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
+        return {
+            model: this.model,
+            stream: false,
+            messages: [
+                ...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
+                ...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
+            ],
+            tools: tools.length ? tools : undefined,
+            tool_choice: fdentries.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
+            parallel_tool_calls: tools.length ? this.parallel : undefined,
+            max_completion_tokens: this.maxTokens ?? undefined,
+            ...this.additionalOptions,
+        };
+    }
 
-	public async stateless(
-		ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
-	): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-		const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
-		const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-			ctx.signal,
-			signalTimeout,
-		]) : ctx.signal || signalTimeout;
-		try {
-			const params = this.makeParams(session);
-			ctx.logger.message?.trace(params);
+    public async stateless(
+        ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
+        const signal = ctx.signal && signalTimeout ? AbortSignal.any([
+            ctx.signal,
+            signalTimeout,
+        ]) : ctx.signal || signalTimeout;
+        try {
+            const params = this.makeParams(session);
+            ctx.logger.message?.trace(params);
 
-			await this.throttle.requests(ctx);
-			const res = await fetch(this.apiURL, {
-				method: 'POST',
-				headers: new Headers({
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${this.apiKey}`,
-				}),
-				body: JSON.stringify(params),
-				dispatcher: this.proxyAgent,
-				signal,
-			});
-			assert(res.ok, new Error(undefined, { cause: res }));
-			const completion = await res.json() as OpenAI.ChatCompletion;
-			ctx.logger.message?.trace(completion);
+            await this.throttle.requests(ctx);
+            const res = await fetch(this.apiURL, {
+                method: 'POST',
+                headers: new Headers({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`,
+                }),
+                body: JSON.stringify(params),
+                dispatcher: this.proxyAgent,
+                signal,
+            });
+            assert(res.ok, new Error(undefined, { cause: res }));
+            const completion = await res.json() as OpenAI.ChatCompletion;
+            ctx.logger.message?.trace(completion);
 
-			const choice = completion.choices[0];
-			assert(choice, new ResponseInvalid('Content missing', { cause: completion }));
+            const choice = completion.choices[0];
+            assert(choice, new ResponseInvalid('Content missing', { cause: completion }));
 
-			this.handleFinishReason(completion, choice.finish_reason);
+            this.handleFinishReason(completion, choice.finish_reason);
 
-			assert(completion.usage);
-			const cost = this.calcCost(completion.usage);
-			ctx.logger.cost?.(cost);
+            assert(completion.usage);
+            const cost = this.calcCost(completion.usage);
+            ctx.logger.cost?.(cost);
 
-			const aiMessage = this.convertToAiMessage(choice.message);
+            const aiMessage = this.convertToAiMessage(choice.message);
 
-			// logging
-			const text = aiMessage.getText();
-			if (text) ctx.logger.inference?.debug(text + '\n');
-			const apifcs = choice.message.tool_calls;
-			if (apifcs?.length) ctx.logger.message?.debug(apifcs);
-			ctx.logger.message?.debug(completion.usage);
+            // logging
+            const text = aiMessage.getText();
+            if (text) ctx.logger.inference?.debug(text + '\n');
+            const apifcs = choice.message.tool_calls;
+            if (apifcs?.length) ctx.logger.message?.debug(apifcs);
+            ctx.logger.message?.debug(completion.usage);
 
-			this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+            this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
 
-			return aiMessage;
-		} catch (e) {
-			if (e instanceof DOMException && e.name === 'AbortError')
-				if (ctx.signal?.aborted) throw new UserAbortion();       		// 用户中止
-				else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
-			else if (e instanceof ResponseInvalid) {}							// 模型抽风
-			else if (e instanceof TypeError) {}         						// 网络故障
-			else throw e;
-			ctx.logger.message?.warn(e);
-			if (retry < 3) return await this.stateless(ctx, session, retry+1);
-			else throw e;
-		}
-	}
+            return aiMessage;
+        } catch (e) {
+            if (e instanceof DOMException && e.name === 'AbortError')
+                if (ctx.signal?.aborted) throw new UserAbortion();       		// 用户中止
+                else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
+            else if (e instanceof ResponseInvalid) {}							// 模型抽风
+            else if (e instanceof TypeError) {}         						// 网络故障
+            else throw e;
+            ctx.logger.message?.warn(e);
+            if (retry < 3) return await this.stateless(ctx, session, retry+1);
+            else throw e;
+        }
+    }
 
 }

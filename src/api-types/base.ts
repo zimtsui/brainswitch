@@ -8,72 +8,72 @@ import assert from 'node:assert';
 
 
 export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {}>
-	implements Engine<Function.Declaration.From<fdm>>
+    implements Engine<Function.Declaration.From<fdm>>
 {
-	protected baseUrl: string;
-	protected apiKey: string;
-	protected model: string;
-	public name: string;
-	protected inputPrice: number;
-	protected outputPrice: number;
-	protected cachedPrice: number;
-	protected fdm: fdm;
-	protected toolChoice: Function.ToolChoice<fdm>;
-	protected abstract parallel: boolean;
-	protected additionalOptions?: Record<string, unknown>;
-	protected throttle: Throttle;
-	protected timeout?: number;
-	protected maxTokens?: number;
+    protected baseUrl: string;
+    protected apiKey: string;
+    protected model: string;
+    public name: string;
+    protected inputPrice: number;
+    protected outputPrice: number;
+    protected cachedPrice: number;
+    protected fdm: fdm;
+    protected toolChoice: Function.ToolChoice<fdm>;
+    protected abstract parallel: boolean;
+    protected additionalOptions?: Record<string, unknown>;
+    protected throttle: Throttle;
+    protected timeout?: number;
+    protected maxTokens?: number;
 
-	protected proxyAgent?: ProxyAgent;
+    protected proxyAgent?: ProxyAgent;
 
-	/**
-	 * @throws {@link UserAbortion}
-	 */
-	public abstract stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-	public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-		const response = await this.stateless(ctx, session);
-		session.chatMessages.push(response);
-		return response;
-	}
-	public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
-		return {
-			...session,
-			chatMessages: [...session.chatMessages, message],
-		};
-	}
-	public pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
-		session.chatMessages.push(message);
-		return session;
-	}
+    /**
+     * @throws {@link UserAbortion}
+     */
+    public abstract stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        const response = await this.stateless(ctx, session);
+        session.chatMessages.push(response);
+        return response;
+    }
+    public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
+        return {
+            ...session,
+            chatMessages: [...session.chatMessages, message],
+        };
+    }
+    public pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
+        session.chatMessages.push(message);
+        return session;
+    }
 
-	public constructor(options: Engine.Options<fdm>) {
-		this.baseUrl = options.baseUrl;
-		this.apiKey = options.apiKey;
-		this.model = options.model;
-		this.name = options.name;
-		this.inputPrice = options.inputPrice ?? 0;
-		this.outputPrice = options.outputPrice ?? 0;
-		this.cachedPrice = options.cachePrice ?? this.inputPrice;
-		this.fdm = options.functionDeclarationMap;
-		if (Object.keys(this.fdm).length)
-			this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
-		else this.toolChoice = Function.ToolChoice.NONE;
-		this.additionalOptions = options.additionalOptions;
-		this.throttle = options.throttle;
-		this.timeout = options.timeout;
-		this.maxTokens = options.maxTokens;
-		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
-	}
+    public constructor(options: Engine.Options<fdm>) {
+        this.baseUrl = options.baseUrl;
+        this.apiKey = options.apiKey;
+        this.model = options.model;
+        this.name = options.name;
+        this.inputPrice = options.inputPrice ?? 0;
+        this.outputPrice = options.outputPrice ?? 0;
+        this.cachedPrice = options.cachePrice ?? this.inputPrice;
+        this.fdm = options.functionDeclarationMap;
+        if (Object.keys(this.fdm).length)
+            this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+        else this.toolChoice = Function.ToolChoice.NONE;
+        this.additionalOptions = options.additionalOptions;
+        this.throttle = options.throttle;
+        this.timeout = options.timeout;
+        this.maxTokens = options.maxTokens;
+        this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
+    }
 
-	protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-		if (this.toolChoice === Function.ToolChoice.REQUIRED)
-			assert(functionCalls.length, new ResponseInvalid('Function call required but missing'));
-		else if (this.toolChoice instanceof Array) for (const fc of functionCalls)
-			assert(this.toolChoice.includes(fc.name), new ResponseInvalid('Function call not in allowed tools'));
-		else if (this.toolChoice === Function.ToolChoice.NONE)
-			assert(!functionCalls.length, new ResponseInvalid('Function call not allowed but made'));
-	}
+    protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
+        if (this.toolChoice === Function.ToolChoice.REQUIRED)
+            assert(functionCalls.length, new ResponseInvalid('Function call required but missing'));
+        else if (this.toolChoice instanceof Array) for (const fc of functionCalls)
+            assert(this.toolChoice.includes(fc.name), new ResponseInvalid('Function call not in allowed tools'));
+        else if (this.toolChoice === Function.ToolChoice.NONE)
+            assert(!functionCalls.length, new ResponseInvalid('Function call not allowed but made'));
+    }
 }
 
 export class ResponseInvalid extends Error {}

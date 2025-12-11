@@ -6,17 +6,17 @@ import { OpenAIChatCompletionsStreamEngineBase } from './openai-chatcompletions-
 
 
 export namespace AliyunEngine {
-	export interface ChatCompletionChunkChoiceDelta extends OpenAI.ChatCompletionChunk.Choice.Delta {
-		reasoning_content?: string;
-	}
+    export interface ChatCompletionChunkChoiceDelta extends OpenAI.ChatCompletionChunk.Choice.Delta {
+        reasoning_content?: string;
+    }
 
-	export function create<fdm extends Function.Declaration.Map = never>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
-		return new Constructor<fdm>(options);
-	}
+    export function create<fdm extends Function.Declaration.Map = never>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+        return new Constructor<fdm>(options);
+    }
 
-	export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsStreamEngineBase<fdm> {
-		protected getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
-			return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
-		}
-	}
+    export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsStreamEngineBase<fdm> {
+        protected getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
+            return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
+        }
+    }
 }
