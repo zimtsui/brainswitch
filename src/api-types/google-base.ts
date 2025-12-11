@@ -3,7 +3,7 @@ import { RoleMessage, type ChatMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
-import { EngineBase, TransientError } from './base.ts';
+import { EngineBase, ResponseInvalid } from './base.ts';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
@@ -27,8 +27,11 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
 	protected convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		assert(googlefc.name);
 		const fditem = this.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
-		assert(fditem);
-		assert(ajv.validate(fditem.paraschema, googlefc.args), new TransientError('Invalid function call', { cause: googlefc }));
+		assert(fditem, new ResponseInvalid('Unknown function call', { cause: googlefc }));
+		assert(
+			ajv.validate(fditem.paraschema, googlefc.args),
+			new ResponseInvalid('Function call not conforming to schema', { cause: googlefc }),
+		);
 		return Function.Call.create({
 			id: googlefc.id,
 			name: googlefc.name,
@@ -111,16 +114,6 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
 		else if (mode === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
 		else if (mode === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
 		else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...mode] };
-	}
-
-	protected validateFunctionCallByToolChoice(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): void {
-		const functionCalls = aiMessage.getFunctionCalls();
-		if (this.toolChoice === Function.ToolChoice.REQUIRED)
-			assert(functionCalls.length, new TransientError('No function call'));
-		else if (this.toolChoice instanceof Array)
-			for (const fc of functionCalls) assert(this.toolChoice.includes(fc.name), new TransientError('Invalid function call', { cause: fc }));
-		else if (this.toolChoice === Function.ToolChoice.NONE)
-			assert(!functionCalls.length, new TransientError('No function should be called.'));
 	}
 }
 

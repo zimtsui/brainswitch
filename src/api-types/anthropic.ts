@@ -1,11 +1,11 @@
-import { EngineBase } from './base.ts';
+import { EngineBase, InferenceTimeout, UserAbortion } from './base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
 import { type Engine } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import assert from 'node:assert';
-import { TransientError } from './base.ts';
+import { ResponseInvalid } from './base.ts';
 import Ajv from 'ajv';
 import { type TObject } from '@sinclair/typebox';
 
@@ -42,17 +42,17 @@ export namespace AnthropicEngine {
 		}
 		protected convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 			const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
-			assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
+			assert(fditem, new ResponseInvalid('Unknown function call', { cause: apifc }));
 			const args = (() => {
 				try {
 					return JSON.parse(apifc.input as string);
 				} catch (e) {
-					return new TransientError('Invalid function call', { cause: apifc });
+					return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
 				}
 			})();
 			assert(
 				ajv.validate(fditem.paraschema, args),
-				new TransientError('Invalid function call', { cause: apifc }),
+				new ResponseInvalid('Function call not conforming to schema', { cause: apifc }),
 			);
 			return Function.Call.create({
 				id: apifc.id,
@@ -135,7 +135,7 @@ export namespace AnthropicEngine {
 				messages: session.chatMessages.map(chatMessage => this.convertFromChatMessage(chatMessage)),
 				system: session.developerMessage?.parts.map(part => ({ type: 'text', text: part.text})),
 				tools: tools.length ? tools : undefined,
-				max_tokens: this.tokenLimit ?? 64 * 1024,
+				max_tokens: this.maxTokens ?? 64 * 1024,
 				...this.additionalOptions,
 			};
 		}
@@ -151,16 +151,6 @@ export namespace AnthropicEngine {
 				else throw new Error();
 			});
 			return AnthropicAiMessage.create(parts, raw);
-		}
-
-
-		protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-			if (this.toolChoice === Function.ToolChoice.REQUIRED)
-				assert(functionCalls.length, new TransientError());
-			else if (this.toolChoice instanceof Array)
-				for (const fc of functionCalls) assert(this.toolChoice.includes(fc.name), new TransientError());
-			else if (this.toolChoice === Function.ToolChoice.NONE)
-				assert(!functionCalls.length, new TransientError());
 		}
 
 		protected calcCost(usage: Anthropic.Usage): number {
@@ -244,10 +234,10 @@ export namespace AnthropicEngine {
 				}
 				assert(response);
 				if (response.stop_reason === 'max_tokens')
-					throw new TransientError('Token limit exceeded.', { cause: response });
+					throw new ResponseInvalid('Token limit exceeded.', { cause: response });
 				assert(
 					response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use',
-					new TransientError('Abnormal stop reason', { cause: response }),
+					new ResponseInvalid('Abnormal stop reason', { cause: response }),
 				);
 
 				const cost = this.calcCost(response.usage);
@@ -259,17 +249,16 @@ export namespace AnthropicEngine {
 
 				return aiMessage;
 			} catch (e) {
-				if (ctx.signal?.aborted) throw e;
-				else if (signalTimeout?.aborted) {}			// 推理超时
-				else if (e instanceof TransientError) {}	// 模型抽风
-				else if (e instanceof TypeError) {}			// 网络故障
+				if (ctx.signal?.aborted) throw new UserAbortion();              // 用户中止
+				else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
+				else if (e instanceof TypeError) {}                             // 网络故障
+				else if (e instanceof ResponseInvalid) {}                       // 模型抽风
 				else throw e;
 				ctx.logger.message?.warn(e);
 				if (retry < 3) return await this.stateless(ctx, session, retry+1);
 				else throw e;
 			}
 		}
-
 	}
 }
 

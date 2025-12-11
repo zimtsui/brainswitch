@@ -2,8 +2,6 @@ import type OpenAI from 'openai';
 import { type Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import { OpenAIChatCompletionsStreamEngineBase } from './openai-chatcompletions-stream-base.ts';
-import { type InferenceContext } from '../inference-context.ts';
-import { type Session, type RoleMessage } from '../session.ts';
 
 
 

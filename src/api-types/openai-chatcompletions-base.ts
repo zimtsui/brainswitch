@@ -3,8 +3,7 @@ import { RoleMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { EngineBase, TransientError } from './base.ts';
-import { type InferenceContext } from '../inference-context.ts';
+import { EngineBase, ResponseInvalid } from './base.ts';
 import { Ajv } from 'ajv';
 
 
@@ -44,17 +43,17 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 	}
 	protected convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 		const fditem = this.fdm[apifc.function.name] as Function.Declaration.Item.From<fdm>;
-		assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
+		assert(fditem, new ResponseInvalid('Unknown function call', { cause: apifc }));
 		const args = (() => {
 			try {
 				return JSON.parse(apifc.function.arguments);
 			} catch (e) {
-				return new TransientError('Invalid function call', { cause: apifc });
+				return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
 			}
 		})();
 		assert(
 			ajv.validate(fditem.paraschema, args),
-			new TransientError('Invalid function call', { cause: apifc }),
+			new ResponseInvalid('Function call not conforming to schema', { cause: apifc }),
 		);
 		return Function.Call.create({
 			id: apifc.id,
@@ -130,14 +129,9 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 		}
 	}
 
-	protected validateFunctionCallByToolChoice(fcs: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
+	protected override validateFunctionCallByToolChoice(fcs: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
 		// https://community.openai.com/t/function-call-with-finish-reason-of-stop/437226/7
-		if (this.toolChoice === Function.ToolChoice.REQUIRED)
-			assert(fcs.length, new TransientError());
-		else if (this.toolChoice instanceof Array)
-			for (const fc of fcs) assert(this.toolChoice.includes(fc.name), new TransientError());
-		else if (this.toolChoice === Function.ToolChoice.NONE)
-			assert(!fcs.length, new TransientError());
+		return super.validateFunctionCallByToolChoice(fcs);
 	}
 
 	protected calcCost(usage: OpenAI.CompletionUsage): number {
@@ -154,10 +148,10 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
 
 	protected handleFinishReason(completion: OpenAI.ChatCompletion, finishReason: OpenAI.ChatCompletion.Choice['finish_reason']): void {
 		if (finishReason === 'length')
-			throw new TransientError('Token limit exceeded.', { cause: completion });
+			throw new ResponseInvalid('Token limit exceeded.', { cause: completion });
 		assert(
 			['stop', 'tool_calls'].includes(finishReason),
-			new TransientError('Invalid finish reason', { cause: finishReason }),
+			new ResponseInvalid('Abnormal finish reason', { cause: finishReason }),
 		);
 	}
 }

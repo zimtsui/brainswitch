@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 import assert from 'node:assert';
 import { OpenAIChatCompletionsEngineBase } from './openai-chatcompletions-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
-import { TransientError } from './base.ts';
+import { InferenceTimeout, ResponseInvalid, UserAbortion } from './base.ts';
 import { type Engine } from '../engine.ts';
 
 
@@ -38,7 +38,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			stream_options: {
 				include_usage: true
 			},
-			max_completion_tokens: this.tokenLimit ?? undefined,
+			max_completion_tokens: this.maxTokens ?? undefined,
 			...this.additionalOptions,
 		};
 	}
@@ -104,9 +104,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
 			await this.throttle.requests(ctx);
 
-			const stream = await this.client.chat.completions.create(params, { signal })
-				.catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
-
+			const stream = await this.client.chat.completions.create(params, { signal });
 			let stock: OpenAI.ChatCompletionChunk | null = null;
 			let thoughts: string | null = null, thinking = false;
 
@@ -186,7 +184,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 			const completion = this.convertCompletionStockToCompletion(stock);
 
 			const choice = completion.choices[0];
-			assert(choice, new TransientError('No choices', { cause: completion }));
+			assert(choice, new ResponseInvalid('Content missing', { cause: completion }));
 			if (choice.message.content) ctx.logger.inference?.debug('\n');
 
 			this.handleFinishReason(completion, choice.finish_reason);
@@ -206,10 +204,10 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
 			return aiMessage;
 		} catch (e) {
-			if (ctx.signal?.aborted) throw e;
-			else if (signalTimeout?.aborted) {} 		// 推理超时
-			else if (e instanceof TransientError) {}	// 模型抽风
-			else if (e instanceof TypeError) {}			// 网络故障
+			if (ctx.signal?.aborted) throw new UserAbortion();              // 用户中止
+			else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
+			else if (e instanceof TypeError) {}                             // 网络故障
+			else if (e instanceof ResponseInvalid) {}                       // 模型抽风
 			else throw e;
 			ctx.logger.message?.warn(e);
 			if (retry < 3) return this.stateless(ctx, session, retry+1);

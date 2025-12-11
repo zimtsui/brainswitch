@@ -4,6 +4,8 @@ import { Throttle } from '../throttle.ts';
 import { ProxyAgent } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { type Session, type RoleMessage } from '../session.ts';
+import assert from 'node:assert';
+
 
 export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {}>
 	implements Engine<Function.Declaration.From<fdm>>
@@ -21,15 +23,18 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 	protected additionalOptions?: Record<string, unknown>;
 	protected throttle: Throttle;
 	protected timeout?: number;
-	protected tokenLimit?: number;
+	protected maxTokens?: number;
 
 	protected proxyAgent?: ProxyAgent;
 
+	/**
+	 * @throws {@link UserAbortion}
+	 */
 	public abstract stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
 	public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
 		const response = await this.stateless(ctx, session);
-        session.chatMessages.push(response);
-        return response;
+		session.chatMessages.push(response);
+		return response;
 	}
 	public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
 		return {
@@ -57,9 +62,20 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
 		this.additionalOptions = options.additionalOptions;
 		this.throttle = options.throttle;
 		this.timeout = options.timeout;
-		this.tokenLimit = options.maxTokens;
+		this.maxTokens = options.maxTokens;
 		this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
+	}
+
+	protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
+		if (this.toolChoice === Function.ToolChoice.REQUIRED)
+			assert(functionCalls.length, new ResponseInvalid('Function call required but missing'));
+		else if (this.toolChoice instanceof Array) for (const fc of functionCalls)
+			assert(this.toolChoice.includes(fc.name), new ResponseInvalid('Function call not in allowed tools'));
+		else if (this.toolChoice === Function.ToolChoice.NONE)
+			assert(!functionCalls.length, new ResponseInvalid('Function call not allowed but made'));
 	}
 }
 
-export class TransientError extends Error {}
+export class ResponseInvalid extends Error {}
+export class UserAbortion extends Error {}
+export class InferenceTimeout extends Error {}

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { GoogleAiMessage, GoogleEngineBase } from './google-base.ts';
 import { fetch } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
-import { TransientError } from './base.ts';
+import { InferenceTimeout, ResponseInvalid, UserAbortion } from './base.ts';
 
 
 export namespace GoogleRestfulEngine {
@@ -57,8 +57,8 @@ export namespace GoogleRestfulEngine {
 						functionCallingConfig: this.convertFromFunctionCallMode(this.toolChoice),
 					} : undefined,
 					systemInstruction,
-					generationConfig: this.tokenLimit || this.additionalOptions ? {
-						maxOutputTokens: this.tokenLimit ?? undefined,
+					generationConfig: this.maxTokens || this.additionalOptions ? {
+						maxOutputTokens: this.maxTokens ?? undefined,
 						...this.additionalOptions,
 					} : undefined,
 				};
@@ -74,17 +74,17 @@ export namespace GoogleRestfulEngine {
 					body: JSON.stringify(reqbody),
 					dispatcher: this.proxyAgent,
 					signal,
-				}).catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
+				});
 				ctx.logger.message?.trace(res);
 				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as Google.GenerateContentResponse;
 
-				assert(response.candidates?.[0]?.content?.parts?.length, new TransientError('No content parts', { cause: response }));
+				assert(response.candidates?.[0]?.content?.parts?.length, new ResponseInvalid('Content missing', { cause: response }));
 				if (response.candidates[0].finishReason === Google.FinishReason.MAX_TOKENS)
-					throw new TransientError('Token limit exceeded.', { cause: response });
+					throw new ResponseInvalid('Token limit exceeded.', { cause: response });
 				assert(
 					response.candidates[0].finishReason === Google.FinishReason.STOP,
-					new TransientError('Abnormal finish reason', { cause: response }),
+					new ResponseInvalid('Abnormal finish reason', { cause: response }),
 				);
 
 
@@ -107,14 +107,15 @@ export namespace GoogleRestfulEngine {
 				ctx.logger.cost?.(cost);
 
 				const aiMessage = this.convertToAiMessage(response.candidates[0].content);
-				this.validateFunctionCallByToolChoice(aiMessage);
+				this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
 				return aiMessage;
 
 			} catch (e) {
-				if (ctx.signal?.aborted) throw e;
-				else if (signalTimeout?.aborted) {}			// 推理超时
-				else if (e instanceof TransientError) {}	// 模型抽风
-				else if (e instanceof TypeError) {}			// 网络故障
+				if (e instanceof DOMException && e.name === 'AbortError')
+					if (ctx.signal?.aborted) throw new UserAbortion();       		// 用户中止
+					else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
+				else if (e instanceof ResponseInvalid) {}							// 模型抽风
+				else if (e instanceof TypeError) {}         						// 网络故障
 				else throw e;
 				ctx.logger.message?.warn(e);
 				if (retry < 3) return this.stateless(ctx, session, retry+1);

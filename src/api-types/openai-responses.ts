@@ -1,11 +1,10 @@
-import { EngineBase } from './base.ts';
+import { EngineBase, InferenceTimeout, ResponseInvalid, UserAbortion } from './base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
 import { type Engine } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { TransientError } from './base.ts';
 import { fetch } from 'undici';
 import Ajv from 'ajv';
 
@@ -38,17 +37,17 @@ export namespace OpenAIResponsesEngine {
 		}
 		protected convertToFunctionCall(apifc: OpenAI.Responses.ResponseFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
 			const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
-			assert(fditem, new TransientError('Invalid function call', { cause: apifc }));
+			assert(fditem, new ResponseInvalid('Unknown function call', { cause: apifc }));
 			const args = (() => {
 				try {
 					return JSON.parse(apifc.arguments);
 				} catch (e) {
-					return new TransientError('Invalid function call', { cause: apifc });
+					return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
 				}
 			})();
 			assert(
 				ajv.validate(fditem.paraschema, args),
-				new TransientError('Invalid function call', { cause: apifc }),
+				new ResponseInvalid('Function call not conforming to schema', { cause: apifc }),
 			);
 			return Function.Call.create({
 				id: apifc.call_id,
@@ -140,7 +139,7 @@ export namespace OpenAIResponsesEngine {
 				tools: tools.length ? tools : undefined,
 				tool_choice: fdentries.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
 				parallel_tool_calls: fdentries.length ? this.parallel : undefined,
-				max_output_tokens: this.tokenLimit ? this.tokenLimit+1 : undefined,
+				max_output_tokens: this.maxTokens,
 				...this.additionalOptions,
 			};
 		}
@@ -167,17 +166,6 @@ export namespace OpenAIResponsesEngine {
 				else throw new Error();
 			});
 			return OpenAIResponsesAiMessage.create(parts, output);
-		}
-
-
-		protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-			// https://community.openai.com/t/function-call-with-finish-reason-of-stop/437226/7
-			if (this.toolChoice === Function.ToolChoice.REQUIRED)
-				assert(functionCalls.length, new TransientError());
-			else if (this.toolChoice instanceof Array)
-				for (const fc of functionCalls) assert(this.toolChoice.includes(fc.name), new TransientError());
-			else if (this.toolChoice === Function.ToolChoice.NONE)
-				assert(!functionCalls.length, new TransientError());
 		}
 
 		protected calcCost(usage: OpenAI.Responses.ResponseUsage): number {
@@ -211,22 +199,20 @@ export namespace OpenAIResponsesEngine {
 					body: JSON.stringify(params),
 					dispatcher: this.proxyAgent,
 					signal,
-				}).catch(e => Promise.reject(new TransientError(undefined, { cause: e })));
+				});
 				assert(res.ok, new Error(undefined, { cause: res }));
 				const response = await res.json() as OpenAI.Responses.Response;
 				ctx.logger.message?.trace(response);
+				if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
+					throw new ResponseInvalid('Token limit exceeded.', { cause: response });
 				assert(
 					response.status === 'completed',
-					new TransientError('Abnormal response status', { cause: response }),
+					new ResponseInvalid('Abnormal response status', { cause: response }),
 				);
 
 				this.logApiAiMessage(ctx, response.output);
 
 				assert(response.usage);
-				assert(
-					response.usage.output_tokens <= (this.tokenLimit || Number.POSITIVE_INFINITY),
-					new TransientError('Token limit exceeded.', { cause: response }),
-				);
 				const cost = this.calcCost(response.usage);
 				ctx.logger.cost?.(cost);
 				ctx.logger.message?.debug(response.usage);
@@ -236,10 +222,11 @@ export namespace OpenAIResponsesEngine {
 
 				return aiMessage;
 			} catch (e) {
-				if (ctx.signal?.aborted) throw e;
-				else if (signalTimeout?.aborted) {}			// 推理超时
-				else if (e instanceof TransientError) {}	// 模型抽风
-				else if (e instanceof TypeError) {}			// 网络故障
+				if (e instanceof DOMException && e.name === 'AbortError')
+					if (ctx.signal?.aborted) throw new UserAbortion();       		// 用户中止
+					else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
+				else if (e instanceof ResponseInvalid) {}							// 模型抽风
+				else if (e instanceof TypeError) {}         						// 网络故障
 				else throw e;
 				ctx.logger.message?.warn(e);
 				if (retry < 3) return await this.stateless(ctx, session, retry+1);

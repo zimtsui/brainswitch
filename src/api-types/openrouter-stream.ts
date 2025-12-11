@@ -1,10 +1,9 @@
 import { type Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
-import { type Session, type RoleMessage } from '../session.ts';
+import { type Session } from '../session.ts';
 import assert from 'node:assert';
 import { OpenAIChatCompletionsStreamEngineBase } from './openai-chatcompletions-stream-base.ts';
-import { type InferenceContext } from '../inference-context.ts';
 
 const EXCHANGE_RATE_USD_CNY = 8;
 
