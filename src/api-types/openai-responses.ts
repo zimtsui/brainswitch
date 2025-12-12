@@ -176,64 +176,45 @@ export namespace OpenAIResponsesEngine {
                     this.outputPrice * usage.output_tokens / 1e6;
         }
 
-        public async stateless(
-            ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+        protected async fetch(
+            ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
         ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-            const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
-            const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-                ctx.signal,
-                signalTimeout,
-            ]) : ctx.signal || signalTimeout;
+            const params = this.makeMonolithParams(session);
+            ctx.logger.message?.trace(params);
 
-            try {
-                const params = this.makeMonolithParams(session);
-                ctx.logger.message?.trace(params);
+            await this.throttle.requests(ctx);
+            const res = await fetch(this.apiURL, {
+                method: 'POST',
+                headers: new Headers({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`,
+                }),
+                body: JSON.stringify(params),
+                dispatcher: this.proxyAgent,
+                signal,
+            });
+            assert(res.ok, new Error(undefined, { cause: res }));
+            const response = await res.json() as OpenAI.Responses.Response;
+            ctx.logger.message?.trace(response);
+            if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
+                throw new ResponseInvalid('Token limit exceeded.', { cause: response });
+            assert(
+                response.status === 'completed',
+                new ResponseInvalid('Abnormal response status', { cause: response }),
+            );
 
-                await this.throttle.requests(ctx);
-                const res = await fetch(this.apiURL, {
-                    method: 'POST',
-                    headers: new Headers({
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.apiKey}`,
-                    }),
-                    body: JSON.stringify(params),
-                    dispatcher: this.proxyAgent,
-                    signal,
-                });
-                assert(res.ok, new Error(undefined, { cause: res }));
-                const response = await res.json() as OpenAI.Responses.Response;
-                ctx.logger.message?.trace(response);
-                if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
-                    throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                assert(
-                    response.status === 'completed',
-                    new ResponseInvalid('Abnormal response status', { cause: response }),
-                );
+            this.logApiAiMessage(ctx, response.output);
 
-                this.logApiAiMessage(ctx, response.output);
+            assert(response.usage);
+            const cost = this.calcCost(response.usage);
+            ctx.logger.cost?.(cost);
+            ctx.logger.message?.debug(response.usage);
 
-                assert(response.usage);
-                const cost = this.calcCost(response.usage);
-                ctx.logger.cost?.(cost);
-                ctx.logger.message?.debug(response.usage);
+            const aiMessage = this.convertToAiMessage(response.output);
+            this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
 
-                const aiMessage = this.convertToAiMessage(response.output);
-                this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
-
-                return aiMessage;
-            } catch (e) {
-                if (e instanceof DOMException && e.name === 'AbortError')
-                    if (ctx.signal?.aborted) throw new UserAbortion();       		// 用户中止
-                    else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
-                else if (e instanceof ResponseInvalid) {}							// 模型抽风
-                else if (e instanceof TypeError) {}         						// 网络故障
-                else throw e;
-                ctx.logger.message?.warn(e);
-                if (retry < 3) return await this.stateless(ctx, session, retry+1);
-                else throw e;
-            }
+            return aiMessage;
         }
-
     }
 }
 

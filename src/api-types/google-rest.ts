@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { GoogleAiMessage, GoogleEngineBase } from './google-base.ts';
 import { fetch } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
-import { InferenceTimeout, ResponseInvalid, UserAbortion } from './base.ts';
+import { ResponseInvalid } from './base.ts';
 
 
 export namespace GoogleRestfulEngine {
@@ -31,96 +31,77 @@ export namespace GoogleRestfulEngine {
             this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
         }
 
-        public async stateless(
-            ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+        protected async fetch(
+            ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
         ): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
-            const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
-            const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-                ctx.signal,
-                signalTimeout,
-            ]) : ctx.signal || signalTimeout;
+            const systemInstruction = session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage);
+            const contents = this.convertFromChatMessages(session.chatMessages);
 
-            try {
-                const systemInstruction = session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage);
-                const contents = this.convertFromChatMessages(session.chatMessages);
+            await this.throttle.requests(ctx);
 
-                await this.throttle.requests(ctx);
+            const reqbody: GoogleRestfulEngine.Request = {
+                contents,
+                tools: Object.keys(this.fdm).length ? [{
+                    functionDeclarations: Object.entries(this.fdm).map(
+                        fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
+                    ),
+                }] : undefined,
+                toolConfig: Object.keys(this.fdm).length && this.toolChoice ? {
+                    functionCallingConfig: this.convertFromFunctionCallMode(this.toolChoice),
+                } : undefined,
+                systemInstruction,
+                generationConfig: this.maxTokens || this.additionalOptions ? {
+                    maxOutputTokens: this.maxTokens ?? undefined,
+                    ...this.additionalOptions,
+                } : undefined,
+            };
 
-                const reqbody: GoogleRestfulEngine.Request = {
-                    contents,
-                    tools: Object.keys(this.fdm).length ? [{
-                        functionDeclarations: Object.entries(this.fdm).map(
-                            fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
-                        ),
-                    }] : undefined,
-                    toolConfig: Object.keys(this.fdm).length && this.toolChoice ? {
-                        functionCallingConfig: this.convertFromFunctionCallMode(this.toolChoice),
-                    } : undefined,
-                    systemInstruction,
-                    generationConfig: this.maxTokens || this.additionalOptions ? {
-                        maxOutputTokens: this.maxTokens ?? undefined,
-                        ...this.additionalOptions,
-                    } : undefined,
-                };
+            ctx.logger.message?.trace(reqbody);
 
-                ctx.logger.message?.trace(reqbody);
+            const res = await fetch(this.apiURL, {
+                method: 'POST',
+                headers: new Headers({
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': this.apiKey,
+                }),
+                body: JSON.stringify(reqbody),
+                dispatcher: this.proxyAgent,
+                signal,
+            });
+            ctx.logger.message?.trace(res);
+            assert(res.ok, new Error(undefined, { cause: res }));
+            const response = await res.json() as Google.GenerateContentResponse;
 
-                const res = await fetch(this.apiURL, {
-                    method: 'POST',
-                    headers: new Headers({
-                        'Content-Type': 'application/json',
-                        'x-goog-api-key': this.apiKey,
-                    }),
-                    body: JSON.stringify(reqbody),
-                    dispatcher: this.proxyAgent,
-                    signal,
-                });
-                ctx.logger.message?.trace(res);
-                assert(res.ok, new Error(undefined, { cause: res }));
-                const response = await res.json() as Google.GenerateContentResponse;
-
-                assert(response.candidates?.[0]?.content?.parts?.length, new ResponseInvalid('Content missing', { cause: response }));
-                if (response.candidates[0].finishReason === Google.FinishReason.MAX_TOKENS)
-                    throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                assert(
-                    response.candidates[0].finishReason === Google.FinishReason.STOP,
-                    new ResponseInvalid('Abnormal finish reason', { cause: response }),
-                );
+            assert(response.candidates?.[0]?.content?.parts?.length, new ResponseInvalid('Content missing', { cause: response }));
+            if (response.candidates[0].finishReason === Google.FinishReason.MAX_TOKENS)
+                throw new ResponseInvalid('Token limit exceeded.', { cause: response });
+            assert(
+                response.candidates[0].finishReason === Google.FinishReason.STOP,
+                new ResponseInvalid('Abnormal finish reason', { cause: response }),
+            );
 
 
-                for (const part of response.candidates[0].content.parts) {
-                    if (part.text) ctx.logger.inference?.debug(part.text+'\n');
-                    if (part.functionCall) ctx.logger.message?.debug(part.functionCall);
-                }
-                assert(response.usageMetadata?.promptTokenCount, new Error('Prompt token count absent', { cause: response }));
-                ctx.logger.message?.debug(response.usageMetadata);
-
-                const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
-                const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
-                const cacheMissTokenCount = response.usageMetadata.promptTokenCount - cacheHitTokenCount;
-                const thinkingTokenCount = response.usageMetadata.thoughtsTokenCount ?? 0;
-                const cost =
-                    this.inputPrice * cacheMissTokenCount / 1e6 +
-                    this.cachedPrice * cacheHitTokenCount / 1e6 +
-                    this.outputPrice * candidatesTokenCount / 1e6 +
-                    this.outputPrice * thinkingTokenCount / 1e6;
-                ctx.logger.cost?.(cost);
-
-                const aiMessage = this.convertToAiMessage(response.candidates[0].content);
-                this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
-                return aiMessage;
-
-            } catch (e) {
-                if (e instanceof DOMException && e.name === 'AbortError')
-                    if (ctx.signal?.aborted) throw new UserAbortion();       		// 用户中止
-                    else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
-                else if (e instanceof ResponseInvalid) {}							// 模型抽风
-                else if (e instanceof TypeError) {}         						// 网络故障
-                else throw e;
-                ctx.logger.message?.warn(e);
-                if (retry < 3) return this.stateless(ctx, session, retry+1);
-                else throw e;
+            for (const part of response.candidates[0].content.parts) {
+                if (part.text) ctx.logger.inference?.debug(part.text+'\n');
+                if (part.functionCall) ctx.logger.message?.debug(part.functionCall);
             }
+            assert(response.usageMetadata?.promptTokenCount, new Error('Prompt token count absent', { cause: response }));
+            ctx.logger.message?.debug(response.usageMetadata);
+
+            const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
+            const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
+            const cacheMissTokenCount = response.usageMetadata.promptTokenCount - cacheHitTokenCount;
+            const thinkingTokenCount = response.usageMetadata.thoughtsTokenCount ?? 0;
+            const cost =
+                this.inputPrice * cacheMissTokenCount / 1e6 +
+                this.cachedPrice * cacheHitTokenCount / 1e6 +
+                this.outputPrice * candidatesTokenCount / 1e6 +
+                this.outputPrice * thinkingTokenCount / 1e6;
+            ctx.logger.cost?.(cost);
+
+            const aiMessage = this.convertToAiMessage(response.candidates[0].content);
+            this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+            return aiMessage;
         }
     }
 }

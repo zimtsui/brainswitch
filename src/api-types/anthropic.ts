@@ -1,4 +1,4 @@
-import { EngineBase, InferenceTimeout, UserAbortion } from './base.ts';
+import { EngineBase } from './base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
 import { type Engine } from '../engine.ts';
@@ -161,103 +161,86 @@ export namespace AnthropicEngine {
                     this.outputPrice * usage.output_tokens / 1e6;
         }
 
-        public async stateless(
-            ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, retry = 0,
+        protected async fetch(
+            ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
         ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-            const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
-            const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-                ctx.signal,
-                signalTimeout,
-            ]) : ctx.signal || signalTimeout;
-            try {
+            const params = this.makeParams(session);
+            ctx.logger.message?.trace(params);
 
-                const params = this.makeParams(session);
-                ctx.logger.message?.trace(params);
+            await this.throttle.requests(ctx);
+            const stream = this.anthropic.messages.stream(params, { signal });
 
-                await this.throttle.requests(ctx);
-                const stream = this.anthropic.messages.stream(params, { signal });
-
-                let response: Anthropic.Message | null = null;
-                for await (const event of stream) {
-                    if (event.type === 'message_start') {
+            let response: Anthropic.Message | null = null;
+            for await (const event of stream) {
+                if (event.type === 'message_start') {
+                    ctx.logger.message?.trace(event);
+                    response = structuredClone(event.message);
+                } else {
+                    assert(response);
+                    if (event.type === 'message_delta') {
                         ctx.logger.message?.trace(event);
-                        response = structuredClone(event.message);
-                    } else {
-                        assert(response);
-                        if (event.type === 'message_delta') {
-                            ctx.logger.message?.trace(event);
-                            response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
-                            response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
-                            response.usage.input_tokens = event.usage.input_tokens ?? response.usage.input_tokens;
-                            response.usage.output_tokens = event.usage.output_tokens;
-                            response.usage.cache_read_input_tokens = event.usage.cache_read_input_tokens ?? response.usage.cache_read_input_tokens;
-                            response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
-                            response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
-                        } else if (event.type === 'message_stop') {
-                            ctx.logger.message?.trace(event);
-                        } else if (event.type === 'content_block_start') {
-                            ctx.logger.message?.trace(event);
-                            const contentBlock = structuredClone(event.content_block);
-                            response.content.push(contentBlock);
-                            if (contentBlock.type === 'tool_use') contentBlock.input = '';
-                        } else if (event.type === 'content_block_delta') {
-                            const contentBlock = response.content[event.index];
-                            if (event.delta.type === 'text_delta'){
-                                ctx.logger.inference?.debug(event.delta.text);
-                                assert(contentBlock?.type === 'text');
-                                contentBlock.text += event.delta.text;
-                            } else if (event.delta.type === 'thinking_delta') {
-                                ctx.logger.inference?.trace(event.delta.thinking);
-                                assert(contentBlock?.type === 'thinking');
-                                contentBlock.thinking += event.delta.thinking;
-                            } else if (event.delta.type === 'signature_delta') {
-                                assert(contentBlock?.type === 'thinking');
-                                contentBlock.signature += event.delta.signature;
-                            } else if (event.delta.type === 'input_json_delta') {
-                                ctx.logger.inference?.trace(event.delta.partial_json);
-                                assert(contentBlock?.type === 'tool_use');
-                                assert(typeof contentBlock.input === 'string');
-                                contentBlock.input += event.delta.partial_json;
-                            } else throw new Error('Unknown type of content block delta', { cause: event.delta });
-                        } else if (event.type === 'content_block_stop') {
-                            const contentBlock = response.content[event.index];
-                            if (contentBlock?.type === 'text') ctx.logger.inference?.debug('\n');
-                            else if (contentBlock?.type === 'thinking') ctx.logger.inference?.trace('\n');
-                            else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
-                            ctx.logger.message?.trace(event);
-                            if (contentBlock?.type === 'tool_use') {
-                                assert(typeof contentBlock.input === 'string');
-                                ctx.logger.message?.debug(contentBlock);
-                            }
-                        } else throw new Error('Unknown stream event', { cause: event });
-                    }
+                        response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
+                        response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
+                        response.usage.input_tokens = event.usage.input_tokens ?? response.usage.input_tokens;
+                        response.usage.output_tokens = event.usage.output_tokens;
+                        response.usage.cache_read_input_tokens = event.usage.cache_read_input_tokens ?? response.usage.cache_read_input_tokens;
+                        response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
+                        response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
+                    } else if (event.type === 'message_stop') {
+                        ctx.logger.message?.trace(event);
+                    } else if (event.type === 'content_block_start') {
+                        ctx.logger.message?.trace(event);
+                        const contentBlock = structuredClone(event.content_block);
+                        response.content.push(contentBlock);
+                        if (contentBlock.type === 'tool_use') contentBlock.input = '';
+                    } else if (event.type === 'content_block_delta') {
+                        const contentBlock = response.content[event.index];
+                        if (event.delta.type === 'text_delta'){
+                            ctx.logger.inference?.debug(event.delta.text);
+                            assert(contentBlock?.type === 'text');
+                            contentBlock.text += event.delta.text;
+                        } else if (event.delta.type === 'thinking_delta') {
+                            ctx.logger.inference?.trace(event.delta.thinking);
+                            assert(contentBlock?.type === 'thinking');
+                            contentBlock.thinking += event.delta.thinking;
+                        } else if (event.delta.type === 'signature_delta') {
+                            assert(contentBlock?.type === 'thinking');
+                            contentBlock.signature += event.delta.signature;
+                        } else if (event.delta.type === 'input_json_delta') {
+                            ctx.logger.inference?.trace(event.delta.partial_json);
+                            assert(contentBlock?.type === 'tool_use');
+                            assert(typeof contentBlock.input === 'string');
+                            contentBlock.input += event.delta.partial_json;
+                        } else throw new Error('Unknown type of content block delta', { cause: event.delta });
+                    } else if (event.type === 'content_block_stop') {
+                        const contentBlock = response.content[event.index];
+                        if (contentBlock?.type === 'text') ctx.logger.inference?.debug('\n');
+                        else if (contentBlock?.type === 'thinking') ctx.logger.inference?.trace('\n');
+                        else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
+                        ctx.logger.message?.trace(event);
+                        if (contentBlock?.type === 'tool_use') {
+                            assert(typeof contentBlock.input === 'string');
+                            ctx.logger.message?.debug(contentBlock);
+                        }
+                    } else throw new Error('Unknown stream event', { cause: event });
                 }
-                assert(response);
-                if (response.stop_reason === 'max_tokens')
-                    throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                assert(
-                    response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use',
-                    new ResponseInvalid('Abnormal stop reason', { cause: response }),
-                );
-
-                const cost = this.calcCost(response.usage);
-                ctx.logger.cost?.(cost);
-                ctx.logger.message?.debug(response.usage);
-
-                const aiMessage = this.convertToAiMessage(response.content);
-                this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
-
-                return aiMessage;
-            } catch (e) {
-                if (ctx.signal?.aborted) throw new UserAbortion();              // 用户中止
-                else if (signalTimeout?.aborted) e = new InferenceTimeout();    // 推理超时
-                else if (e instanceof TypeError) {}                             // 网络故障
-                else if (e instanceof ResponseInvalid) {}                       // 模型抽风
-                else throw e;
-                ctx.logger.message?.warn(e);
-                if (retry < 3) return await this.stateless(ctx, session, retry+1);
-                else throw e;
             }
+            assert(response);
+            if (response.stop_reason === 'max_tokens')
+                throw new ResponseInvalid('Token limit exceeded.', { cause: response });
+            assert(
+                response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use',
+                new ResponseInvalid('Abnormal stop reason', { cause: response }),
+            );
+
+            const cost = this.calcCost(response.usage);
+            ctx.logger.cost?.(cost);
+            ctx.logger.message?.debug(response.usage);
+
+            const aiMessage = this.convertToAiMessage(response.content);
+            this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+
+            return aiMessage;
         }
     }
 }

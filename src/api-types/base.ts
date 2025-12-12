@@ -28,9 +28,30 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
     protected proxyAgent?: ProxyAgent;
 
     /**
+     * @throws {@link ResponseInvalid}
+     * @throws {@link TypeError}
+     */
+    protected abstract fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    /**
      * @throws {@link UserAbortion}
      */
-    public abstract stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    public async stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
+        const signal = ctx.signal && signalTimeout ? AbortSignal.any([
+            ctx.signal,
+            signalTimeout,
+        ]) : ctx.signal || signalTimeout;
+        for (let retry = 0;; retry++) try {
+            return await this.fetch(ctx, session, signal);
+        } catch (e) {
+            if (ctx.signal?.aborted) throw new UserAbortion();                                  // 用户中止
+            else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
+            else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
+            else if (e instanceof TypeError) {}         		                                // 网络故障
+            else throw e;
+            if (retry < 3) ctx.logger.message?.warn(e); else throw e;
+        }
+    }
     public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const response = await this.stateless(ctx, session);
         session.chatMessages.push(response);
