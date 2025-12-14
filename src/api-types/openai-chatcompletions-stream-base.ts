@@ -54,7 +54,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
 
     protected convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion {
         const stockChoice = stock?.choices[0];
-        assert(stockChoice?.finish_reason);
+        assert(stockChoice?.finish_reason, new ResponseInvalid('Finish reason missing', { cause: stock }));
 
         const completion: OpenAI.ChatCompletion = {
             id: stock.id,
