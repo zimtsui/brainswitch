@@ -82,6 +82,7 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         assert(content.parts);
         return GoogleAiMessage.create(content.parts.flatMap(part => {
             const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
+            assert(part.functionCall || part.text, new ResponseInvalid('Unknown content part', { cause: content }));
             if (part.text) parts.push(RoleMessage.Part.Text.create(part.text));
             if (part.functionCall) parts.push(this.convertToFunctionCall(part.functionCall));
             return parts;
