@@ -35,7 +35,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
         };
     }
 
-    protected async fetch(
+    protected async fetchRaw(
         ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);

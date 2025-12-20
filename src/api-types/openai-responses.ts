@@ -176,7 +176,11 @@ export namespace OpenAIResponsesEngine {
                     this.outputPrice * usage.output_tokens / 1e6;
         }
 
-        protected async fetch(
+        protected async fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+            return await this.fetchRaw(ctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
+        }
+
+        protected async fetchRaw(
             ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
         ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
             const params = this.makeMonolithParams(session);

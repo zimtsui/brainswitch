@@ -1,10 +1,11 @@
 import { type Engine } from '../engine.ts';
-import { RoleMessage } from '../session.ts';
+import { RoleMessage, Session } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import { EngineBase, ResponseInvalid } from './base.ts';
 import { Ajv } from 'ajv';
+import type { InferenceContext } from '../inference-context.ts';
 
 
 const ajv = new Ajv();
@@ -16,6 +17,12 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
     public constructor(options: Engine.Options<fdm>) {
         super(options);
         this.parallel = options.parallelFunctionCall ?? false;
+    }
+
+    protected abstract fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+
+    protected async fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        return await this.fetchRaw(ctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
     }
 
     protected convertToAiMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>> {

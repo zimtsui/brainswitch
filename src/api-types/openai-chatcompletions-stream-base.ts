@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 import assert from 'node:assert';
 import { OpenAIChatCompletionsEngineBase } from './openai-chatcompletions-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
-import { InferenceTimeout, ResponseInvalid, UserAbortion } from './base.ts';
+import { ResponseInvalid } from './base.ts';
 import { type Engine } from '../engine.ts';
 
 
@@ -91,7 +91,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
         return completion;
     }
 
-    protected async fetch(
+    protected async fetchRaw(
         ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
