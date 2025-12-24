@@ -17,19 +17,12 @@ export class Adaptor {
         return new Adaptor(config);
     }
 
-    protected constructor(public config: Config) {}
-
-    private throttles = new Map<string, Map<string, Throttle>>();
-    public getThrottle(endpointId: string): Throttle {
-        assert(endpointId in this.config.brainswitch.endpoints);
-        const baseUrl = this.config.brainswitch.endpoints[endpointId]!.baseUrl;
-        const model = this.config.brainswitch.endpoints[endpointId]!.model;
-        const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
-        if (!this.throttles.has(baseUrl))
-            this.throttles.set(baseUrl, new Map<string, Throttle>());
-        if (!this.throttles.get(baseUrl)!.has(model))
-            this.throttles.get(baseUrl)!.set(model, new Throttle(rpm));
-        return this.throttles.get(baseUrl)!.get(model)!;
+    private throttles: Record<string, Throttle> = {};
+    protected constructor(public config: Config) {
+        for (const endpointId in this.config.brainswitch.endpoints) {
+            const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
+            this.throttles[endpointId] = new Throttle(rpm);
+        }
     }
 
     public makeEngine<fdm extends Function.Declaration.Map = {}>(
@@ -38,9 +31,10 @@ export class Adaptor {
         toolChoice?: Function.ToolChoice<fdm>,
         parallelFunctionCall?: boolean,
     ): Engine<Function.Declaration.From<fdm>> {
-        assert(endpoint in this.config.brainswitch.endpoints);
-        const endpointSpec = this.config.brainswitch.endpoints[endpoint]!;
-        const throttle = this.getThrottle(endpoint);
+        const endpointSpec = this.config.brainswitch.endpoints[endpoint];
+        assert(endpointSpec);
+        const throttle = this.throttles[endpoint];
+        assert(throttle);
         const options: Engine.Options<fdm> = {
             ...endpointSpec,
             functionDeclarationMap,
