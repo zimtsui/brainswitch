@@ -1,4 +1,4 @@
-import { type Engine } from '../engine.ts';
+import { type Engine, ResponseInvalid } from '../engine.ts';
 import { type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
@@ -6,7 +6,6 @@ import assert from 'node:assert';
 import { GoogleAiMessage, GoogleEngineBase } from './google-base.ts';
 import { fetch } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
-import { ResponseInvalid } from './base.ts';
 
 
 export namespace GoogleRestfulEngine {

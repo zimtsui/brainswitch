@@ -1,11 +1,10 @@
 import { EngineBase } from './base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
-import { type Engine } from '../engine.ts';
+import { type Engine, ResponseInvalid } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import assert from 'node:assert';
-import { ResponseInvalid } from './base.ts';
 import Ajv from 'ajv';
 import { type TObject } from '@sinclair/typebox';
 

@@ -1,7 +1,7 @@
-import { EngineBase, InferenceTimeout, ResponseInvalid, UserAbortion } from './base.ts';
+import { EngineBase } from './base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
-import { type Engine } from '../engine.ts';
+import { type Engine, ResponseInvalid } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';

@@ -2,11 +2,10 @@ import { RoleMessage, type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { ResponseInvalid } from './base.ts';
 import { OpenAIChatCompletionsEngineBase } from './openai-chatcompletions-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import { fetch } from 'undici';
-import { type Engine } from '../engine.ts';
+import { type Engine, ResponseInvalid } from '../engine.ts';
 
 
 export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsEngineBase<fdm> {

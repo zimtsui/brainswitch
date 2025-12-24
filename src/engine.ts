@@ -32,3 +32,7 @@ export namespace Engine {
         throttle: Throttle;
     }
 }
+
+export class ResponseInvalid extends Error {}
+export class UserAbortion extends Error {}
+export class InferenceTimeout extends Error {}

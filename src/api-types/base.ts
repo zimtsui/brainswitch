@@ -1,5 +1,5 @@
 import { Function } from '../function.ts';
-import { type Engine } from '../engine.ts';
+import { type Engine, UserAbortion, InferenceTimeout, ResponseInvalid } from '../engine.ts';
 import { Throttle } from '../throttle.ts';
 import { ProxyAgent } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
@@ -28,12 +28,15 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
     protected proxyAgent?: ProxyAgent;
 
     /**
-     * @throws {@link ResponseInvalid}
-     * @throws {@link TypeError}
+     * @throws {@link ResponseInvalid} 模型抽风
+     * @throws {@link TypeError} 网络故障
      */
     protected abstract fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     /**
-     * @throws {@link UserAbortion}
+     * @throws {@link UserAbortion} 用户中止
+     * @throws {@link InferenceTimeout} 推理超时
+     * @throws {@link ResponseInvalid} 模型抽风
+     * @throws {@link TypeError} 网络故障
      */
     public async stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
@@ -96,7 +99,3 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
             assert(!functionCalls.length, new ResponseInvalid('Function call not allowed but made'));
     }
 }
-
-export class ResponseInvalid extends Error {}
-export class UserAbortion extends Error {}
-export class InferenceTimeout extends Error {}
