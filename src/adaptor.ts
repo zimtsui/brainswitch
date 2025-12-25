@@ -17,11 +17,11 @@ export class Adaptor {
         return new Adaptor(config);
     }
 
-    private throttles: Record<string, Throttle> = {};
+    private throttles = new Map<string, Throttle>();
     protected constructor(public config: Config) {
         for (const endpointId in this.config.brainswitch.endpoints) {
             const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
-            this.throttles[endpointId] = new Throttle(rpm);
+            this.throttles.set(endpointId, new Throttle(rpm));
         }
     }
 
@@ -33,7 +33,7 @@ export class Adaptor {
     ): Engine<Function.Declaration.From<fdm>> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         assert(endpointSpec);
-        const throttle = this.throttles[endpoint];
+        const throttle = this.throttles.get(endpoint);
         assert(throttle);
         const options: Engine.Options<fdm> = {
             ...endpointSpec,
