@@ -5,6 +5,7 @@ import { ProxyAgent } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { type Session, type RoleMessage } from '../session.ts';
 import assert from 'node:assert';
+import { env } from 'node:process';
 
 
 export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {}>
@@ -87,7 +88,8 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
         this.throttle = options.throttle;
         this.timeout = options.timeout;
         this.maxTokens = options.maxTokens;
-        this.proxyAgent = options.proxy ? new ProxyAgent(options.proxy) : undefined;
+        const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
+        this.proxyAgent = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
     }
 
     protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
@@ -97,5 +99,13 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
             assert(this.toolChoice.includes(fc.name), new ResponseInvalid('Function call not in allowed tools'));
         else if (this.toolChoice === Function.ToolChoice.NONE)
             assert(!functionCalls.length, new ResponseInvalid('Function call not allowed but made'));
+    }
+}
+
+declare global {
+    export namespace NodeJS {
+        export interface ProcessEnv {
+            https_proxy?: string;
+        }
     }
 }
