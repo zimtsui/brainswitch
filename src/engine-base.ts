@@ -29,12 +29,6 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
      * @throws {@link TypeError} 网络故障
      */
     protected abstract fetch(ctx: InferenceContext, session: never, signal?: AbortSignal): Promise<unknown>;
-    /**
-     * @throws {@link UserAbortion} 用户中止
-     * @throws {@link InferenceTimeout} 推理超时
-     * @throws {@link ResponseInvalid} 模型抽风
-     * @throws {@link TypeError} 网络故障
-     */
     public abstract stateless(ctx: InferenceContext, session: never): Promise<unknown>;
     public abstract stateful(ctx: InferenceContext, session: never): Promise<unknown>;
 

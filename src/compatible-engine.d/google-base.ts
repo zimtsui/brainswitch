@@ -4,12 +4,12 @@ import { RoleMessage, type ChatMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
-import { CommonEngineBase } from './compatible-base.ts';
+import { CompatibleEngineBase } from './compatible-base.ts';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
 
-export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends CommonEngineBase<fdm> {
+export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends CompatibleEngineBase<fdm> {
     protected parallel: boolean;
 
     protected constructor(options: CompatibleEngine.Options<fdm>) {

@@ -4,7 +4,7 @@ import { RoleMessage, type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { CommonEngineBase } from './compatible-base.ts';
+import { CompatibleEngineBase } from './compatible-base.ts';
 import { Ajv } from 'ajv';
 import type { InferenceContext } from '../inference-context.ts';
 
@@ -12,7 +12,7 @@ import type { InferenceContext } from '../inference-context.ts';
 const ajv = new Ajv();
 
 
-export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends CommonEngineBase<fdm> {
+export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends CompatibleEngineBase<fdm> {
     protected parallel: boolean;
 
     public constructor(options: CompatibleEngine.Options<fdm>) {

@@ -1,4 +1,4 @@
-import { CommonEngineBase } from './compatible-base.ts';
+import { CompatibleEngineBase } from './compatible-base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
 import { type CompatibleEngine } from '../compatible-engine.ts';
@@ -10,17 +10,16 @@ import { fetch } from 'undici';
 import { OpenAIResponsesUtilities } from '../api-types/openai-responses.ts';
 
 
-export type OpenAIResponsesEngine<fdm extends Function.Declaration.Map = {}> = OpenAIResponsesEngine.Constructor<fdm>;
 export namespace OpenAIResponsesEngine {
     export interface Options<fdm extends Function.Declaration.Map = {}> extends CompatibleEngine.Options<fdm> {
         applyPatch?: boolean;
     }
 
-    export function create<fdm extends Function.Declaration.Map = {}>(options: Options<fdm>): OpenAIResponsesEngine<fdm> {
+    export function create<fdm extends Function.Declaration.Map = {}>(options: Options<fdm>): CompatibleEngine<Function.Declaration.From<fdm>> {
         return new Constructor<fdm>(options);
     }
 
-    export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends CommonEngineBase<fdm> {
+    export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends CompatibleEngineBase<fdm> {
         protected apiURL: URL;
         protected parallel: boolean;
         protected utilities: OpenAIResponsesUtilities<fdm>;

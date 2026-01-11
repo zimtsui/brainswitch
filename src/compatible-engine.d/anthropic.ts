@@ -1,4 +1,4 @@
-import { CommonEngineBase } from './compatible-base.ts';
+import { CompatibleEngineBase } from './compatible-base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
 import { type CompatibleEngine } from '../compatible-engine.ts';
@@ -17,7 +17,7 @@ export namespace AnthropicEngine {
         return new Constructor<fdm>(options);
     }
 
-    export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends CommonEngineBase<fdm> {
+    export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends CompatibleEngineBase<fdm> {
         protected anthropic = new Anthropic({
             baseURL: this.baseUrl,
             apiKey: this.apiKey,

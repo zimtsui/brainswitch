@@ -6,7 +6,7 @@ import { type Session, type RoleMessage } from '../session.ts';
 import { EngineBase } from '../engine-base.ts';
 
 
-export abstract class CommonEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
+export abstract class CompatibleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
     protected override toolChoice: Function.ToolChoice<fdm>;
 
     protected abstract override fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;

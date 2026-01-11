@@ -5,6 +5,12 @@ import { Throttle } from './throttle.ts';
 
 
 export interface Engine {
+    /**
+     * @throws {@link UserAbortion} 用户中止
+     * @throws {@link InferenceTimeout} 推理超时
+     * @throws {@link ResponseInvalid} 模型抽风
+     * @throws {TypeError} 网络故障
+     */
     stateless(ctx: InferenceContext, session: never): Promise<unknown>;
     /**
      * @param session mutable

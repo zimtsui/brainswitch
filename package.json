@@ -3,7 +3,7 @@
   "version": "0.0.30",
   "exports": {
     ".": "./build/exports.js",
-    "./openai-responses": "./build/native-engine/openai-responses.js"
+    "./openai-responses": "./build/native-engine.d/openai-responses/exports.js"
   },
   "imports": {
     "#config": "./build/config.js"
@@ -17,7 +17,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b ./src/tsconfig.json",
     "clean": "rm -rf ./build && rm -rf ./docs",
-    "docs": "typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts"
+    "docs": "typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts ./src/native-engine.d/openai-responses/exports.ts"
   },
   "author": "Zim",
   "repository": {

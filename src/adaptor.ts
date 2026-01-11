@@ -10,6 +10,7 @@ import { OpenRouterStreamEngine } from './compatible-engine.d/openrouter-stream.
 import { AliyunEngine } from './compatible-engine.d/aliyun.ts';
 import { OpenAIResponsesEngine } from './compatible-engine.d/openai-responses.ts';
 import { AnthropicEngine } from './compatible-engine.d/anthropic.ts';
+import { OpenAIResponsesNativeEngine } from './native-engine.d/openai-responses/engine.ts';
 
 
 export class Adaptor {
@@ -65,12 +66,12 @@ export class Adaptor {
         applyPatch?: boolean,
         toolChoice?: Function.ToolChoice<fdm>,
         parallelToolCall?: boolean,
-    ): OpenAIResponsesEngine<fdm> {
+    ): OpenAIResponsesNativeEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         assert(endpointSpec);
         const throttle = this.throttles.get(endpoint);
         assert(throttle);
-        const options: OpenAIResponsesEngine.Options<fdm> = {
+        const options: OpenAIResponsesNativeEngine.Options<fdm> = {
             ...endpointSpec,
             functionDeclarationMap,
             toolChoice,
@@ -79,6 +80,6 @@ export class Adaptor {
             applyPatch,
         };
         assert(endpointSpec.apiType === 'openai-responses');
-        return OpenAIResponsesEngine.create<fdm>(options);
+        return OpenAIResponsesNativeEngine.create<fdm>(options);
     }
 }

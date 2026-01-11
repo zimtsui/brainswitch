@@ -1,4 +1,4 @@
-import * as Common from '../../session.ts';
+import * as Compatible from '../../session.ts';
 import { Function } from '../../function.ts';
 import assert from 'node:assert';
 import { Tool } from './tool.ts';
@@ -22,7 +22,7 @@ export namespace RoleMessage {
         public abstract getOnlyText(): string;
     }
     export namespace Part {
-        export import Text = Common.RoleMessage.Part.Text;
+        export import Text = Compatible.RoleMessage.Part.Text;
     }
 
     export type Ai<fdu extends Function.Declaration = never> = Ai.Constructor<fdu>;
@@ -121,5 +121,5 @@ export namespace RoleMessage {
         ;
     }
 
-    export import Developer = Common.RoleMessage.Developer;
+    export import Developer = Compatible.RoleMessage.Developer;
 }
