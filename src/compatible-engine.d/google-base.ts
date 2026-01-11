@@ -1,22 +1,21 @@
-import { type Engine, ResponseInvalid } from '../engine.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
+import { ResponseInvalid } from '../engine.ts';
 import { RoleMessage, type ChatMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
-import { EngineBase } from './base.ts';
+import { CommonEngineBase } from './compatible-base.ts';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
 
-export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
+export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends CommonEngineBase<fdm> {
     protected parallel: boolean;
-    protected toolChoice: Function.ToolChoice<fdm>;
 
-    protected constructor(options: Engine.Options<fdm>) {
+    protected constructor(options: CompatibleEngine.Options<fdm>) {
         super(options);
-        this.parallel = options.parallelFunctionCall ?? true;
-        assert(this.parallel, new Error('Google Engine supports only parallel function calls.'));
-        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+        this.parallel = options.parallelToolCall ?? true;
+        assert(this.parallel, new Error('Google API requires parallel tool calls.'));
     }
 
     protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall {
@@ -26,24 +25,39 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
             args: fc.args as Record<string, unknown>,
         };
     }
+
     protected convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-        assert(googlefc.name);
-        const fditem = this.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
-        assert(fditem, new ResponseInvalid('Unknown function call', { cause: googlefc }));
-        assert(
-            ajv.validate(fditem.paraschema, googlefc.args),
-            new ResponseInvalid('Function call not conforming to schema', { cause: googlefc }),
-        );
-        return Function.Call.create({
-            id: googlefc.id,
-            name: googlefc.name,
-            args: googlefc.args,
-        } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
+        return GoogleEngineBase.convertToFunctionCall<fdm>(googlefc, this.fdm);
+    }
+    protected static convertToFunctionCall<fdm extends Function.Declaration.Map = {}>(
+        googlefc: Google.FunctionCall,
+        fdm?: fdm,
+    ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+        if (fdm) {
+            assert(googlefc.name);
+            const fditem = fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
+            assert(fditem, new ResponseInvalid('Unknown function call', { cause: googlefc }));
+            assert(
+                ajv.validate(fditem.paraschema, googlefc.args),
+                new ResponseInvalid('Function call not conforming to schema', { cause: googlefc }),
+            );
+            return Function.Call.create({
+                id: googlefc.id,
+                name: googlefc.name,
+                args: googlefc.args,
+            } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
+        } else {
+            assert(googlefc.name);
+            return Function.Call.create({
+                id: googlefc.id,
+                name: googlefc.name,
+                args: googlefc.args,
+            } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
+        }
     }
 
     protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content {
-        if (userMessage.specific) throw new RoleMessage.SpecificMessageError();
-        const parts = userMessage.parts.map(part => {
+        const parts = userMessage.getParts().map(part => {
             if (part instanceof RoleMessage.Part.Text.Constructor)
                 return Google.createPartFromText(part.text);
             else if (part instanceof Function.Response)
@@ -55,11 +69,10 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         return Google.createUserContent(parts);
     }
     protected convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Google.Content {
-        if (aiMessage instanceof GoogleAiMessage.Constructor)
+        if (aiMessage instanceof GoogleMessage.Ai.Constructor)
             return aiMessage.raw;
         else {
-            if (aiMessage.specific) throw new RoleMessage.SpecificMessageError();
-            const parts = aiMessage.parts.map(part => {
+            const parts = aiMessage.getParts().map(part => {
                 if (part instanceof RoleMessage.Part.Text.Constructor)
                     return Google.createPartFromText(part.text);
                 else if (part instanceof Function.Call) {
@@ -71,8 +84,7 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         }
     }
     protected convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Google.Content {
-        if (developerMessage.specific) throw new RoleMessage.SpecificMessageError();
-        const parts = developerMessage.parts.map(part => Google.createPartFromText(part.text));
+        const parts = developerMessage.getParts().map(part => Google.createPartFromText(part.text));
         return { parts };
     }
     protected convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[] {
@@ -83,13 +95,19 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         });
     }
 
-    protected convertToAiMessage(content: Google.Content): GoogleAiMessage<Function.Declaration.From<fdm>> {
+    public convertToAiMessage(content: Google.Content): GoogleMessage.Ai<Function.Declaration.From<fdm>> {
+        return GoogleEngineBase.convertToAiMessage<fdm>(content);
+    }
+    public static convertToAiMessage<fdm extends Function.Declaration.Map = {}>(
+        content: Google.Content,
+        fdm?: fdm,
+    ): GoogleMessage.Ai<Function.Declaration.From<fdm>> {
         assert(content.parts);
-        return GoogleAiMessage.create(content.parts.flatMap(part => {
+        return GoogleMessage.Ai.create(content.parts.flatMap(part => {
             const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
             assert(part.functionCall || part.text, new ResponseInvalid('Unknown content part', { cause: content }));
             if (part.text) parts.push(RoleMessage.Part.Text.create(part.text));
-            if (part.functionCall) parts.push(this.convertToFunctionCall(part.functionCall));
+            if (part.functionCall) parts.push(GoogleEngineBase.convertToFunctionCall(part.functionCall, fdm));
             return parts;
         }), content);
     }
@@ -121,38 +139,21 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         else if (toolChoice === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
         else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...toolChoice] };
     }
-
-    protected override validateToolCallsByToolChoice(
-        toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
-    ): void {
-        return EngineBase.validateToolCallsByToolChoice<fdm>(this.toolChoice, toolCalls);
-    }
 }
 
 
-export type GoogleAiMessage<fdu extends Function.Declaration> = GoogleAiMessage.Constructor<fdu>;
-export namespace GoogleAiMessage {
-    export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[], raw: Google.Content): GoogleAiMessage<fdu> {
-        return new Constructor(parts, raw);
-    }
-    export const NOMINAL = Symbol();
-    export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
-        public declare readonly [NOMINAL]: void;
-        public constructor(parts: RoleMessage.Ai.Part<fdu>[], public raw: Google.Content) {
-            super(parts);
+export namespace GoogleMessage {
+    export type Ai<fdu extends Function.Declaration> = Ai.Constructor<fdu>;
+    export namespace Ai {
+        export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[], raw: Google.Content): Ai<fdu> {
+            return new Constructor(parts, raw);
         }
-    }
-    export interface Snapshot<in out fdu extends Function.Declaration = never> {
-        parts: RoleMessage.Ai.Part.Snapshot<fdu>[];
-        raw: Google.Content;
-    }
-    export function restore<fdu extends Function.Declaration>(snapshot: GoogleAiMessage.Snapshot<fdu>): GoogleAiMessage<fdu> {
-        return new Constructor(RoleMessage.Ai.restore<fdu>(snapshot.parts).parts, snapshot.raw);
-    }
-    export function capture<fdu extends Function.Declaration>(message: GoogleAiMessage<fdu>): GoogleAiMessage.Snapshot<fdu> {
-        return {
-            parts: RoleMessage.Ai.capture(message),
-            raw: message.raw,
-        };
+        export const NOMINAL = Symbol();
+        export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
+            public declare readonly [NOMINAL]: void;
+            public constructor(parts: RoleMessage.Ai.Part<fdu>[], public raw: Google.Content) {
+                super(parts);
+            }
+        }
     }
 }

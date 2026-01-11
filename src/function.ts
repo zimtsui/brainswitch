@@ -1,4 +1,5 @@
 import { type Static, type TSchema } from '@sinclair/typebox';
+import assert from 'node:assert';
 
 
 export interface Function<in out fd extends Function.Declaration> {
@@ -34,8 +35,8 @@ export namespace Function {
     }
 
     export class Call<in out fd extends Declaration> {
-        public static readonly CALL_NOMINAL = Symbol();
-        private declare readonly [Call.CALL_NOMINAL]: void;
+        public static readonly NOMINAL = Symbol();
+        private declare readonly [Call.NOMINAL]: void;
         public id?: string;
         public name: fd['name'];
         public args: Static<fd['paraschema']>;
@@ -63,11 +64,24 @@ export namespace Function {
         export namespace create {
             export type Options<fdu extends Declaration> = fdu extends infer fd extends Function.Declaration ? Omit<Call<fd>, never> : never;
         }
+
+        export function validate<fdm extends Function.Declaration.Map = {}>(
+            toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+            toolChoice: Function.ToolChoice<fdm>,
+            e: Error,
+        ): void {
+            if (toolChoice === Function.ToolChoice.REQUIRED)
+                assert(toolCalls.length, e);
+            else if (toolChoice instanceof Array) for (const fc of toolCalls)
+                assert(toolChoice.includes(fc.name), e);
+            else if (toolChoice === Function.ToolChoice.NONE)
+                assert(!toolCalls.length, e);
+        }
     }
 
     export class Response<in out fd extends Declaration> {
-        public static readonly RESPONSE_NOMINAL = Symbol();
-        private declare readonly [Response.RESPONSE_NOMINAL]: void;
+        public static readonly NOMINAL = Symbol();
+        private declare readonly [Response.NOMINAL]: void;
         public id?: string;
         public name: fd['name'];
         public text: string;

@@ -4,13 +4,14 @@ import OpenAI from 'openai';
 import assert from 'node:assert';
 import { OpenAIChatCompletionsEngineBase } from './openai-chatcompletions-base.ts';
 import { type InferenceContext } from '../inference-context.ts';
-import { type Engine, ResponseInvalid } from '../engine.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
+import { ResponseInvalid } from '../engine.ts';
 
 
 export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsEngineBase<fdm> {
     private client: OpenAI;
 
-    public constructor(options: Engine.Options<fdm>) {
+    public constructor(options: CompatibleEngine.Options<fdm>) {
         super(options);
         this.client = new OpenAI({
             baseURL: this.baseUrl,

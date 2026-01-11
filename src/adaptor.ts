@@ -1,15 +1,15 @@
 import { Config } from '#config';
 import { Function } from './function.ts';
-import { type Engine } from './engine.ts';
+import { type CompatibleEngine } from './compatible-engine.ts';
 import assert from 'node:assert';
 import { Throttle } from './throttle.ts';
-import { OpenAIChatCompletionsEngine } from './engine.d/openai-chatcompletions.ts';
-import { GoogleRestfulEngine } from './engine.d/google-rest.ts';
-import { OpenRouterMonolithEngine } from './engine.d/openrouter-monolith.ts';
-import { OpenRouterStreamEngine } from './engine.d/openrouter-stream.ts';
-import { AliyunEngine } from './engine.d/aliyun.ts';
-import { OpenAIResponsesEngine } from './engine.d/openai-responses.ts';
-import { AnthropicEngine } from './engine.d/anthropic.ts';
+import { OpenAIChatCompletionsEngine } from './compatible-engine.d/openai-chatcompletions.ts';
+import { GoogleRestfulEngine } from './compatible-engine.d/google-rest.ts';
+import { OpenRouterMonolithEngine } from './compatible-engine.d/openrouter-monolith.ts';
+import { OpenRouterStreamEngine } from './compatible-engine.d/openrouter-stream.ts';
+import { AliyunEngine } from './compatible-engine.d/aliyun.ts';
+import { OpenAIResponsesEngine } from './compatible-engine.d/openai-responses.ts';
+import { AnthropicEngine } from './compatible-engine.d/anthropic.ts';
 
 
 export class Adaptor {
@@ -29,17 +29,17 @@ export class Adaptor {
         endpoint: string,
         functionDeclarationMap: fdm,
         toolChoice?: Function.ToolChoice<fdm>,
-        parallelFunctionCall?: boolean,
-    ): Engine<Function.Declaration.From<fdm>> {
+        parallelToolCall?: boolean,
+    ): CompatibleEngine<Function.Declaration.From<fdm>> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         assert(endpointSpec);
         const throttle = this.throttles.get(endpoint);
         assert(throttle);
-        const options: Engine.Options<fdm> = {
+        const options: CompatibleEngine.Options<fdm> = {
             ...endpointSpec,
             functionDeclarationMap,
             toolChoice,
-            parallelFunctionCall,
+            parallelToolCall,
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')
@@ -64,7 +64,7 @@ export class Adaptor {
         functionDeclarationMap: fdm,
         applyPatch?: boolean,
         toolChoice?: Function.ToolChoice<fdm>,
-        parallelFunctionCall?: boolean,
+        parallelToolCall?: boolean,
     ): OpenAIResponsesEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         assert(endpointSpec);
@@ -74,7 +74,7 @@ export class Adaptor {
             ...endpointSpec,
             functionDeclarationMap,
             toolChoice,
-            parallelFunctionCall,
+            parallelToolCall,
             throttle,
             applyPatch,
         };

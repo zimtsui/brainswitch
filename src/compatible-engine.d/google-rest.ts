@@ -1,9 +1,10 @@
-import { type Engine, ResponseInvalid } from '../engine.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
+import { ResponseInvalid } from '../engine.ts';
 import { type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
-import { GoogleAiMessage, GoogleEngineBase } from './google-base.ts';
+import { GoogleMessage, GoogleEngineBase } from './google-base.ts';
 import { fetch } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 
@@ -17,14 +18,14 @@ export namespace GoogleRestfulEngine {
         generationConfig?: Google.GenerationConfig;
     }
 
-    export function create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+    export function create<fdm extends Function.Declaration.Map = {}>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<Function.Declaration.From<fdm>> {
         return new Constructor(options);
     }
 
     export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends GoogleEngineBase<fdm> {
         protected apiURL: URL;
 
-        public constructor(options: Engine.Options<fdm>) {
+        public constructor(options: CompatibleEngine.Options<fdm>) {
             super(options);
 
             this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
@@ -32,7 +33,7 @@ export namespace GoogleRestfulEngine {
 
         protected async fetch(
             ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
-        ): Promise<GoogleAiMessage<Function.Declaration.From<fdm>>> {
+        ): Promise<GoogleMessage.Ai<Function.Declaration.From<fdm>>> {
             const systemInstruction = session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage);
             const contents = this.convertFromChatMessages(session.chatMessages);
 
@@ -100,6 +101,7 @@ export namespace GoogleRestfulEngine {
 
             const aiMessage = this.convertToAiMessage(response.candidates[0].content);
             this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
+
             return aiMessage;
         }
     }

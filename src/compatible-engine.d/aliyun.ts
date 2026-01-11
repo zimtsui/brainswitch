@@ -1,5 +1,5 @@
 import type OpenAI from 'openai';
-import { type Engine } from '../engine.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
 import { Function } from '../function.ts';
 import { OpenAIChatCompletionsStreamEngineBase } from './openai-chatcompletions-stream-base.ts';
 
@@ -10,7 +10,7 @@ export namespace AliyunEngine {
         reasoning_content?: string;
     }
 
-    export function create<fdm extends Function.Declaration.Map = never>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+    export function create<fdm extends Function.Declaration.Map = never>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<Function.Declaration.From<fdm>> {
         return new Constructor<fdm>(options);
     }
 

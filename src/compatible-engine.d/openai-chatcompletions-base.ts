@@ -1,9 +1,10 @@
-import { type Engine, ResponseInvalid } from '../engine.ts';
-import { RoleMessage, Session } from '../session.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
+import { ResponseInvalid } from '../engine.ts';
+import { RoleMessage, type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
-import { EngineBase } from './base.ts';
+import { CommonEngineBase } from './compatible-base.ts';
 import { Ajv } from 'ajv';
 import type { InferenceContext } from '../inference-context.ts';
 
@@ -11,14 +12,12 @@ import type { InferenceContext } from '../inference-context.ts';
 const ajv = new Ajv();
 
 
-export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
+export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends CommonEngineBase<fdm> {
     protected parallel: boolean;
-    protected toolChoice: Function.ToolChoice<fdm>;
 
-    public constructor(options: Engine.Options<fdm>) {
+    public constructor(options: CompatibleEngine.Options<fdm>) {
         super(options);
-        this.parallel = options.parallelFunctionCall ?? false;
-        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+        this.parallel = options.parallelToolCall ?? false;
     }
 
     protected abstract fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
@@ -62,7 +61,7 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
         })();
         assert(
             ajv.validate(fditem.paraschema, args),
-            new ResponseInvalid('Function call not conforming to schema', { cause: apifc }),
+            new ResponseInvalid('Invalid function arguments', { cause: apifc }),
         );
         return Function.Call.create({
             id: apifc.id,
@@ -89,7 +88,7 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
     protected convertFromUserMessage(
         userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
-        const textParts = userMessage.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
+        const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text.Constructor);
         const frs = userMessage.getFunctionResponses();
         if (textParts.length && !frs.length)
             return [{ role: 'user', content: textParts.map(part => ({ type: 'text', text: part.text })) }];
@@ -98,8 +97,9 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
         else throw new Error();
     }
     protected convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
-        const textParts = aiMessage.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
-        const fcParts = aiMessage.parts.filter(part => part instanceof Function.Call);
+        const parts = aiMessage.getParts();
+        const textParts = parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
+        const fcParts = parts.filter(part => part instanceof Function.Call);
         return {
             role: 'assistant',
             content: textParts.length ? textParts.map(part => part.text).join('') : undefined,
@@ -142,7 +142,7 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
         toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
     ): void {
         // https://community.openai.com/t/function-call-with-finish-reason-of-stop/437226/7
-        return EngineBase.validateToolCallsByToolChoice<fdm>(this.toolChoice, toolCalls);
+        super.validateToolCallsByToolChoice(toolCalls);
     }
 
     protected calcCost(usage: OpenAI.CompletionUsage): number {

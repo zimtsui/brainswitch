@@ -1,7 +1,8 @@
-import { EngineBase } from './base.ts';
+import { CommonEngineBase } from './compatible-base.ts';
 import { Function } from '../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
-import { type Engine, ResponseInvalid } from '../engine.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
+import { ResponseInvalid } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import assert from 'node:assert';
@@ -12,11 +13,11 @@ const ajv = new Ajv();
 
 
 export namespace AnthropicEngine {
-    export function create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+    export function create<fdm extends Function.Declaration.Map = {}>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<Function.Declaration.From<fdm>> {
         return new Constructor<fdm>(options);
     }
 
-    export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
+    export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends CommonEngineBase<fdm> {
         protected anthropic = new Anthropic({
             baseURL: this.baseUrl,
             apiKey: this.apiKey,
@@ -24,12 +25,10 @@ export namespace AnthropicEngine {
         });
 
         protected parallel: boolean;
-        protected toolChoice: Function.ToolChoice<fdm>;
 
-        public constructor(options: Engine.Options<fdm>) {
+        public constructor(options: CompatibleEngine.Options<fdm>) {
             super(options);
-            this.parallel = options.parallelFunctionCall ?? false;
-            this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+            this.parallel = options.parallelToolCall ?? false;
         }
 
         protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolUseBlock {
@@ -72,7 +71,7 @@ export namespace AnthropicEngine {
         }
 
         protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
-            return userMessage.parts.map(part => {
+            return userMessage.getParts().map(part => {
                 if (part instanceof RoleMessage.Part.Text.Constructor)
                     return {
                         type: 'text',
@@ -85,10 +84,10 @@ export namespace AnthropicEngine {
         }
 
         protected convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
-            if (aiMessage instanceof AnthropicAiMessage.Constructor)
+            if (aiMessage instanceof AnthropicMessage.Ai.Constructor)
                 return aiMessage.raw;
             else {
-                return aiMessage.parts.map(part => {
+                return aiMessage.getParts().map(part => {
                     if (part instanceof RoleMessage.Part.Text.Constructor)
                         return {
                             type: 'text',
@@ -102,7 +101,7 @@ export namespace AnthropicEngine {
         }
 
         protected convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Anthropic.TextBlockParam[] {
-            return developerMessage.parts.map(part => ({ type: 'text', text: part.text}));
+            return developerMessage.getParts().map(part => ({ type: 'text', text: part.text}));
         }
 
         protected convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): Anthropic.MessageParam {
@@ -145,7 +144,7 @@ export namespace AnthropicEngine {
             };
         }
 
-        protected convertToAiMessage(raw: Anthropic.ContentBlock[]): AnthropicAiMessage<Function.Declaration.From<fdm>> {
+        protected convertToAiMessage(raw: Anthropic.ContentBlock[]): AnthropicMessage.Ai<Function.Declaration.From<fdm>> {
             const parts = raw.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
                 if (item.type === 'text') {
                     return [RoleMessage.Part.Text.create(item.text)];
@@ -155,7 +154,7 @@ export namespace AnthropicEngine {
                     return [];
                 else throw new Error();
             });
-            return AnthropicAiMessage.create(parts, raw);
+            return AnthropicMessage.Ai.create(parts, raw);
         }
 
         protected calcCost(usage: Anthropic.Usage): number {
@@ -248,44 +247,28 @@ export namespace AnthropicEngine {
             return aiMessage;
         }
 
-        protected override validateToolCallsByToolChoice(
-            toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
-        ): void {
-            return EngineBase.validateToolCallsByToolChoice<fdm>(this.toolChoice, toolCalls);
-        }
     }
 }
 
 
-export type AnthropicAiMessage<fdu extends Function.Declaration> = AnthropicAiMessage.Constructor<fdu>;
-export namespace AnthropicAiMessage {
-    export function create<fdu extends Function.Declaration>(
-        parts: RoleMessage.Ai.Part<fdu>[],
-        raw: Anthropic.ContentBlock[],
-    ): AnthropicAiMessage<fdu> {
-        return new Constructor(parts, raw);
-    }
-    export const NOMINAL = Symbol();
-    export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
-        public declare readonly [NOMINAL]: void;
-        public constructor(
+export namespace AnthropicMessage {
+    export type Ai<fdu extends Function.Declaration> = Ai.Constructor<fdu>;
+    export namespace Ai {
+        export function create<fdu extends Function.Declaration>(
             parts: RoleMessage.Ai.Part<fdu>[],
-            public raw: Anthropic.ContentBlock[],
-        ) {
-            super(parts);
+            raw: Anthropic.ContentBlock[],
+        ): Ai<fdu> {
+            return new Constructor(parts, raw);
         }
-    }
-    export interface Snapshot<in out fdu extends Function.Declaration = never> {
-        parts: RoleMessage.Ai.Part.Snapshot<fdu>[];
-        raw: Anthropic.ContentBlock[];
-    }
-    export function restore<fdu extends Function.Declaration>(snapshot: Snapshot<fdu>): AnthropicAiMessage<fdu> {
-        return new Constructor(RoleMessage.Ai.restore<fdu>(snapshot.parts).parts, snapshot.raw);
-    }
-    export function capture<fdu extends Function.Declaration>(message: AnthropicAiMessage<fdu>): Snapshot<fdu> {
-        return {
-            parts: RoleMessage.Ai.capture(message),
-            raw: message.raw,
-        };
+        export const NOMINAL = Symbol();
+        export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
+            public declare readonly [NOMINAL]: void;
+            public constructor(
+                parts: RoleMessage.Ai.Part<fdu>[],
+                public raw: Anthropic.ContentBlock[],
+            ) {
+                super(parts);
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-import { type Engine } from '../engine.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import { type Session } from '../session.ts';
@@ -21,12 +21,12 @@ export interface OpenRouterChatCompletionChoice extends OpenAI.ChatCompletion.Ch
 }
 
 export namespace OpenRouterMonolithEngine {
-    export function create<fdm extends Function.Declaration.Map = {}>(options: Engine.Options<fdm>): Engine<Function.Declaration.From<fdm>> {
+    export function create<fdm extends Function.Declaration.Map = {}>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<Function.Declaration.From<fdm>> {
         return new Constructor<fdm>(options);
     }
 
     export class Constructor<in out fdm extends Function.Declaration.Map = {}> extends OpenAIChatCompletionsMonolithEngineBase<fdm> {
-        public constructor(options: Engine.Options<fdm>) {
+        public constructor(options: CompatibleEngine.Options<fdm>) {
             super(options);
             assert(
                 options.inputPrice === undefined,
