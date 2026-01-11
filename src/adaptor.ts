@@ -60,7 +60,7 @@ export class Adaptor {
         else throw new Error();
     }
 
-    public makeOpenAIResponsesEngine<fdm extends Function.Declaration.Map = {}>(
+    public makeOpenAIResponsesNativeEngine<fdm extends Function.Declaration.Map = {}>(
         endpoint: string,
         functionDeclarationMap: fdm,
         applyPatch?: boolean,
