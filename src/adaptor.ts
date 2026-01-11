@@ -62,9 +62,9 @@ export class Adaptor {
     public makeOpenAIResponsesEngine<fdm extends Function.Declaration.Map = {}>(
         endpoint: string,
         functionDeclarationMap: fdm,
+        applyPatch?: boolean,
         toolChoice?: Function.ToolChoice<fdm>,
         parallelFunctionCall?: boolean,
-        applyPatch?: boolean,
     ): OpenAIResponsesEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         assert(endpointSpec);
