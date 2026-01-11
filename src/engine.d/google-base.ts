@@ -40,6 +40,7 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
     }
 
     protected convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content {
+        if (userMessage.specific) throw new RoleMessage.SpecificMessageError();
         const parts = userMessage.parts.map(part => {
             if (part instanceof RoleMessage.Part.Text.Constructor)
                 return Google.createPartFromText(part.text);
@@ -55,6 +56,7 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         if (aiMessage instanceof GoogleAiMessage.Constructor)
             return aiMessage.raw;
         else {
+            if (aiMessage.specific) throw new RoleMessage.SpecificMessageError();
             const parts = aiMessage.parts.map(part => {
                 if (part instanceof RoleMessage.Part.Text.Constructor)
                     return Google.createPartFromText(part.text);
@@ -67,6 +69,7 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         }
     }
     protected convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Google.Content {
+        if (developerMessage.specific) throw new RoleMessage.SpecificMessageError();
         const parts = developerMessage.parts.map(part => Google.createPartFromText(part.text));
         return { parts };
     }
@@ -110,11 +113,11 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         };
     }
 
-    protected convertFromFunctionCallMode(mode: Function.ToolChoice<fdm>): Google.FunctionCallingConfig {
-        if (mode === Function.ToolChoice.NONE) return { mode: Google.FunctionCallingConfigMode.NONE };
-        else if (mode === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
-        else if (mode === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
-        else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...mode] };
+    protected convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>): Google.FunctionCallingConfig {
+        if (toolChoice === Function.ToolChoice.NONE) return { mode: Google.FunctionCallingConfigMode.NONE };
+        else if (toolChoice === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
+        else if (toolChoice === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
+        else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...toolChoice] };
     }
 }
 

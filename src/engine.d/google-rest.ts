@@ -38,15 +38,15 @@ export namespace GoogleRestfulEngine {
 
             await this.throttle.requests(ctx);
 
+            const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
+            const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
             const reqbody: GoogleRestfulEngine.Request = {
                 contents,
-                tools: Object.keys(this.fdm).length ? [{
-                    functionDeclarations: Object.entries(this.fdm).map(
-                        fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>),
-                    ),
+                tools: tools.length ? [{
+                    functionDeclarations: tools,
                 }] : undefined,
-                toolConfig: Object.keys(this.fdm).length && this.toolChoice ? {
-                    functionCallingConfig: this.convertFromFunctionCallMode(this.toolChoice),
+                toolConfig: tools.length ? {
+                    functionCallingConfig: this.convertFromToolChoice(this.toolChoice),
                 } : undefined,
                 systemInstruction,
                 generationConfig: this.maxTokens || this.additionalOptions ? {

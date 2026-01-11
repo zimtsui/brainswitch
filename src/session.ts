@@ -58,11 +58,17 @@ export namespace ChatMessage {
 
 export type RoleMessage = RoleMessage.Constructor;
 export namespace RoleMessage {
+    export class SpecificMessageError extends Error {
+        public constructor() {
+            super('This message is specific to a certain type of engines.');
+        }
+    }
     export abstract class Constructor {
         public static readonly ROLE_MESSAGE_NOMINAL = Symbol();
         private declare readonly [Constructor.ROLE_MESSAGE_NOMINAL]: void;
         public abstract getText(): string;
         public abstract getOnlyText(): string;
+        public specific: boolean = false;
     }
     export namespace Part {
         export type Text = Text.Constructor;
@@ -100,18 +106,22 @@ export namespace RoleMessage {
                 super();
             }
             public getText(): string {
+                if (this.specific) throw new SpecificMessageError();
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor).map(part => part.text).join('');
             }
             public getOnlyText(): string {
+                if (this.specific) throw new SpecificMessageError();
                 assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Constructor));
                 return this.getText();
             }
             public getOnlyFunctionCall(): Function.Call.Distributive<fdu> {
+                if (this.specific) throw new SpecificMessageError();
                 const fcs = this.getFunctionCalls();
                 assert(fcs.length === 1);
                 return fcs[0]!;
             }
             public getFunctionCalls(): Function.Call.Distributive<fdu>[] {
+                if (this.specific) throw new SpecificMessageError();
                 return this.parts.filter(part => part instanceof Function.Call);
             }
         }

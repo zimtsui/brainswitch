@@ -3,13 +3,13 @@ import { Function } from './function.ts';
 import { type Engine } from './engine.ts';
 import assert from 'node:assert';
 import { Throttle } from './throttle.ts';
-import { OpenAIChatCompletionsEngine } from './api-types/openai-chatcompletions.ts';
-import { GoogleRestfulEngine } from './api-types/google-rest.ts';
-import { OpenRouterMonolithEngine } from './api-types/openrouter-monolith.ts';
-import { OpenRouterStreamEngine } from './api-types/openrouter-stream.ts';
-import { AliyunEngine } from './api-types/aliyun.ts';
-import { OpenAIResponsesEngine } from './api-types/openai-responses.ts';
-import { AnthropicEngine } from './api-types/anthropic.ts';
+import { OpenAIChatCompletionsEngine } from './engine.d/openai-chatcompletions.ts';
+import { GoogleRestfulEngine } from './engine.d/google-rest.ts';
+import { OpenRouterMonolithEngine } from './engine.d/openrouter-monolith.ts';
+import { OpenRouterStreamEngine } from './engine.d/openrouter-stream.ts';
+import { AliyunEngine } from './engine.d/aliyun.ts';
+import { OpenAIResponsesEngine } from './engine.d/openai-responses.ts';
+import { AnthropicEngine } from './engine.d/anthropic.ts';
 
 
 export class Adaptor {
@@ -57,5 +57,28 @@ export class Adaptor {
         else if (endpointSpec.apiType === 'anthropic')
             return AnthropicEngine.create<fdm>(options);
         else throw new Error();
+    }
+
+    public makeOpenAIResponsesEngine<fdm extends Function.Declaration.Map = {}>(
+        endpoint: string,
+        functionDeclarationMap: fdm,
+        toolChoice?: Function.ToolChoice<fdm>,
+        parallelFunctionCall?: boolean,
+        applyPatch?: boolean,
+    ): OpenAIResponsesEngine<fdm> {
+        const endpointSpec = this.config.brainswitch.endpoints[endpoint];
+        assert(endpointSpec);
+        const throttle = this.throttles.get(endpoint);
+        assert(throttle);
+        const options: OpenAIResponsesEngine.Options<fdm> = {
+            ...endpointSpec,
+            functionDeclarationMap,
+            toolChoice,
+            parallelFunctionCall,
+            throttle,
+            applyPatch,
+        };
+        assert(endpointSpec.apiType === 'openai-responses');
+        return OpenAIResponsesEngine.create<fdm>(options);
     }
 }

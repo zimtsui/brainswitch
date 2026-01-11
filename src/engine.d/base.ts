@@ -83,9 +83,7 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
         this.outputPrice = options.outputPrice ?? 0;
         this.cachedPrice = options.cachePrice ?? this.inputPrice;
         this.fdm = options.functionDeclarationMap;
-        if (Object.keys(this.fdm).length)
-            this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
-        else this.toolChoice = Function.ToolChoice.NONE;
+        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
         this.additionalOptions = options.additionalOptions;
         this.throttle = options.throttle;
         this.timeout = options.timeout;

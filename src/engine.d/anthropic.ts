@@ -99,6 +99,10 @@ export namespace AnthropicEngine {
             }
         }
 
+        protected convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Anthropic.TextBlockParam[] {
+            return developerMessage.parts.map(part => ({ type: 'text', text: part.text}));
+        }
+
         protected convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): Anthropic.MessageParam {
             if (chatMessage instanceof RoleMessage.User.Constructor)
                 return { role: 'user', content: this.convertFromUserMessage(chatMessage) };
@@ -126,13 +130,13 @@ export namespace AnthropicEngine {
         }
 
         protected makeParams(session: Session<Function.Declaration.From<fdm>>): Anthropic.MessageCreateParamsStreaming {
-            const fdentries = Object.entries(this.fdm);
-            const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry as Function.Declaration.Entry.From<fdm>));
+            const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
+            const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
             return {
                 model: this.model,
                 stream: true,
                 messages: session.chatMessages.map(chatMessage => this.convertFromChatMessage(chatMessage)),
-                system: session.developerMessage?.parts.map(part => ({ type: 'text', text: part.text})),
+                system: session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage),
                 tools: tools.length ? tools : undefined,
                 max_tokens: this.maxTokens ?? 64 * 1024,
                 ...this.additionalOptions,
