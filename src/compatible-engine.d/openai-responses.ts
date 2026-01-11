@@ -131,7 +131,7 @@ export namespace OpenAIResponsesEngine {
         }
 
 
-        protected logApiAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void {
+        protected logAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void {
             for (const item of output)
                 if (item.type === 'message') {
                     assert(item.content.every(part => part.type === 'output_text'));
@@ -179,7 +179,7 @@ export namespace OpenAIResponsesEngine {
                 new ResponseInvalid('Abnormal response status', { cause: response }),
             );
 
-            this.logApiAiMessage(ctx, response.output);
+            this.logAiMessage(ctx, response.output);
 
             assert(response.usage);
             const cost = this.utilities.calcCost(response.usage);
