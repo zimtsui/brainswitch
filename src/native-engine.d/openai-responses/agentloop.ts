@@ -1,9 +1,9 @@
-import { type InferenceContext } from '../inference-context.ts';
-import { RoleMessage, type Session } from '../native-engine.d/openai-responses/session.ts';
-import { Function } from '../function.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../../function.ts';
 import assert from 'node:assert';
-import { Tool } from '../native-engine.d/openai-responses/tool.ts';
-import { OpenAIResponsesNativeEngine } from '../native-engine.d/openai-responses.ts';
+import { Tool } from './tool.ts';
+import { OpenAIResponsesNativeEngine } from './engine.ts';
 
 
 /**
