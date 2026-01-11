@@ -24,10 +24,12 @@ export namespace AnthropicEngine {
         });
 
         protected parallel: boolean;
+        protected toolChoice: Function.ToolChoice<fdm>;
 
         public constructor(options: Engine.Options<fdm>) {
             super(options);
             this.parallel = options.parallelFunctionCall ?? false;
+            this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
         }
 
         protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolUseBlock {
@@ -241,9 +243,15 @@ export namespace AnthropicEngine {
             ctx.logger.message?.debug(response.usage);
 
             const aiMessage = this.convertToAiMessage(response.content);
-            this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+            this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 
             return aiMessage;
+        }
+
+        protected override validateToolCallsByToolChoice(
+            toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+        ): void {
+            return EngineBase.validateToolCallsByToolChoice<fdm>(this.toolChoice, toolCalls);
         }
     }
 }

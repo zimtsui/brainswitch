@@ -19,7 +19,6 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
     protected outputPrice: number;
     protected cachedPrice: number;
     protected fdm: fdm;
-    protected toolChoice: Function.ToolChoice<fdm>;
     protected abstract parallel: boolean;
     protected additionalOptions?: Record<string, unknown>;
     protected throttle: Throttle;
@@ -83,7 +82,7 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
         this.outputPrice = options.outputPrice ?? 0;
         this.cachedPrice = options.cachePrice ?? this.inputPrice;
         this.fdm = options.functionDeclarationMap;
-        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+        // this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
         this.additionalOptions = options.additionalOptions;
         this.throttle = options.throttle;
         this.timeout = options.timeout;
@@ -92,13 +91,20 @@ export abstract class EngineBase<in out fdm extends Function.Declaration.Map = {
         this.proxyAgent = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
     }
 
-    protected validateFunctionCallByToolChoice(functionCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-        if (this.toolChoice === Function.ToolChoice.REQUIRED)
-            assert(functionCalls.length, new ResponseInvalid('Function call required but missing'));
-        else if (this.toolChoice instanceof Array) for (const fc of functionCalls)
-            assert(this.toolChoice.includes(fc.name), new ResponseInvalid('Function call not in allowed tools'));
-        else if (this.toolChoice === Function.ToolChoice.NONE)
-            assert(!functionCalls.length, new ResponseInvalid('Function call not allowed but made'));
+    protected abstract validateToolCallsByToolChoice(
+        toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+    ): void;
+
+    protected static validateToolCallsByToolChoice<fdm extends Function.Declaration.Map = {}>(
+        toolChoice: Function.ToolChoice<fdm>,
+        toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+    ): void {
+        if (toolChoice === Function.ToolChoice.REQUIRED)
+            assert(toolCalls.length, new ResponseInvalid('Function call required but missing'));
+        else if (toolChoice instanceof Array) for (const fc of toolCalls)
+            assert(toolChoice.includes(fc.name), new ResponseInvalid('Function call not in allowed tools'));
+        else if (toolChoice === Function.ToolChoice.NONE)
+            assert(!toolCalls.length, new ResponseInvalid('Function call not allowed but made'));
     }
 }
 

@@ -18,8 +18,11 @@ export namespace OpenAIResponsesEngine {
     }
 
     export type ToolChoice<fdm extends Function.Declaration.Map = {}> =
-        | Function.ToolChoice<fdm>
-        | (Function.Declaration.Map.NameOf<fdm> | typeof ToolChoice.APPLY_PATCH)[];
+        | typeof Function.ToolChoice.NONE
+        | typeof Function.ToolChoice.REQUIRED
+        | typeof Function.ToolChoice.AUTO
+        | (Function.Declaration.Map.NameOf<fdm> | typeof ToolChoice.APPLY_PATCH)[]
+    ;
     export namespace ToolChoice {
         export const APPLY_PATCH = Symbol();
     }
@@ -102,12 +105,14 @@ export namespace OpenAIResponsesEngine {
         protected apiURL: URL;
         protected parallel: boolean;
         protected applyPatch: boolean;
+        protected toolChoice: ToolChoice<fdm>;
 
         public constructor(options: Options<fdm>) {
             super(options);
             this.apiURL = new URL(`${this.baseUrl}/responses`);
             this.parallel = options.parallelFunctionCall ?? false;
             this.applyPatch = options.applyPatch ?? false;
+            this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
         }
 
         protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseFunctionToolCall {
@@ -284,9 +289,31 @@ export namespace OpenAIResponsesEngine {
             ctx.logger.message?.debug(response.usage);
 
             const aiMessage = this.convertToAiMessage(response.output);
-            this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+            this.validateToolCallsByToolChoice(aiMessage.getSpecificToolCalls());
 
             return aiMessage;
+        }
+
+        protected override validateToolCallsByToolChoice(
+            toolCalls: OpenAIResponsesAiMessage.ToolCall<Function.Declaration.From<fdm>>[],
+        ): void {
+            return Constructor.validateToolCallsByToolChoice<fdm>(this.toolChoice, toolCalls);
+        }
+
+        protected static override validateToolCallsByToolChoice<fdm extends Function.Declaration.Map = {}>(
+            toolChoice: ToolChoice<fdm>,
+            toolCalls: OpenAIResponsesAiMessage.ToolCall<Function.Declaration.From<fdm>>[],
+        ): void {
+            if (toolChoice === Function.ToolChoice.REQUIRED)
+                assert(toolCalls.length, new ResponseInvalid('Function call required but missing'));
+            else if (toolChoice instanceof Array) for (const fc of toolCalls) {
+                if (fc instanceof Function.Call )
+                    assert(toolChoice.includes(fc.name), new ResponseInvalid('Function call not in allowed tools'));
+                else if (fc instanceof OpenAIResponsesAiMessage.Part.ApplyPatchCall.Constructor)
+                    assert(toolChoice.includes(ToolChoice.APPLY_PATCH), new ResponseInvalid('Apply patch call not in allowed tools'));
+                else throw new Error();
+            } else if (toolChoice === Function.ToolChoice.NONE)
+                assert(!toolCalls.length, new ResponseInvalid('Function call not allowed but made'));
         }
     }
 }

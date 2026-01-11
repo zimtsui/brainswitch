@@ -194,7 +194,7 @@ export abstract class OpenAIChatCompletionsStreamEngineBase<in out fdm extends F
         if (apifcs?.length) ctx.logger.message?.debug(apifcs);
         ctx.logger.message?.debug(completion.usage);
 
-        this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+        this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 
         return aiMessage;
     }

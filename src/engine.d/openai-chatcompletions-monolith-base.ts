@@ -73,7 +73,7 @@ export abstract class OpenAIChatCompletionsMonolithEngineBase<in out fdm extends
         if (apifcs?.length) ctx.logger.message?.debug(apifcs);
         ctx.logger.message?.debug(completion.usage);
 
-        this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+        this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 
         return aiMessage;
     }

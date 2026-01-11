@@ -13,10 +13,12 @@ const ajv = new Ajv();
 
 export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
     protected parallel: boolean;
+    protected toolChoice: Function.ToolChoice<fdm>;
 
     public constructor(options: Engine.Options<fdm>) {
         super(options);
         this.parallel = options.parallelFunctionCall ?? false;
+        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
     }
 
     protected abstract fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
@@ -136,9 +138,11 @@ export abstract class OpenAIChatCompletionsEngineBase<in out fdm extends Functio
         }
     }
 
-    protected override validateFunctionCallByToolChoice(fcs: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
+    protected override validateToolCallsByToolChoice(
+        toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+    ): void {
         // https://community.openai.com/t/function-call-with-finish-reason-of-stop/437226/7
-        return super.validateFunctionCallByToolChoice(fcs);
+        return EngineBase.validateToolCallsByToolChoice<fdm>(this.toolChoice, toolCalls);
     }
 
     protected calcCost(usage: OpenAI.CompletionUsage): number {

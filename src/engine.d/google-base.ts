@@ -10,11 +10,13 @@ const ajv = new Ajv();
 
 export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.Map = {}> extends EngineBase<fdm> {
     protected parallel: boolean;
+    protected toolChoice: Function.ToolChoice<fdm>;
 
     protected constructor(options: Engine.Options<fdm>) {
         super(options);
         this.parallel = options.parallelFunctionCall ?? true;
         assert(this.parallel, new Error('Google Engine supports only parallel function calls.'));
+        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
     }
 
     protected convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall {
@@ -118,6 +120,12 @@ export abstract class GoogleEngineBase<in out fdm extends Function.Declaration.M
         else if (toolChoice === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
         else if (toolChoice === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
         else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...toolChoice] };
+    }
+
+    protected override validateToolCallsByToolChoice(
+        toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+    ): void {
+        return EngineBase.validateToolCallsByToolChoice<fdm>(this.toolChoice, toolCalls);
     }
 }
 

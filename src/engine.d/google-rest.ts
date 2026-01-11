@@ -99,7 +99,7 @@ export namespace GoogleRestfulEngine {
             ctx.logger.cost?.(cost);
 
             const aiMessage = this.convertToAiMessage(response.candidates[0].content);
-            this.validateFunctionCallByToolChoice(aiMessage.getFunctionCalls());
+            this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
             return aiMessage;
         }
     }
