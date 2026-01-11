@@ -1,6 +1,6 @@
 {
   "name": "@zimtsui/brainswitch",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "exports": {
     ".": "./build/exports.js",
     "./openai-responses": "./build/native-engine.d/openai-responses/exports.js"
