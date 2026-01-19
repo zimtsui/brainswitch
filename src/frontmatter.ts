@@ -4,7 +4,7 @@ import assert from 'node:assert';
 
 export function prepend(metadata: object): string {
     const frontmatterResult = spawnSync(
-        'cat | pandoc --standalone -f markdown -t markdown --metadata-file=<(cat) /dev/null',
+        'cat | pandoc --wrap=none --standalone -f markdown -t markdown --metadata-file=<(cat) /dev/null',
         { shell: '/usr/bin/bash', input: JSON.stringify(metadata), encoding: 'utf-8' },
     );
     assert(!frontmatterResult.status, new prepend.SyntaxError(frontmatterResult.stderr));
