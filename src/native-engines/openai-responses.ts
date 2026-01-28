@@ -6,7 +6,7 @@ import { type InferenceContext } from '../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import { fetch } from 'undici';
-import { OpenAIResponsesEngine } from '../api-types/openai-responses-engine.ts';
+import { OpenAIResponsesEngine } from '../api-types/openai-responses.ts';
 
 
 export interface OpenAIResponsesNativeEngine<fdm extends Function.Declaration.Map> extends Engine {

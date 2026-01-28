@@ -9,7 +9,6 @@ import { AnthropicEngine } from '../api-types/anthropic.ts';
 
 
 
-
 export namespace AnthropicCompatibleEngine {
     export interface Base<fdm extends Function.Declaration.Map> {
         convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[];

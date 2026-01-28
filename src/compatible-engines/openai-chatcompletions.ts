@@ -5,7 +5,7 @@ import { Function } from '../function.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import type { InferenceContext } from '../inference-context.ts';
-import { type OpenAIChatCompletionsEngine } from '../api-types/openai-chat-completions-engine.ts';
+import { type OpenAIChatCompletionsEngine } from '../api-types/openai-chat-completions.ts';
 
 
 

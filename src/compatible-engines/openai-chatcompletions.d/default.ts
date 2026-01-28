@@ -1,4 +1,4 @@
-import { OpenAIChatCompletionsEngine } from '../../api-types/openai-chat-completions-engine.ts';
+import { OpenAIChatCompletionsEngine } from '../../api-types/openai-chat-completions.ts';
 import { CompatibleEngine } from '../../compatible-engine.ts';
 import { Engine } from '../../engine.ts';
 import { type Function } from '../../function.ts';
@@ -188,7 +188,7 @@ export namespace OpenAIChatCompletionsCompatibleDefaultEngine {
         public fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
             return this.openAIChatCompletionsCompatibleMonolithEngineBase.fetchRaw(ctx, session, signal);
         }
-        public makeParams(session: Session<Function.Declaration.From<fdm, Extract<keyof fdm, string>>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
+        public makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming {
             return this.openAIChatCompletionsCompatibleMonolithEngineBase.makeParams(session);
         }
     }

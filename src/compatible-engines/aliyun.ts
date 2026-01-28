@@ -2,7 +2,7 @@ import type OpenAI from 'openai';
 import { Function } from '../function.ts';
 import { Engine } from '../engine.ts';
 import { CompatibleEngine } from '../compatible-engine.ts';
-import { OpenAIChatCompletionsEngine } from '../api-types/openai-chat-completions-engine.ts';
+import { OpenAIChatCompletionsEngine } from '../api-types/openai-chat-completions.ts';
 import { OpenAIChatCompletionsCompatibleEngine } from './openai-chatcompletions.ts';
 import { OpenAIChatCompletionsCompatibleStreamEngine } from './openai-chatcompletions.d/stream.ts';
 import { type InferenceContext } from '../inference-context.ts';

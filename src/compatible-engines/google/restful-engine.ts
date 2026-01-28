@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { GoogleCompatibleEngine } from './engine.ts';
 import { fetch } from 'undici';
 import { type InferenceContext } from '../../inference-context.ts';
-import { GoogleEngine } from '../../api-types/google-engine-base.ts';
+import { GoogleEngine } from '../../api-types/google.ts';
 
 
 

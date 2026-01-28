@@ -4,7 +4,7 @@ import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import assert from 'node:assert';
 import { CompatibleEngine } from '../../compatible-engine.ts';
-import { GoogleEngine } from '../../api-types/google-engine-base.ts';
+import { GoogleEngine } from '../../api-types/google.ts';
 
 
 
