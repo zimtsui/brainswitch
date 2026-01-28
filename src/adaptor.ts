@@ -3,14 +3,12 @@ import { Function } from './function.ts';
 import { type CompatibleEngine } from './compatible-engine.ts';
 import assert from 'node:assert';
 import { Throttle } from './throttle.ts';
-import { OpenAIChatCompletionsEngine } from './compatible-engine.d/openai-chatcompletions.ts';
-import { GoogleRestfulEngine } from './compatible-engine.d/google-rest.ts';
-import { OpenRouterMonolithEngine } from './compatible-engine.d/openrouter-monolith.ts';
-import { OpenRouterStreamEngine } from './compatible-engine.d/openrouter-stream.ts';
-import { AliyunEngine } from './compatible-engine.d/aliyun.ts';
-import { OpenAIResponsesEngine } from './compatible-engine.d/openai-responses.ts';
-import { AnthropicEngine } from './compatible-engine.d/anthropic.ts';
-import { OpenAIResponsesNativeEngine } from './native-engine.d/openai-responses/engine.ts';
+import { OpenAIChatCompletionsCompatibleDefaultEngine } from './compatible-engines/openai-chatcompletions.d/default.ts';
+import { GoogleCompatibleRestfulEngine } from './compatible-engines/google/restful-engine.ts';
+import { AliyunEngine } from './compatible-engines/aliyun.ts';
+import { OpenAIResponsesCompatibleEngine } from './compatible-engines/openai-responses.ts';
+import { AnthropicCompatibleEngine } from './compatible-engines/anthropic.ts';
+import { OpenAIResponsesNativeEngine } from './native-engines/openai-responses.ts';
 
 
 export class Adaptor {
@@ -31,7 +29,7 @@ export class Adaptor {
         functionDeclarationMap: fdm,
         toolChoice?: Function.ToolChoice<fdm>,
         parallelToolCall?: boolean,
-    ): CompatibleEngine<Function.Declaration.From<fdm>> {
+    ): CompatibleEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         assert(endpointSpec);
         const throttle = this.throttles.get(endpoint);
@@ -44,19 +42,15 @@ export class Adaptor {
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')
-            return OpenAIResponsesEngine.create<fdm>(options);
+            return OpenAIResponsesCompatibleEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'openai-chatcompletions')
-            return OpenAIChatCompletionsEngine.create<fdm>(options);
+            return OpenAIChatCompletionsCompatibleDefaultEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'google')
-            return GoogleRestfulEngine.create<fdm>(options);
+            return GoogleCompatibleRestfulEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'aliyun')
             return AliyunEngine.create<fdm>(options);
-        else if (endpointSpec.apiType === 'openrouter-monolith')
-            return OpenRouterMonolithEngine.create<fdm>(options);
-        else if (endpointSpec.apiType === 'openrouter-stream')
-            return OpenRouterStreamEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'anthropic')
-            return AnthropicEngine.create<fdm>(options);
+            return AnthropicCompatibleEngine.create<fdm>(options);
         else throw new Error();
     }
 
@@ -68,7 +62,7 @@ export class Adaptor {
         parallelToolCall?: boolean,
     ): OpenAIResponsesNativeEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
-        assert(endpointSpec);
+        assert(endpointSpec?.apiType === 'openai-responses');
         const throttle = this.throttles.get(endpoint);
         assert(throttle);
         const options: OpenAIResponsesNativeEngine.Options<fdm> = {

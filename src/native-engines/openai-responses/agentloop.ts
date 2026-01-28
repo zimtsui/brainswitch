@@ -3,7 +3,7 @@ import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
 import assert from 'node:assert';
 import { Tool } from './tool.ts';
-import { OpenAIResponsesNativeEngine } from './engine.ts';
+import { OpenAIResponsesNativeEngine } from '../openai-responses.ts';
 
 
 /**

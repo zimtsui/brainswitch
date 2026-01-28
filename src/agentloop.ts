@@ -11,7 +11,7 @@ import assert from 'node:assert';
 export async function *agentloop<fdm extends Function.Declaration.Map>(
     ctx: InferenceContext,
     session: Session<Function.Declaration.From<fdm>>,
-    engine: CompatibleEngine<Function.Declaration.From<fdm>>,
+    engine: CompatibleEngine<fdm>,
     fnm: Function.Map<fdm>,
     limit = Number.POSITIVE_INFINITY,
 ): AsyncGenerator<string, string, void> {

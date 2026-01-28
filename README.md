@@ -18,7 +18,6 @@ Brainswitch 支持在一次会话中途切换模型并保持对话上下文，�
 -   OpenAI Responses
 -   Google
 -   百炼
--   OpenRouter
 -   Anthropic
 
 ## 安装
@@ -54,8 +53,6 @@ export type Config = {
                 | 'openai-responses'
                 | 'google'
                 | 'aliyun'
-                | 'openrouter-monolith'
-                | 'openrouter-stream'
                 | 'anthropic'
             ;
             proxy?: string;
