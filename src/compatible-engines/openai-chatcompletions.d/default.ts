@@ -11,10 +11,10 @@ import OpenAI from 'openai';
 
 export namespace OpenAIChatCompletionsCompatibleDefaultEngine {
     export function create<fdm extends Function.Declaration.Map>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<fdm> {
-        return new OpenAIChatCompletionsCompatibleDefaultEngine.Constructor<fdm>(options);
+        return new OpenAIChatCompletionsCompatibleDefaultEngine.Instance<fdm>(options);
     }
 
-    export class Constructor<in out fdm extends Function.Declaration.Map> implements OpenAIChatCompletionsCompatibleMonolithEngine.Instance<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIChatCompletionsCompatibleMonolithEngine.Instance<fdm> {
         protected engineBase: Engine.Base<fdm>;
         protected compatibleEngineBase: CompatibleEngine.Base<fdm>;
         protected openAIChatCompletionsEngineBase: OpenAIChatCompletionsEngine.Base<fdm>;
@@ -22,11 +22,11 @@ export namespace OpenAIChatCompletionsCompatibleDefaultEngine {
         protected openAIChatCompletionsCompatibleMonolithEngineBase: OpenAIChatCompletionsCompatibleMonolithEngine.Base<fdm>;
 
         public constructor(options: Engine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Constructor<fdm>(this, options);
-            this.compatibleEngineBase = new CompatibleEngine.Base.Constructor<fdm>(this, options);
-            this.openAIChatCompletionsEngineBase = new OpenAIChatCompletionsEngine.Base.Constructor<fdm>(this, options);
-            this.openAIChatCompletionsCompatibleEngineBase = new OpenAIChatCompletionsCompatibleEngine.Base.Constructor<fdm>(this);
-            this.openAIChatCompletionsCompatibleMonolithEngineBase = new OpenAIChatCompletionsCompatibleMonolithEngine.Base.Constructor<fdm>(this);
+            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
+            this.compatibleEngineBase = new CompatibleEngine.Base.Instance<fdm>(this, options);
+            this.openAIChatCompletionsEngineBase = new OpenAIChatCompletionsEngine.Base.Instance<fdm>(this, options);
+            this.openAIChatCompletionsCompatibleEngineBase = new OpenAIChatCompletionsCompatibleEngine.Base.Instance<fdm>(this);
+            this.openAIChatCompletionsCompatibleMonolithEngineBase = new OpenAIChatCompletionsCompatibleMonolithEngine.Base.Instance<fdm>(this);
         }
 
 

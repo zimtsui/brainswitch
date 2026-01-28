@@ -16,7 +16,7 @@ export namespace Tool {
             : never;
     };
 
-    export type Choice<fdm extends Function.Declaration.Map = {}> =
+    export type Choice<fdm extends Function.Declaration.Map> =
         |   typeof Function.ToolChoice.NONE
         |   typeof Function.ToolChoice.REQUIRED
         |   typeof Function.ToolChoice.AUTO

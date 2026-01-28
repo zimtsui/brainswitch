@@ -45,7 +45,7 @@ export namespace Engine {
     }
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements Engine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements Engine.Base<fdm> {
             public baseUrl: string;
             public apiKey: string;
             public model: string;

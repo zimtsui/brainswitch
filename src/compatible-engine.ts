@@ -55,7 +55,7 @@ export namespace CompatibleEngine {
 
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements CompatibleEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements CompatibleEngine.Base<fdm> {
 
             public toolChoice: Function.ToolChoice<fdm>;
 

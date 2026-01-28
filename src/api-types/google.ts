@@ -23,7 +23,7 @@ export namespace GoogleEngine {
     {}
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements GoogleEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleEngine.Base<fdm> {
             public parallel: boolean;
 
             public constructor(

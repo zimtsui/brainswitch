@@ -26,14 +26,14 @@ export namespace AliyunEngine {
     }
 
     export namespace Base {
-        export class Constructor implements AliyunEngine.Base {
+        export class Instance implements AliyunEngine.Base {
             public getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
                 return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
             }
         }
     }
 
-    export class Constructor<in out fdm extends Function.Declaration.Map> implements AliyunEngine.Instance<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements AliyunEngine.Instance<fdm> {
         protected engineBase: Engine.Base<fdm>;
         protected compatibleEngineBase: CompatibleEngine.Base<fdm>;
         protected openAIChatCompletionsEngineBase: OpenAIChatCompletionsEngine.Base<fdm>;
@@ -42,12 +42,12 @@ export namespace AliyunEngine {
         protected aliyunEngineBase: AliyunEngine.Base;
 
         public constructor(options: Engine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Constructor<fdm>(this, options);
-            this.compatibleEngineBase = new CompatibleEngine.Base.Constructor<fdm>(this, options);
-            this.openAIChatCompletionsEngineBase = new OpenAIChatCompletionsEngine.Base.Constructor<fdm>(this, options);
-            this.openAIChatCompletionsCompatibleEngineBase = new OpenAIChatCompletionsCompatibleEngine.Base.Constructor<fdm>(this);
-            this.openAIChatCompletionsCompatibleStreamEngineBase = new OpenAIChatCompletionsCompatibleStreamEngine.Base.Constructor<fdm>(this);
-            this.aliyunEngineBase = new AliyunEngine.Base.Constructor();
+            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
+            this.compatibleEngineBase = new CompatibleEngine.Base.Instance<fdm>(this, options);
+            this.openAIChatCompletionsEngineBase = new OpenAIChatCompletionsEngine.Base.Instance<fdm>(this, options);
+            this.openAIChatCompletionsCompatibleEngineBase = new OpenAIChatCompletionsCompatibleEngine.Base.Instance<fdm>(this);
+            this.openAIChatCompletionsCompatibleStreamEngineBase = new OpenAIChatCompletionsCompatibleStreamEngine.Base.Instance<fdm>(this);
+            this.aliyunEngineBase = new AliyunEngine.Base.Instance();
         }
 
 
@@ -227,6 +227,6 @@ export namespace AliyunEngine {
 
 
     export function create<fdm extends Function.Declaration.Map>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<fdm> {
-        return new AliyunEngine.Constructor<fdm>(options);
+        return new AliyunEngine.Instance<fdm>(options);
     }
 }

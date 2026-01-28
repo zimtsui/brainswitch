@@ -61,7 +61,7 @@ export namespace OpenAIResponsesNativeEngine {
     {}
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesNativeEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesNativeEngine.Base<fdm> {
             protected apiURL: URL;
             public parallel: boolean;
             public applyPatch: boolean;
@@ -130,7 +130,7 @@ export namespace OpenAIResponsesNativeEngine {
 
             public convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
                 return userMessage.getParts().map(part => {
-                    if (part instanceof RoleMessage.Part.Text.Constructor)
+                    if (part instanceof RoleMessage.Part.Text.Instance)
                         return {
                             type: 'message',
                             role: 'user',
@@ -154,9 +154,9 @@ export namespace OpenAIResponsesNativeEngine {
             }
 
             public convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
-                if (chatMessage instanceof RoleMessage.User.Constructor)
+                if (chatMessage instanceof RoleMessage.User.Instance)
                     return this.convertFromUserMessage(chatMessage);
-                else if (chatMessage instanceof RoleMessage.Ai.Constructor)
+                else if (chatMessage instanceof RoleMessage.Ai.Instance)
                     return chatMessage.getRaw();
                 else throw new Error();
             }
@@ -278,15 +278,15 @@ export namespace OpenAIResponsesNativeEngine {
         }
     }
 
-    export class Constructor<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesNativeEngine.Instance<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesNativeEngine.Instance<fdm> {
         protected engineBase: Engine.Base<fdm>;
         protected openAIResponsesEngineBase: OpenAIResponsesEngine.Base<fdm>;
         protected openAIResponsesNativeEngine: OpenAIResponsesNativeEngine.Base<fdm>;
 
         public constructor(options: OpenAIResponsesNativeEngine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Constructor<fdm>(this, options);
-            this.openAIResponsesEngineBase = new OpenAIResponsesEngine.Base.Constructor<fdm>(this);
-            this.openAIResponsesNativeEngine = new OpenAIResponsesNativeEngine.Base.Constructor<fdm>(this, options);
+            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
+            this.openAIResponsesEngineBase = new OpenAIResponsesEngine.Base.Instance<fdm>(this);
+            this.openAIResponsesNativeEngine = new OpenAIResponsesNativeEngine.Base.Instance<fdm>(this, options);
         }
 
 
@@ -449,6 +449,6 @@ export namespace OpenAIResponsesNativeEngine {
     export function create<fdm extends Function.Declaration.Map>(
         options: OpenAIResponsesNativeEngine.Options<fdm>,
     ): OpenAIResponsesNativeEngine<fdm> {
-        return new OpenAIResponsesNativeEngine.Constructor<fdm>(options);
+        return new OpenAIResponsesNativeEngine.Instance<fdm>(options);
     }
 }

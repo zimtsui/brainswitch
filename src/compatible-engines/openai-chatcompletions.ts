@@ -30,7 +30,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
     }
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements OpenAIChatCompletionsCompatibleEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIChatCompletionsCompatibleEngine.Base<fdm> {
             public constructor(protected instance: OpenAIChatCompletionsCompatibleEngine.Instance<fdm>) {}
 
             public async fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -60,7 +60,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
             public convertFromUserMessage(
                 userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
             ): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
-                const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text.Constructor);
+                const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text.Instance);
                 const frs = userMessage.getFunctionResponses();
                 if (textParts.length && !frs.length)
                     return [{ role: 'user', content: textParts.map(part => ({ type: 'text', text: part.text })) }];
@@ -71,7 +71,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
 
             public convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
                 const parts = aiMessage.getParts();
-                const textParts = parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor);
+                const textParts = parts.filter(part => part instanceof RoleMessage.Part.Text.Instance);
                 const fcParts = parts.filter(part => part instanceof Function.Call);
                 return {
                     role: 'assistant',
@@ -81,11 +81,11 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
             }
 
             public convertFromRoleMessage(roleMessage: RoleMessage): OpenAI.ChatCompletionMessageParam[] {
-                if (roleMessage instanceof RoleMessage.Developer.Constructor)
+                if (roleMessage instanceof RoleMessage.Developer.Instance)
                     return [this.convertFromDeveloperMessage(roleMessage)];
-                else if (roleMessage instanceof RoleMessage.User.Constructor)
+                else if (roleMessage instanceof RoleMessage.User.Instance)
                     return this.convertFromUserMessage(roleMessage);
-                else if (roleMessage instanceof RoleMessage.Ai.Constructor)
+                else if (roleMessage instanceof RoleMessage.Ai.Instance)
                     return [this.convertFromAiMessage(roleMessage)];
                 else throw new Error();
             }

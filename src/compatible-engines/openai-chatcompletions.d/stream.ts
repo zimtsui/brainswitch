@@ -25,7 +25,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
     }
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements OpenAIChatCompletionsCompatibleStreamEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIChatCompletionsCompatibleStreamEngine.Base<fdm> {
             protected client: OpenAI;
 
             public constructor(protected instance: OpenAIChatCompletionsCompatibleStreamEngine.Instance<fdm>) {

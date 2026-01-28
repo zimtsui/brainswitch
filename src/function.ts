@@ -65,7 +65,7 @@ export namespace Function {
             export type Options<fdu extends Declaration> = fdu extends infer fd extends Function.Declaration ? Omit<Call<fd>, never> : never;
         }
 
-        export function validate<fdm extends Function.Declaration.Map = {}>(
+        export function validate<fdm extends Function.Declaration.Map>(
             toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
             toolChoice: Function.ToolChoice<fdm>,
             e: Error,

@@ -33,7 +33,7 @@ export namespace OpenAIResponsesCompatibleEngine {
     {}
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesCompatibleEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesCompatibleEngine.Base<fdm> {
             protected apiURL: URL;
             public parallel: boolean;
 
@@ -72,7 +72,7 @@ export namespace OpenAIResponsesCompatibleEngine {
 
             public convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
                 return userMessage.getParts().map(part => {
-                    if (part instanceof RoleMessage.Part.Text.Constructor)
+                    if (part instanceof RoleMessage.Part.Text.Instance)
                         return {
                             type: 'message',
                             role: 'user',
@@ -85,11 +85,11 @@ export namespace OpenAIResponsesCompatibleEngine {
             }
 
             public convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
-                if (aiMessage instanceof OpenAIResponsesCompatibleEngine.Message.Ai.Constructor)
+                if (aiMessage instanceof OpenAIResponsesCompatibleEngine.Message.Ai.Instance)
                     return aiMessage.getRaw();
                 else {
                     return aiMessage.getParts().map(part => {
-                        if (part instanceof RoleMessage.Part.Text.Constructor)
+                        if (part instanceof RoleMessage.Part.Text.Instance)
                             return {
                                 role: 'assistant',
                                 content: part.text,
@@ -106,9 +106,9 @@ export namespace OpenAIResponsesCompatibleEngine {
             }
 
             public convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput {
-                if (chatMessage instanceof RoleMessage.User.Constructor)
+                if (chatMessage instanceof RoleMessage.User.Instance)
                     return this.convertFromUserMessage(chatMessage);
-                else if (chatMessage instanceof RoleMessage.Ai.Constructor)
+                else if (chatMessage instanceof RoleMessage.Ai.Instance)
                     return this.convertFromAiMessage(chatMessage);
                 else throw new Error();
             }
@@ -208,17 +208,17 @@ export namespace OpenAIResponsesCompatibleEngine {
     }
 
 
-    export class Constructor<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesCompatibleEngine.Instance<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesCompatibleEngine.Instance<fdm> {
         protected engineBase: Engine.Base<fdm>;
         protected compatibleEngineBase: CompatibleEngine.Base<fdm>;
         protected openAIResponsesEngineBase: OpenAIResponsesEngine.Base<fdm>;
         protected openAIResponsesCompatibleEngineBase: OpenAIResponsesCompatibleEngine.Base<fdm>;
 
         public constructor(options: OpenAIResponsesCompatibleEngine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Constructor<fdm>(this, options);
-            this.compatibleEngineBase = new CompatibleEngine.Base.Constructor<fdm>(this, options);
-            this.openAIResponsesEngineBase = new OpenAIResponsesEngine.Base.Constructor<fdm>(this);
-            this.openAIResponsesCompatibleEngineBase = new OpenAIResponsesCompatibleEngine.Base.Constructor<fdm>(this, options);
+            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
+            this.compatibleEngineBase = new CompatibleEngine.Base.Instance<fdm>(this, options);
+            this.openAIResponsesEngineBase = new OpenAIResponsesEngine.Base.Instance<fdm>(this);
+            this.openAIResponsesCompatibleEngineBase = new OpenAIResponsesCompatibleEngine.Base.Instance<fdm>(this, options);
         }
 
 
@@ -386,20 +386,20 @@ export namespace OpenAIResponsesCompatibleEngine {
     export function create<fdm extends Function.Declaration.Map>(
         options: OpenAIResponsesCompatibleEngine.Options<fdm>,
     ): CompatibleEngine<fdm> {
-        return new OpenAIResponsesCompatibleEngine.Constructor<fdm>(options);
+        return new OpenAIResponsesCompatibleEngine.Instance<fdm>(options);
     }
 
     export namespace Message {
-        export type Ai<fdu extends Function.Declaration> = Ai.Constructor<fdu>;
+        export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
         export namespace Ai {
             export function create<fdu extends Function.Declaration>(
                 parts: RoleMessage.Ai.Part<fdu>[],
                 raw: OpenAI.Responses.ResponseOutputItem[],
             ): Ai<fdu> {
-                return new Constructor(parts, raw);
+                return new Instance(parts, raw);
             }
             export const NOMINAL = Symbol();
-            export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
+            export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Ai.Instance<fdu> {
                 public declare readonly [NOMINAL]: void;
                 public constructor(
                     parts: RoleMessage.Ai.Part<fdu>[],

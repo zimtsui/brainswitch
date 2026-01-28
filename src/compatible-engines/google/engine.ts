@@ -26,13 +26,13 @@ export namespace GoogleCompatibleEngine {
 
     export namespace Base {
 
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleEngine.Base<fdm> {
             public constructor(protected instance: GoogleCompatibleEngine.Instance<fdm>) {}
 
 
             public convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content {
                 const parts = userMessage.getParts().map(part => {
-                    if (part instanceof RoleMessage.Part.Text.Constructor)
+                    if (part instanceof RoleMessage.Part.Text.Instance)
                         return Google.createPartFromText(part.text);
                     else if (part instanceof Function.Response)
                         return {
@@ -44,11 +44,11 @@ export namespace GoogleCompatibleEngine {
             }
 
             public convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Google.Content {
-                if (aiMessage instanceof GoogleCompatibleEngine.Message.Ai.Constructor)
+                if (aiMessage instanceof GoogleCompatibleEngine.Message.Ai.Instance)
                     return aiMessage.raw;
                 else {
                     const parts = aiMessage.getParts().map(part => {
-                        if (part instanceof RoleMessage.Part.Text.Constructor)
+                        if (part instanceof RoleMessage.Part.Text.Instance)
                             return Google.createPartFromText(part.text);
                         else if (part instanceof Function.Call) {
                             assert(part.args instanceof Object);
@@ -66,8 +66,8 @@ export namespace GoogleCompatibleEngine {
 
             public convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[] {
                 return chatMessages.map(chatMessage => {
-                    if (chatMessage instanceof RoleMessage.User.Constructor) return this.convertFromUserMessage(chatMessage);
-                    else if (chatMessage instanceof RoleMessage.Ai.Constructor) return this.convertFromAiMessage(chatMessage);
+                    if (chatMessage instanceof RoleMessage.User.Instance) return this.convertFromUserMessage(chatMessage);
+                    else if (chatMessage instanceof RoleMessage.Ai.Instance) return this.convertFromAiMessage(chatMessage);
                     else throw new Error();
                 });
             }
@@ -122,13 +122,13 @@ export namespace GoogleCompatibleEngine {
     }
 
     export namespace Message {
-        export type Ai<fdu extends Function.Declaration> = Ai.Constructor<fdu>;
+        export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
         export namespace Ai {
             export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[], raw: Google.Content): Ai<fdu> {
-                return new Constructor(parts, raw);
+                return new Instance(parts, raw);
             }
             export const NOMINAL = Symbol();
-            export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
+            export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Ai.Instance<fdu> {
                 public declare readonly [NOMINAL]: void;
                 public constructor(parts: RoleMessage.Ai.Part<fdu>[], public raw: Google.Content) {
                     super(parts);

@@ -24,7 +24,7 @@ export namespace OpenAIResponsesEngine {
     {}
 
     export namespace Base {
-        export class Constructor<fdm extends Function.Declaration.Map> {
+        export class Instance<fdm extends Function.Declaration.Map> {
             public constructor(protected instance: OpenAIResponsesEngine.Instance<fdm>) {}
 
             public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {

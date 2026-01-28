@@ -22,7 +22,7 @@ export namespace GoogleCompatibleRestfulEngine {
     {}
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleRestfulEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleRestfulEngine.Base<fdm> {
             protected apiURL: URL;
 
             public constructor(protected instance: GoogleCompatibleEngine.Instance<fdm>) {
@@ -112,7 +112,7 @@ export namespace GoogleCompatibleRestfulEngine {
     }
 
 
-    export class Constructor<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleRestfulEngine.Instance<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleRestfulEngine.Instance<fdm> {
         protected engineBase: Engine.Base<fdm>;
         protected compatibleEngineBase: CompatibleEngine.Base<fdm>;
         protected googleEngineBase: GoogleEngine.Base<fdm>;
@@ -120,11 +120,11 @@ export namespace GoogleCompatibleRestfulEngine {
         protected googleCompatibleRestfulEngineBase: GoogleCompatibleRestfulEngine.Base<fdm>;
 
         public constructor(options: GoogleCompatibleRestfulEngine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Constructor<fdm>(this, options);
-            this.compatibleEngineBase = new CompatibleEngine.Base.Constructor<fdm>(this, options);
-            this.googleEngineBase = new GoogleEngine.Base.Constructor<fdm>(this, options);
-            this.googleCompatibleEngineBase = new GoogleCompatibleEngine.Base.Constructor<fdm>(this);
-            this.googleCompatibleRestfulEngineBase = new GoogleCompatibleRestfulEngine.Base.Constructor<fdm>(this);
+            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
+            this.compatibleEngineBase = new CompatibleEngine.Base.Instance<fdm>(this, options);
+            this.googleEngineBase = new GoogleEngine.Base.Instance<fdm>(this, options);
+            this.googleCompatibleEngineBase = new GoogleCompatibleEngine.Base.Instance<fdm>(this);
+            this.googleCompatibleRestfulEngineBase = new GoogleCompatibleRestfulEngine.Base.Instance<fdm>(this);
         }
 
 
@@ -277,6 +277,6 @@ export namespace GoogleCompatibleRestfulEngine {
     export interface Options<in out fdm extends Function.Declaration.Map> extends CompatibleEngine.Options<fdm> {}
 
     export function create<fdm extends Function.Declaration.Map>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<fdm> {
-        return new GoogleCompatibleRestfulEngine.Constructor(options);
+        return new GoogleCompatibleRestfulEngine.Instance(options);
     }
 }

@@ -27,12 +27,12 @@ export namespace AnthropicCompatibleEngine {
 
     export namespace Base {
 
-        export class Constructor<in out fdm extends Function.Declaration.Map = {}> implements AnthropicCompatibleEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Base<fdm> {
             public constructor(protected instance: AnthropicCompatibleEngine.Instance<fdm>) {}
 
             public convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
                 return userMessage.getParts().map(part => {
-                    if (part instanceof RoleMessage.Part.Text.Constructor)
+                    if (part instanceof RoleMessage.Part.Text.Instance)
                         return {
                             type: 'text',
                             text: part.text,
@@ -44,11 +44,11 @@ export namespace AnthropicCompatibleEngine {
             }
 
             public convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
-                if (aiMessage instanceof AnthropicCompatibleEngine.Message.Ai.Constructor)
+                if (aiMessage instanceof AnthropicCompatibleEngine.Message.Ai.Instance)
                     return aiMessage.raw;
                 else {
                     return aiMessage.getParts().map(part => {
-                        if (part instanceof RoleMessage.Part.Text.Constructor)
+                        if (part instanceof RoleMessage.Part.Text.Instance)
                             return {
                                 type: 'text',
                                 text: part.text,
@@ -65,9 +65,9 @@ export namespace AnthropicCompatibleEngine {
             }
 
             public convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): Anthropic.MessageParam {
-                if (chatMessage instanceof RoleMessage.User.Constructor)
+                if (chatMessage instanceof RoleMessage.User.Instance)
                     return { role: 'user', content: this.convertFromUserMessage(chatMessage) };
-                else if (chatMessage instanceof RoleMessage.Ai.Constructor)
+                else if (chatMessage instanceof RoleMessage.Ai.Instance)
                     return { role: 'assistant', content: this.convertFromAiMessage(chatMessage) };
                 else throw new Error();
             }
@@ -184,16 +184,16 @@ export namespace AnthropicCompatibleEngine {
     }
 
     export namespace Message {
-        export type Ai<fdu extends Function.Declaration> = Ai.Constructor<fdu>;
+        export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
         export namespace Ai {
             export function create<fdu extends Function.Declaration>(
                 parts: RoleMessage.Ai.Part<fdu>[],
                 raw: Anthropic.ContentBlock[],
             ): Ai<fdu> {
-                return new Constructor(parts, raw);
+                return new Instance(parts, raw);
             }
             export const NOMINAL = Symbol();
-            export class Constructor<out fdu extends Function.Declaration> extends RoleMessage.Ai.Constructor<fdu> {
+            export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Ai.Instance<fdu> {
                 public declare readonly [NOMINAL]: void;
                 public constructor(
                     parts: RoleMessage.Ai.Part<fdu>[],
@@ -206,17 +206,17 @@ export namespace AnthropicCompatibleEngine {
     }
 
 
-    export class Constructor<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Instance<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Instance<fdm> {
         protected engineBase: Engine.Base<fdm>;
         protected compatibleEngineBase: CompatibleEngine.Base<fdm>;
         protected anthropicEngineBase: AnthropicEngine.Base<fdm>;
         protected anthropicCompatibleEngineBase: AnthropicCompatibleEngine.Base<fdm>;
 
         public constructor(options: AnthropicCompatibleEngine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Constructor<fdm>(this, options);
-            this.compatibleEngineBase = new CompatibleEngine.Base.Constructor<fdm>(this, options);
-            this.anthropicEngineBase = new AnthropicEngine.Base.Constructor<fdm>(this, options);
-            this.anthropicCompatibleEngineBase = new AnthropicCompatibleEngine.Base.Constructor<fdm>(this);
+            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
+            this.compatibleEngineBase = new CompatibleEngine.Base.Instance<fdm>(this, options);
+            this.anthropicEngineBase = new AnthropicEngine.Base.Instance<fdm>(this, options);
+            this.anthropicCompatibleEngineBase = new AnthropicCompatibleEngine.Base.Instance<fdm>(this);
         }
 
 
@@ -380,7 +380,7 @@ export namespace AnthropicCompatibleEngine {
     }
 
     export function create<fdm extends Function.Declaration.Map>(options: AnthropicCompatibleEngine.Options<fdm>): CompatibleEngine<fdm> {
-        return new AnthropicCompatibleEngine.Constructor<fdm>(options);
+        return new AnthropicCompatibleEngine.Instance<fdm>(options);
     }
 
     export interface Options<fdm extends Function.Declaration.Map> extends CompatibleEngine.Options<fdm> {}

@@ -23,7 +23,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
         if (!tcs.length) return response.getOnlyText();
         const ptcs: Promise<Tool.Response<fdu>>[] = [];
         for (const part of response.getParts()) {
-            if (part instanceof RoleMessage.Part.Text.Constructor) {
+            if (part instanceof RoleMessage.Part.Text.Instance) {
                 yield part.text;
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.Distributive<fdu>;

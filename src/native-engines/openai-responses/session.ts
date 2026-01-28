@@ -13,11 +13,11 @@ export interface Session<out fdu extends Function.Declaration = never> {
 export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User<fdu> | RoleMessage.Ai<fdu>;
 
 
-export type RoleMessage = RoleMessage.Constructor;
+export type RoleMessage = RoleMessage.Instance;
 export namespace RoleMessage {
-    export abstract class Constructor {
+    export abstract class Instance {
         public static readonly ROLE_MESSAGE_NOMINAL = Symbol();
-        private declare readonly [Constructor.ROLE_MESSAGE_NOMINAL]: void;
+        private declare readonly [Instance.ROLE_MESSAGE_NOMINAL]: void;
         public abstract getText(): string;
         public abstract getOnlyText(): string;
     }
@@ -25,16 +25,16 @@ export namespace RoleMessage {
         export import Text = Compatible.RoleMessage.Part.Text;
     }
 
-    export type Ai<fdu extends Function.Declaration = never> = Ai.Constructor<fdu>;
+    export type Ai<fdu extends Function.Declaration = never> = Ai.Instance<fdu>;
     export namespace Ai {
         export function create<fdu extends Function.Declaration = never>(
             parts: Ai.Part<fdu>[],
             raw: OpenAI.Responses.ResponseOutputItem[],
         ): Ai<fdu> {
-            return new Constructor(parts, raw);
+            return new Instance(parts, raw);
         }
         export const NOMINAL = Symbol();
-        export class Constructor<out fdu extends Function.Declaration = never> extends RoleMessage.Constructor {
+        export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
             public declare readonly [NOMINAL]: void;
             public constructor(
                 protected parts: Ai.Part<fdu>[],
@@ -50,10 +50,10 @@ export namespace RoleMessage {
                 return this.raw;
             }
             public getText(): string {
-                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor).map(part => part.text).join('');
+                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
             }
             public getOnlyText(): string {
-                assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Constructor));
+                assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance));
                 return this.getText();
             }
             public getOnlyFunctionCall(): Function.Call.Distributive<fdu> {
@@ -89,13 +89,13 @@ export namespace RoleMessage {
         ;
     }
 
-    export type User<fdu extends Function.Declaration = never> = User.Constructor<fdu>;
+    export type User<fdu extends Function.Declaration = never> = User.Instance<fdu>;
     export namespace User {
         export function create<fdu extends Function.Declaration = never>(parts: User.Part<fdu>[]): User<fdu> {
-            return new Constructor(parts);
+            return new Instance(parts);
         }
         export const NOMINAL = Symbol();
-        export class Constructor<out fdu extends Function.Declaration = never> extends RoleMessage.Constructor {
+        export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
             private declare readonly [NOMINAL]: void;
             public constructor(protected parts: User.Part<fdu>[]) {
                 super();
@@ -104,10 +104,10 @@ export namespace RoleMessage {
                 return this.parts;
             }
             public getText(): string {
-                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Constructor).map(part => part.text).join('');
+                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
             }
             public getOnlyText(): string {
-                assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Constructor));
+                assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance));
                 return this.getText();
             }
             public getToolResponses(): Tool.Response<fdu>[] {

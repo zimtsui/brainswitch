@@ -21,7 +21,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
     {}
 
     export namespace Base {
-        export class Constructor<in out fdm extends Function.Declaration.Map = {}> implements OpenAIChatCompletionsCompatibleMonolithEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIChatCompletionsCompatibleMonolithEngine.Base<fdm> {
             protected apiURL: URL;
 
             public constructor(

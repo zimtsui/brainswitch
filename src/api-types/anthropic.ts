@@ -28,7 +28,7 @@ export namespace AnthropicEngine {
 
     export namespace Base {
 
-        export class Constructor<in out fdm extends Function.Declaration.Map = {}> implements AnthropicEngine.Base<fdm> {
+        export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicEngine.Base<fdm> {
             public anthropic: Anthropic;
             public parallel: boolean;
 
