@@ -2,7 +2,7 @@
 
 # Brainswitch
 
-[![Npm package version](https://shields.io/npm/v/@zimtsui/brainswitch)](https://www.npmjs.com/package/@zimtsui/brainswitch)
+[![NPM Version](https://img.shields.io/npm/v/@zimtsui/brainswitch?style=flat-square)](https://www.npmjs.com/package/@zimtsui/brainswitch)
 
 Brainswitch 是一个为 AI 工作流设计的 LLM 推理 API 适配器，支持在会话中途切换模型。
 
