@@ -8,7 +8,7 @@ import { GoogleCompatibleRestfulEngine } from './compatible-engines/google/restf
 import { AliyunEngine } from './compatible-engines/aliyun.ts';
 import { OpenAIResponsesCompatibleEngine } from './compatible-engines/openai-responses.ts';
 import { AnthropicCompatibleEngine } from './compatible-engines/anthropic.ts';
-import { OpenAIResponsesNativeEngine } from './native-engines/openai-responses.ts';
+import { OpenAIResponsesNativeEngine } from './native-engines/openai-responses/engine.ts';
 
 
 export class Adaptor {

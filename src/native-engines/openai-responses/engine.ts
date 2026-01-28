@@ -1,12 +1,12 @@
-import { Function } from '../function.ts';
-import { RoleMessage, type ChatMessage, type Session } from './openai-responses/session.ts';
-import { Tool } from './openai-responses/tool.ts';
-import { ResponseInvalid, Engine, UserAbortion, InferenceTimeout } from '../engine.ts';
-import { type InferenceContext } from '../inference-context.ts';
+import { Function } from '../../function.ts';
+import { RoleMessage, type ChatMessage, type Session } from './session.ts';
+import { Tool } from './tool.ts';
+import { ResponseInvalid, Engine, UserAbortion, InferenceTimeout } from '../../engine.ts';
+import { type InferenceContext } from '../../inference-context.ts';
 import OpenAI from 'openai';
 import assert from 'node:assert';
 import { fetch } from 'undici';
-import { OpenAIResponsesEngine } from '../api-types/openai-responses.ts';
+import { OpenAIResponsesEngine } from '../../api-types/openai-responses.ts';
 
 
 export interface OpenAIResponsesNativeEngine<fdm extends Function.Declaration.Map> extends Engine {
