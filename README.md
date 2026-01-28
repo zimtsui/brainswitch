@@ -10,7 +10,7 @@ Brainswitch 是一个为 AI 工作流设计的 LLM 推理 API 适配器，支持
 
 大多数 LLM 的[聊天模板](https://huggingface.co/docs/transformers/en/chat_templating) ChatML 原生不支持[严格函数调用](https://platform.openai.com/docs/guides/function-calling#strict-mode)，在批处理 AI 工作流中难以达到生产级可靠性。如果仅使用 OpenAI 等支持严格函数调用的服务商，那么可选的模型型号会大幅受限。
 
-Brainswitch 支持在一次会话中途切换模型并保持对话上下文，包括 OpenAI、Google、Anthropic 的深度思考模型[交替思考](https://platform.claude.com/docs/en/build-with-claude/extended-thinking#interleaved-thinking)的加密思考内容。有了 Brainswitch 就可以在会话的大量推理阶段使用最合适的模型生成自然语言结果，在最后的总结阶段切换成支持严格函数调用的模型进行结构化提交。
+Brainswitch 支持在一次会话中途切换模型并保持对话上下文，包括 OpenAI、Google、Anthropic 的深度思考模型[交替思考](https://platform.claude.com/docs/en/build-with-claude/extended-thinking#interleaved-thinking)的加密思考内容，这样即可在会话的大量推理阶段使用最合适的模型生成自然语言结果，在最后的总结阶段切换成支持严格函数调用的模型进行结构化提交。
 
 ## 支持服务商 API 类型
 
@@ -67,10 +67,6 @@ export type Config = {
     };
 }
 ```
-
-### 计费说明
-
-OpenRouter 的成本会自动按服务器返回的美元成本并使用固定汇率（1 USD = 8 CNY）换算为人民币记账。
 
 ## 快速上手
 
