@@ -46,6 +46,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
                         assert(apifc.type === 'function');
                         return this.instance.convertToFunctionCall(apifc);
                     }));
+                assert(parts.length, new ResponseInvalid('Content or tool calls not found in Response', { cause: message }));
                 return RoleMessage.Ai.create(parts);
             }
 
