@@ -43,37 +43,41 @@ export namespace GoogleEngine {
             }
 
             public convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-                return GoogleEngine.convertToFunctionCall<fdm>(googlefc, this.instance.fdm);
+                return GoogleEngine.convertToFunctionCall(googlefc, this.instance.fdm);
             }
 
             public convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): Google.FunctionDeclaration {
-                const json = JSON.stringify(fdentry[1].paraschema);
-                const parsed = JSON.parse(json, (key, value) => {
-                    if (key === 'type' && typeof value === 'string') {
-                        if (value === 'string') return Google.Type.STRING;
-                        else if (value === 'number') return Google.Type.NUMBER;
-                        else if (value === 'boolean') return Google.Type.BOOLEAN;
-                        else if (value === 'object') return Google.Type.OBJECT;
-                        else if (value === 'array') return Google.Type.ARRAY;
-                        else throw new Error();
-                    } else if (key === 'additionalProperties' && typeof value === 'boolean')
-                        return;
-                    else return value;
-                }) as Google.Schema;
-                return {
-                    name: fdentry[0],
-                    description: fdentry[1].description,
-                    parameters: parsed,
-                };
+                return GoogleEngine.convertFromFunctionDeclarationEntry(fdentry);
             }
 
         }
+    }
 
+    export function convertFromFunctionDeclarationEntry<fdm extends Function.Declaration.Map>(
+        fdentry: Function.Declaration.Entry.From<fdm>,
+    ): Google.FunctionDeclaration {
+        const json = JSON.stringify(fdentry[1].paraschema);
+        const parsed = JSON.parse(json, (key, value) => {
+            if (key === 'type' && typeof value === 'string') {
+                if (value === 'string') return Google.Type.STRING;
+                else if (value === 'number') return Google.Type.NUMBER;
+                else if (value === 'boolean') return Google.Type.BOOLEAN;
+                else if (value === 'object') return Google.Type.OBJECT;
+                else if (value === 'array') return Google.Type.ARRAY;
+                else throw new Error();
+            } else if (key === 'additionalProperties' && typeof value === 'boolean')
+                return;
+            else return value;
+        }) as Google.Schema;
+        return {
+            name: fdentry[0],
+            description: fdentry[1].description,
+            parameters: parsed,
+        };
     }
 
     export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
-        googlefc: Google.FunctionCall,
-        fdm: fdm,
+        googlefc: Google.FunctionCall, fdm: fdm,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         assert(googlefc.name);
         const fditem = fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
@@ -88,4 +92,13 @@ export namespace GoogleEngine {
             args: googlefc.args,
         } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
     }
+
+    export interface RestfulRequest {
+        contents: Google.Content[];
+        tools?: Google.Tool[];
+        toolConfig?: Google.ToolConfig;
+        systemInstruction?: Google.Content;
+        generationConfig?: Google.GenerationConfig;
+    }
+
 }

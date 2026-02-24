@@ -17,9 +17,9 @@ export namespace RoleMessage {
             super('This message is specific to a certain type of engines.');
         }
     }
+    export const NOMINAL = Symbol();
     export abstract class Instance {
-        public static readonly ROLE_MESSAGE_NOMINAL = Symbol();
-        private declare readonly [Instance.ROLE_MESSAGE_NOMINAL]: void;
+        private declare readonly [NOMINAL]: void;
         public abstract getText(): string;
         public abstract getOnlyText(): string;
     }
@@ -32,9 +32,9 @@ export namespace RoleMessage {
             export function paragraph(text: string): Text {
                 return new Instance(text.trimEnd() + '\n\n');
             }
+            export const NOMINAL = Symbol();
             export class Instance {
-                public static readonly Text_NOMINAL = Symbol();
-                private declare readonly [Instance.Text_NOMINAL]: void;
+                private declare readonly [NOMINAL]: void;
                 public constructor(public text: string) {}
             }
         }
@@ -42,16 +42,16 @@ export namespace RoleMessage {
 
     export type Ai<fdu extends Function.Declaration = never> = Ai.Instance<fdu>;
     export namespace Ai {
-        export function create<fdu extends Function.Declaration = never>(parts: Ai.Part<fdu>[]): Ai<fdu> {
+        export function create<fdu extends Function.Declaration = never>(parts: RoleMessage.Ai.Part<fdu>[]): RoleMessage.Ai<fdu> {
             return new Instance(parts);
         }
         export const NOMINAL = Symbol();
         export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
             public declare readonly [NOMINAL]: void;
-            public constructor(protected parts: Ai.Part<fdu>[]) {
+            public constructor(protected parts: RoleMessage.Ai.Part<fdu>[]) {
                 super();
             }
-            public getParts(): Ai.Part<fdu>[] {
+            public getParts(): RoleMessage.Ai.Part<fdu>[] {
                 return this.parts;
             }
             public getText(): string {
@@ -75,16 +75,16 @@ export namespace RoleMessage {
 
     export type User<fdu extends Function.Declaration = never> = User.Instance<fdu>;
     export namespace User {
-        export function create<fdu extends Function.Declaration = never>(parts: User.Part<fdu>[]): User<fdu> {
+        export function create<fdu extends Function.Declaration = never>(parts: RoleMessage.User.Part<fdu>[]): RoleMessage.User<fdu> {
             return new Instance(parts);
         }
+        export const NOMINAL = Symbol();
         export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
-            public static readonly USER_NOMINAL = Symbol();
-            private declare readonly [Instance.USER_NOMINAL]: void;
-            public constructor(protected parts: User.Part<fdu>[]) {
+            private declare readonly [NOMINAL]: void;
+            public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {
                 super();
             }
-            public getParts(): User.Part<fdu>[] {
+            public getParts(): RoleMessage.User.Part<fdu>[] {
                 return this.parts;
             }
             public getText(): string {
@@ -110,9 +110,9 @@ export namespace RoleMessage {
         export function create(parts: Developer.Part[]): Developer {
             return new Instance(parts);
         }
+        export const NOMINAL = Symbol();
         export class Instance extends RoleMessage.Instance {
-            public static readonly DEVELOPER_NOMINAL = Symbol();
-            private declare readonly [Instance.DEVELOPER_NOMINAL]: void;
+            private declare readonly [NOMINAL]: void;
             public constructor(protected parts: Developer.Part[]) {
                 super();
             }

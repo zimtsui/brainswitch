@@ -102,12 +102,19 @@ export namespace CompatibleEngine {
             }
 
             public validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-                Function.Call.validate<fdm>(
-                    toolCalls,
-                    this.toolChoice,
-                    new ResponseInvalid('Invalid function call', { cause: toolCalls }),
-                );
+                return CompatibleEngine.validateToolCallsByToolChoice(toolCalls, this.toolChoice);
             }
         }
+    }
+
+    export function validateToolCallsByToolChoice<fdm extends Function.Declaration.Map>(
+        toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+        toolChoice: Function.ToolChoice<fdm>,
+    ): void {
+        Function.Call.validate<fdm>(
+            toolCalls,
+            toolChoice,
+            new ResponseInvalid('Invalid function call', { cause: toolCalls }),
+        );
     }
 }

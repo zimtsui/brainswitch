@@ -1,3 +1,5 @@
+## Architecture Diagram
+
 ```mermaid
 classDiagram
 
@@ -15,3 +17,7 @@ CompatibleEngine <|.. OpenAIChatCompletionsCompatibleEngine
 OpenAIChatCompletionsCompatibleEngine <|.. OpenAIChatCompletionsCompatibleMonolithEngine
 OpenAIChatCompletionsCompatibleEngine <|.. OpenAIChatCompletionsCompatibleStreamEngine
 ```
+
+## 继承
+
+用组合代替继承以实现多重继承的效果。
