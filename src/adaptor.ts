@@ -3,7 +3,6 @@ import { Function } from './function.ts';
 import { type CompatibleEngine } from './compatible-engine.ts';
 import assert from 'node:assert';
 import { Throttle } from './throttle.ts';
-import { OpenAIChatCompletionsCompatibleDefaultEngine } from './compatible-engines.d/openai-chatcompletions.d/default.ts';
 import { GoogleCompatibleEngine } from './compatible-engines.d/google.ts';
 import { AliyunEngine } from './compatible-engines.d/aliyun.ts';
 import { OpenAIResponsesCompatibleEngine } from './compatible-engines.d/openai-responses.ts';
@@ -44,8 +43,6 @@ export class Adaptor {
         };
         if (endpointSpec.apiType === 'openai-responses')
             return OpenAIResponsesCompatibleEngine.create<fdm>(options);
-        else if (endpointSpec.apiType === 'openai-chatcompletions')
-            return OpenAIChatCompletionsCompatibleDefaultEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'google')
             return GoogleCompatibleEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'aliyun')

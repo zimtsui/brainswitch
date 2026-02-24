@@ -77,7 +77,7 @@ export namespace GoogleNativeEngine {
                 protected instance: GoogleNativeEngine.Instance<fdm>,
                 options: GoogleNativeEngine.Options<fdm>,
             ) {
-                this.apiURL = new URL(`${this.instance.baseUrl}/responses`);
+                this.apiURL = new URL(`${this.instance.baseUrl}/v1beta/models/${this.instance.model}:generateContent`);
                 this.parallel = options.parallelToolCall ?? false;
                 this.codeExecution = options.codeExecution ?? false;
                 this.urlContext = options.urlContext ?? false;
@@ -180,13 +180,16 @@ export namespace GoogleNativeEngine {
                 await this.instance.throttle.requests(ctx);
 
                 const fdentries = Object.entries(this.instance.fdm) as Function.Declaration.Entry.From<fdm>[];
-                const tools = fdentries.map(fdentry => this.instance.convertFromFunctionDeclarationEntry(fdentry));
+                const functionDeclarations = fdentries.map(fdentry => this.instance.convertFromFunctionDeclarationEntry(fdentry));
+                const tools: Google.Tool[] = [];
+                if (functionDeclarations.length) tools.push({ functionDeclarations });
+                if (this.urlContext) tools.push({ urlContext: {} });
+                if (this.googleSearch) tools.push({ googleSearch: {} });
+                if (this.codeExecution) tools.push({ codeExecution: {} });
                 const reqbody: GoogleEngine.RestfulRequest = {
                     contents,
-                    tools: tools.length ? [{
-                        functionDeclarations: tools,
-                    }] : undefined,
-                    toolConfig: tools.length ? {
+                    tools: tools.length ? tools : undefined,
+                    toolConfig: functionDeclarations.length ? {
                         functionCallingConfig: this.instance.convertFromToolChoice(this.instance.toolChoice),
                     } : undefined,
                     systemInstruction,
