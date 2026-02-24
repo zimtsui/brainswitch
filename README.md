@@ -68,8 +68,6 @@ export type Config = {
 
 ## 快速上手
 
-下面演示：定义一个工具函数，先用 Google 做推理与工具调用，再在同一会话中切换到 OpenAI Responses 做最终的结构化总结。
-
 ```ts
 import { Adaptor, agentloop, RoleMessage, Function, type InferenceContext, type Config, Session } from '@zimtsui/brainswitch';
 import { Type } from '@sinclair/typebox';
@@ -81,28 +79,19 @@ import * as Presets from '@zimtsui/typelog/presets';
 const config: Config = {
     brainswitch: {
         endpoints: {
-            'gpt-4o-mini': {
-                name: 'GPT-4o mini',
-                apiType: 'openai-chatcompletions',
-                baseUrl: 'https://api.openai.com/v1',
-                apiKey: process.env.OPENAI_API_KEY!,
-                model: 'gpt-4o-mini',
-                inputPrice: 5, outputPrice: 15, cachedPrice: 1,
-                rpm: 3000, timeout: 60_000,
-            },
-            'o4-mini': {
-                name: 'o4 mini',
+            'gpt-5-mini': {
+                name: 'GPT-5 mini',
                 apiType: 'openai-responses',
                 baseUrl: 'https://api.openai.com/v1',
                 apiKey: process.env.OPENAI_API_KEY!,
-                model: 'o4-mini',
+                model: 'gpt-5-mini',
             },
-            'gemini-2.5-flash': {
-                name: 'Gemini 2.5 Flash',
+            'gemini-3-flash': {
+                name: 'Gemini 3 Flash',
                 apiType: 'google',
                 baseUrl: 'https://generativelanguage.googleapis.com',
                 apiKey: process.env.GOOGLE_API_KEY!,
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3-flash',
             },
         }
     }
@@ -111,7 +100,7 @@ const config: Config = {
 // 声明函数工具
 const fdm = {
     get_weather: {
-        description: '获取某城市的天气',
+        description: '获取指定城市的天气',
         paraschema: Type.Object({
             city: Type.String(),
             unit: Type.Optional(Type.Union([Type.Literal('C'), Type.Literal('F')]))
@@ -131,7 +120,7 @@ type fdu = Function.Declaration.From<fdm>;
 // 实现函数工具
 export class Submission extends Error {
     public constructor(public weather: string, public advice: string) {
-        super(undefined);
+        super();
     }
 }
 const fnm: Function.Map<fdm> = {
@@ -165,7 +154,7 @@ const session: Session<fdu> = {
 
 // 选择推理引擎
 const adaptor = Adaptor.create(config);
-const engine = adaptor.makeEngine('gpt-4o-mini', fdm, Function.ToolChoice.REQUIRED);
+const engine = adaptor.makeEngine('gpt-5-mini', fdm, Function.ToolChoice.REQUIRED);
 
 // 使用 agentloop 驱动智能体循环，最多 8 轮对话
 try {
