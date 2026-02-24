@@ -45,13 +45,7 @@ export namespace AnthropicEngine {
             }
 
             public convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolUseBlock {
-                assert(fc.id);
-                return {
-                    type: 'tool_use',
-                    id: fc.id,
-                    name: fc.name,
-                    input: fc.args,
-                };
+                throw new Error('Anthropic compatible engine requires native function calls.');
             }
 
             public convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>> {
