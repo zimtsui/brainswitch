@@ -1,7 +1,6 @@
 import { RoleMessage, type Session } from '../../session.ts';
 import { Function } from '../../function.ts';
 import OpenAI from 'openai';
-import assert from 'node:assert';
 import { OpenAIChatCompletionsCompatibleEngine } from '../openai-chatcompletions.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import { fetch } from 'undici';
@@ -65,16 +64,16 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
                     dispatcher: this.instance.proxyAgent,
                     signal,
                 });
-                assert(res.ok, new Error(undefined, { cause: res }));
+                if (res.ok) {} else throw new Error(undefined, { cause: res });
                 const completion = await res.json() as OpenAI.ChatCompletion;
                 ctx.logger.message?.trace(completion);
 
                 const choice = completion.choices[0];
-                assert(choice, new ResponseInvalid('Content missing', { cause: completion }));
+                if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
 
                 this.instance.handleFinishReason(completion, choice.finish_reason);
 
-                assert(completion.usage);
+                if (completion.usage) {} else throw new Error();
                 const cost = this.instance.calcCost(completion.usage);
                 ctx.logger.cost?.(cost);
 

@@ -1,6 +1,5 @@
 import * as Compatible from '../../session.ts';
 import { Function } from '../../function.ts';
-import assert from 'node:assert';
 import { Tool } from './tool.ts';
 import OpenAI from 'openai';
 
@@ -53,21 +52,21 @@ export namespace RoleMessage {
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
             }
             public getOnlyText(): string {
-                assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance));
+                if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
                 return this.getText();
             }
             public getOnlyFunctionCall(): Function.Call.Distributive<fdu> {
                 const tcs = this.getToolCalls();
-                assert(tcs.length === 1);
+                if (tcs.length === 1) {} else throw new Error();
                 const tc = tcs[0]!;
-                assert(tc instanceof Function.Call);
+                if (tc instanceof Function.Call) {} else throw new Error();
                 return tc;
             }
             public getOnlyApplyPatchCall(): Tool.ApplyPatch.Call {
                 const tcs = this.getToolCalls();
-                assert(tcs.length === 1);
+                if (tcs.length === 1) {} else throw new Error();
                 const tc = tcs[0]!;
-                assert(tc instanceof Tool.ApplyPatch.Call);
+                if (tc instanceof Tool.ApplyPatch.Call) {} else throw new Error();
                 return tc;
             }
             public getToolCalls(): Tool.Call<fdu>[] {
@@ -78,7 +77,7 @@ export namespace RoleMessage {
             }
             public getOnlyFunctionCalls(): Function.Call.Distributive<fdu>[] {
                 const tcs = this.getToolCalls();
-                assert(tcs.every(tc => tc instanceof Function.Call));
+                if (tcs.every(tc => tc instanceof Function.Call)) {} else throw new Error();
                 return tcs;
             }
         }
@@ -107,7 +106,7 @@ export namespace RoleMessage {
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
             }
             public getOnlyText(): string {
-                assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance));
+                if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
                 return this.getText();
             }
             public getToolResponses(): Tool.Response<fdu>[] {

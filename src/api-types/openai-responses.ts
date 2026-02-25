@@ -1,4 +1,3 @@
-import assert from 'node:assert';
 import OpenAI from 'openai';
 import { Function } from '../function.ts';
 import { ResponseInvalid } from '../engine.ts';
@@ -28,7 +27,7 @@ export namespace OpenAIResponsesEngine {
             public constructor(protected instance: OpenAIResponsesEngine.Instance<fdm>) {}
 
             public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
-                assert(fr.id);
+                if (fr.id) {} else throw new Error();
                 return {
                     type: 'function_call_output',
                     call_id: fr.id,
@@ -58,7 +57,7 @@ export namespace OpenAIResponsesEngine {
                 apifc: OpenAI.Responses.ResponseFunctionToolCall,
             ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
                 const fditem = this.instance.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
-                assert(fditem, new ResponseInvalid('Unknown function call', { cause: apifc }));
+                if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
                 const args = (() => {
                     try {
                         return JSON.parse(apifc.arguments);
@@ -66,10 +65,8 @@ export namespace OpenAIResponsesEngine {
                         return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
                     }
                 })();
-                assert(
-                    ajv.validate(fditem.paraschema, args),
-                    new ResponseInvalid('Function call not conforming to schema', { cause: apifc }),
-                );
+                if (ajv.validate(fditem.paraschema, args)) {}
+                else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
                 return Function.Call.create({
                     id: apifc.call_id,
                     name: apifc.name,

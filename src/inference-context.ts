@@ -1,5 +1,5 @@
 import { RWLock } from '@zimtsui/coroutine-locks';
-import { Channel } from '@zimtsui/typelog';
+import { type Channel } from '@zimtsui/typelog';
 import * as Presets from '@zimtsui/typelog/presets';
 
 
@@ -13,6 +13,6 @@ export namespace InferenceContext {
     export interface Logger {
         inference?: Channel<typeof Presets.Level, string>;
         message?: Channel<typeof Presets.Level, unknown>;
-        cost?: (deltaCost: number) => void;
+        cost?(deltaCost: number): void;
     }
 }

@@ -3,7 +3,6 @@ import { RoleMessage, type ChatMessage, type Session } from './session.ts';
 import { ResponseInvalid, Engine, UserAbortion, InferenceTimeout } from '../../engine.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import * as Google from '@google/genai';
-import assert from 'node:assert';
 import { fetch } from 'undici';
 import { GoogleEngine } from '../../api-types/google.ts';
 import { GoogleCompatibleEngine } from '../../compatible-engines.d/google.ts';
@@ -121,7 +120,7 @@ export namespace GoogleNativeEngine {
             }
 
             public convertToAiMessage(content: Google.Content): RoleMessage.Ai<Function.Declaration.From<fdm>> {
-                assert(content.parts);
+                if (content.parts) {} else throw new Error();
                 return RoleMessage.Ai.create(content.parts.flatMap(part => {
                     const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
                     let payload = false;
@@ -135,16 +134,16 @@ export namespace GoogleNativeEngine {
                     }
                     if (this.instance.codeExecution && part.executableCode) {
                         payload = true;
-                        assert(part.executableCode.code);
-                        assert(part.executableCode.language);
+                        if (part.executableCode.code) {} else throw new Error();
+                        if (part.executableCode.language) {} else throw new Error();
                         parts.push(RoleMessage.Ai.Part.ExecutableCode.create(part.executableCode.code, part.executableCode.language));
                     }
                     if (this.instance.codeExecution && part.codeExecutionResult) {
                         payload = true;
-                        assert(part.codeExecutionResult.outcome);
+                        if (part.codeExecutionResult.outcome) {} else throw new Error();
                         parts.push(RoleMessage.Ai.Part.CodeExecutionResult.create(part.codeExecutionResult.outcome, part.codeExecutionResult.output));
                     }
-                    assert(payload, new ResponseInvalid('Unknown content part', { cause: content }));
+                    if (payload) {} else throw new ResponseInvalid('Unknown content part', { cause: content });
                     return parts;
                 }), content);
             }
@@ -212,23 +211,22 @@ export namespace GoogleNativeEngine {
                     signal,
                 });
                 ctx.logger.message?.trace(res);
-                assert(res.ok, new Error(undefined, { cause: res }));
+                if (res.ok) {} else throw new Error(undefined, { cause: res });
                 const response = await res.json() as Google.GenerateContentResponse;
 
-                assert(response.candidates?.[0]?.content?.parts?.length, new ResponseInvalid('Content missing', { cause: response }));
+                if (response.candidates?.[0]?.content?.parts?.length) {} else throw new ResponseInvalid('Content missing', { cause: response });
                 if (response.candidates[0].finishReason === Google.FinishReason.MAX_TOKENS)
                     throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                assert(
-                    response.candidates[0].finishReason === Google.FinishReason.STOP,
-                    new ResponseInvalid('Abnormal finish reason', { cause: response }),
-                );
+                if (response.candidates[0].finishReason === Google.FinishReason.STOP) {}
+                else throw new ResponseInvalid('Abnormal finish reason', { cause: response });
 
 
                 for (const part of response.candidates[0].content.parts) {
                     if (part.text) ctx.logger.inference?.debug(part.text+'\n');
                     if (part.functionCall) ctx.logger.message?.debug(part.functionCall);
                 }
-                assert(response.usageMetadata?.promptTokenCount, new Error('Prompt token count absent', { cause: response }));
+                if (response.usageMetadata?.promptTokenCount) {}
+                else throw new Error('Prompt token count absent', { cause: response });
                 ctx.logger.message?.debug(response.usageMetadata);
 
                 const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;

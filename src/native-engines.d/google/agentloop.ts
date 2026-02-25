@@ -2,7 +2,6 @@ import { type InferenceContext } from '../../inference-context.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
 import { type GoogleNativeEngine } from './engine.ts';
-import assert from 'node:assert';
 import * as CompatibleAgentloopModule from '../../agentloop.ts';
 
 
@@ -28,7 +27,6 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.Distributive<fdu>;
                 const f = fnm[fc.name];
-                assert(f);
                 pfrs.push((async () => {
                     return Function.Response.create<fdu>({
                         id: fc.id,

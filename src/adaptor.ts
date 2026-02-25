@@ -1,7 +1,6 @@
 import { Config } from '#config';
 import { Function } from './function.ts';
 import { type CompatibleEngine } from './compatible-engine.ts';
-import assert from 'node:assert';
 import { Throttle } from './throttle.ts';
 import { GoogleCompatibleEngine } from './compatible-engines.d/google.ts';
 import { AliyunEngine } from './compatible-engines.d/aliyun.ts';
@@ -31,9 +30,9 @@ export class Adaptor {
         parallelToolCall?: boolean,
     ): CompatibleEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
-        assert(endpointSpec);
+        if (endpointSpec) {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
-        assert(throttle);
+        if (throttle) {} else throw new Error();
         const options: CompatibleEngine.Options<fdm> = {
             ...endpointSpec,
             functionDeclarationMap,
@@ -60,9 +59,9 @@ export class Adaptor {
         parallelToolCall?: boolean,
     ): OpenAIResponsesNativeEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
-        assert(endpointSpec?.apiType === 'openai-responses');
+        if (endpointSpec?.apiType === 'openai-responses') {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
-        assert(throttle);
+        if (throttle) {} else throw new Error();
         const options: OpenAIResponsesNativeEngine.Options<fdm> = {
             ...endpointSpec,
             functionDeclarationMap,
@@ -84,9 +83,9 @@ export class Adaptor {
         parallelToolCall?: boolean,
     ): GoogleNativeEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
-        assert(endpointSpec?.apiType === 'google');
+        if (endpointSpec?.apiType === 'google') {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
-        assert(throttle);
+        if (throttle) {} else throw new Error();
         const options: GoogleNativeEngine.Options<fdm> = {
             ...endpointSpec,
             functionDeclarationMap,

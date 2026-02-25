@@ -3,7 +3,6 @@ import { ResponseInvalid } from '../engine.ts';
 import { RoleMessage, type Session } from '../session.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
-import assert from 'node:assert';
 import type { InferenceContext } from '../inference-context.ts';
 import { type OpenAIChatCompletionsEngine } from '../api-types/openai-chat-completions.ts';
 
@@ -43,10 +42,10 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
                     parts.push(RoleMessage.Part.Text.create(this.instance.extractContent(message.content)));
                 if (message.tool_calls)
                     parts.push(...message.tool_calls.map(apifc => {
-                        assert(apifc.type === 'function');
+                        if (apifc.type === 'function') {} else throw new Error();
                         return this.instance.convertToFunctionCall(apifc);
                     }));
-                assert(parts.length, new ResponseInvalid('Content or tool calls not found in Response', { cause: message }));
+                if (parts.length) {} else throw new ResponseInvalid('Content or tool calls not found in Response', { cause: message });
                 return RoleMessage.Ai.create(parts);
             }
 

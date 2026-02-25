@@ -1,7 +1,6 @@
 import { type InferenceContext } from '../../inference-context.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
-import assert from 'node:assert';
 import { Tool } from './tool.ts';
 import { OpenAIResponsesNativeEngine } from './engine.ts';
 import * as CompatibleAgentloopModule from '../../agentloop.ts';
@@ -29,7 +28,6 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.Distributive<fdu>;
                 const f = tlm[fc.name];
-                assert(f);
                 ptcs.push((async () => {
                     return Function.Response.create<fdu>({
                         id: fc.id,
@@ -40,7 +38,6 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
             } else if (part instanceof Tool.ApplyPatch.Call) {
                 const apc: Tool.ApplyPatch.Call = part;
                 const tl = tlm[Tool.Choice.APPLY_PATCH];
-                assert(tl);
                 ptcs.push((async () => {
                     return Tool.ApplyPatch.Response.create({
                         id: apc.raw.call_id,

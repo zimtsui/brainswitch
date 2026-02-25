@@ -3,7 +3,6 @@ import { ResponseInvalid, Engine } from '../engine.ts';
 import { RoleMessage, type Session, type ChatMessage } from '../session.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
-import assert from 'node:assert';
 import { fetch } from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { GoogleEngine } from '../api-types/google.ts';
@@ -48,7 +47,7 @@ export namespace GoogleCompatibleEngine {
                         if (part instanceof RoleMessage.Part.Text.Instance)
                             return Google.createPartFromText(part.text);
                         else if (part instanceof Function.Call) {
-                            assert(part.args instanceof Object);
+                            if (part.args instanceof Object) {} else throw new Error();
                             return Google.createPartFromFunctionCall(part.name, part.args as Record<string, unknown>);
                         } else throw new Error();
                     });
@@ -112,23 +111,21 @@ export namespace GoogleCompatibleEngine {
                     signal,
                 });
                 ctx.logger.message?.trace(res);
-                assert(res.ok, new Error(undefined, { cause: res }));
+                if (res.ok) {} else throw new Error(undefined, { cause: res });
                 const response = await res.json() as Google.GenerateContentResponse;
 
-                assert(response.candidates?.[0]?.content?.parts?.length, new ResponseInvalid('Content missing', { cause: response }));
+                if (response.candidates?.[0]?.content?.parts?.length) {} else throw new ResponseInvalid('Content missing', { cause: response });
                 if (response.candidates[0].finishReason === Google.FinishReason.MAX_TOKENS)
                     throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                assert(
-                    response.candidates[0].finishReason === Google.FinishReason.STOP,
-                    new ResponseInvalid('Abnormal finish reason', { cause: response }),
-                );
+                if (response.candidates[0].finishReason === Google.FinishReason.STOP) {}
+                else throw new ResponseInvalid('Abnormal finish reason', { cause: response });
 
 
                 for (const part of response.candidates[0].content.parts) {
                     if (part.text) ctx.logger.inference?.debug(part.text+'\n');
                     if (part.functionCall) ctx.logger.message?.debug(part.functionCall);
                 }
-                assert(response.usageMetadata?.promptTokenCount, new Error('Prompt token count absent', { cause: response }));
+                if (response.usageMetadata?.promptTokenCount) {} else throw new Error('Prompt token count absent', { cause: response });
                 ctx.logger.message?.debug(response.usageMetadata);
 
                 const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
@@ -180,10 +177,10 @@ export namespace GoogleCompatibleEngine {
         content: Google.Content,
         fdm: fdm,
     ): GoogleCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>> {
-        assert(content.parts);
+        if (content.parts) {} else throw new Error();
         return GoogleCompatibleEngine.Message.Ai.create(content.parts.flatMap(part => {
             const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
-            assert(part.functionCall || part.text, new ResponseInvalid('Unknown content part', { cause: content }));
+            if (part.functionCall || part.text) {} else throw new ResponseInvalid('Unknown content part', { cause: content });
             if (part.text) parts.push(RoleMessage.Part.Text.create(part.text));
             if (part.functionCall) parts.push(GoogleEngine.convertToFunctionCall(part.functionCall, fdm));
             return parts;

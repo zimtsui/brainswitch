@@ -1,6 +1,5 @@
 import * as Compatible from '../../session.ts';
 import { Function } from '../../function.ts';
-import assert from 'node:assert';
 import * as Google from '@google/genai';
 
 
@@ -52,12 +51,12 @@ export namespace RoleMessage {
                 return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
             }
             public getOnlyText(): string {
-                assert(this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance));
+                if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
                 return this.getText();
             }
             public getOnlyFunctionCall(): Function.Call.Distributive<fdu> {
                 const fcs = this.getFunctionCalls();
-                assert(fcs.length === 1);
+                if (fcs.length === 1) {} else throw new Error();
                 return fcs[0]!;
             }
             public getFunctionCalls(): Function.Call.Distributive<fdu>[] {

@@ -4,7 +4,6 @@ import { RoleMessage, type ChatMessage, type Session } from '../session.ts';
 import { Engine, ResponseInvalid } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import Anthropic from '@anthropic-ai/sdk';
-import assert from 'node:assert';
 import { AnthropicEngine } from '../api-types/anthropic.ts';
 
 
@@ -114,7 +113,7 @@ export namespace AnthropicCompatibleEngine {
                         ctx.logger.message?.trace(event);
                         response = structuredClone(event.message);
                     } else {
-                        assert(response);
+                        if (response) {} else throw new Error();
                         if (event.type === 'message_delta') {
                             ctx.logger.message?.trace(event);
                             response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
@@ -135,19 +134,19 @@ export namespace AnthropicCompatibleEngine {
                             const contentBlock = response.content[event.index];
                             if (event.delta.type === 'text_delta'){
                                 ctx.logger.inference?.debug(event.delta.text);
-                                assert(contentBlock?.type === 'text');
+                                if (contentBlock?.type === 'text') {} else throw new Error();
                                 contentBlock.text += event.delta.text;
                             } else if (event.delta.type === 'thinking_delta') {
                                 ctx.logger.inference?.trace(event.delta.thinking);
-                                assert(contentBlock?.type === 'thinking');
+                                if (contentBlock?.type === 'thinking') {} else throw new Error();
                                 contentBlock.thinking += event.delta.thinking;
                             } else if (event.delta.type === 'signature_delta') {
-                                assert(contentBlock?.type === 'thinking');
+                                if (contentBlock?.type === 'thinking') {} else throw new Error();
                                 contentBlock.signature += event.delta.signature;
                             } else if (event.delta.type === 'input_json_delta') {
                                 ctx.logger.inference?.trace(event.delta.partial_json);
-                                assert(contentBlock?.type === 'tool_use');
-                                assert(typeof contentBlock.input === 'string');
+                                if (contentBlock?.type === 'tool_use') {} else throw new Error();
+                                if (typeof contentBlock.input === 'string') {} else throw new Error();
                                 contentBlock.input += event.delta.partial_json;
                             } else throw new Error('Unknown type of content block delta', { cause: event.delta });
                         } else if (event.type === 'content_block_stop') {
@@ -157,19 +156,17 @@ export namespace AnthropicCompatibleEngine {
                             else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
                             ctx.logger.message?.trace(event);
                             if (contentBlock?.type === 'tool_use') {
-                                assert(typeof contentBlock.input === 'string');
+                                if (typeof contentBlock.input === 'string') {} else throw new Error();
                                 ctx.logger.message?.debug(contentBlock);
                             }
                         } else throw new Error('Unknown stream event', { cause: event });
                     }
                 }
-                assert(response);
+                if (response) {} else throw new Error();
                 if (response.stop_reason === 'max_tokens')
                     throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                assert(
-                    response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use',
-                    new ResponseInvalid('Abnormal stop reason', { cause: response }),
-                );
+                if (response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use') {}
+                else throw new ResponseInvalid('Abnormal stop reason', { cause: response });
 
                 const cost = this.instance.calcCost(response.usage);
                 ctx.logger.cost?.(cost);

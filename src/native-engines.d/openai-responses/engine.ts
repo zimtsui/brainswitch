@@ -4,7 +4,6 @@ import { Tool } from './tool.ts';
 import { ResponseInvalid, Engine, UserAbortion, InferenceTimeout } from '../../engine.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import OpenAI from 'openai';
-import assert from 'node:assert';
 import { fetch } from 'undici';
 import { OpenAIResponsesEngine } from '../../api-types/openai-responses.ts';
 
@@ -115,7 +114,7 @@ export namespace OpenAIResponsesNativeEngine {
             public convertToAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): RoleMessage.Ai<Function.Declaration.From<fdm>> {
                 const parts = output.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
                     if (item.type === 'message') {
-                        assert(item.content.every(part => part.type === 'output_text'));
+                        if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
                         return [RoleMessage.Part.Text.create(item.content.map(part => part.text).join(''))];
                     } else if (item.type === 'function_call')
                         return [this.instance.convertToFunctionCall(item)];
@@ -202,7 +201,7 @@ export namespace OpenAIResponsesNativeEngine {
             public logAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void {
                 for (const item of output)
                     if (item.type === 'message') {
-                        assert(item.content.every(part => part.type === 'output_text'));
+                        if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
                         ctx.logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
                     } else if (item.type === 'function_call')
                         ctx.logger.message?.debug(item);
@@ -238,19 +237,17 @@ export namespace OpenAIResponsesNativeEngine {
                         signal,
                     },
                 );
-                assert(res.ok, new Error(undefined, { cause: res }));
+                if (res.ok) {} else throw new Error(undefined, { cause: res });
                 const response = await res.json() as OpenAI.Responses.Response;
                 ctx.logger.message?.trace(response);
                 if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
                     throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                assert(
-                    response.status === 'completed',
-                    new ResponseInvalid('Abnormal response status', { cause: response }),
-                );
+                if (response.status === 'completed') {}
+                else throw new ResponseInvalid('Abnormal response status', { cause: response });
 
                 this.logAiMessage(ctx, response.output);
 
-                assert(response.usage);
+                if (response.usage) {} else throw new Error();
                 const cost = this.instance.calcCost(response.usage);
                 ctx.logger.cost?.(cost);
                 ctx.logger.message?.debug(response.usage);
@@ -265,15 +262,15 @@ export namespace OpenAIResponsesNativeEngine {
                 toolCalls: Tool.Call<Function.Declaration.From<fdm>>[],
             ): void {
                 if (this.toolChoice === Function.ToolChoice.REQUIRED)
-                    assert(toolCalls.length, new ResponseInvalid('Invalid function call', { cause: toolCalls }));
+                    if (toolCalls.length) {} else throw new ResponseInvalid('Invalid function call', { cause: toolCalls });
                 else if (this.toolChoice instanceof Array) for (const tc of toolCalls) {
                     if (tc instanceof Function.Call)
-                        assert(this.toolChoice.includes(tc.name), new ResponseInvalid('Invalid function call', { cause: toolCalls }));
+                        if (this.toolChoice.includes(tc.name)) {} else throw new ResponseInvalid('Invalid function call', { cause: toolCalls });
                     else if (tc instanceof Tool.ApplyPatch.Call)
-                        assert(this.toolChoice.includes(Tool.Choice.APPLY_PATCH), new ResponseInvalid('Invalid function call', { cause: toolCalls }));
+                        if (this.toolChoice.includes(Tool.Choice.APPLY_PATCH)) {} else throw new ResponseInvalid('Invalid function call', { cause: toolCalls });
                     else throw new Error();
                 } else if (this.toolChoice === Function.ToolChoice.NONE)
-                    assert(!toolCalls.length, new ResponseInvalid('Invalid function call', { cause: toolCalls }));
+                    if (!toolCalls.length) {} else throw new ResponseInvalid('Invalid function call', { cause: toolCalls });
             }
         }
     }

@@ -1,7 +1,6 @@
 import { Function } from '../function.ts';
 import { Engine, ResponseInvalid } from '../engine.ts';
 import Anthropic from '@anthropic-ai/sdk';
-import assert from 'node:assert';
 import Ajv from 'ajv';
 import { type TObject } from '@sinclair/typebox';
 
@@ -50,18 +49,16 @@ export namespace AnthropicEngine {
 
             public convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>> {
                 const fditem = this.instance.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
-                assert(fditem, new ResponseInvalid('Unknown function call', { cause: apifc }));
+                if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
                 const args = (() => {
                     try {
                         return JSON.parse(apifc.input as string);
                     } catch (e) {
-                        return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
+                        throw new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
                     }
                 })();
-                assert(
-                    ajv.validate(fditem.paraschema, args),
-                    new ResponseInvalid('Function call not conforming to schema', { cause: apifc }),
-                );
+                if (ajv.validate(fditem.paraschema, args)) {}
+                else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
                 return Function.Call.create({
                     id: apifc.id,
                     name: apifc.name,
@@ -70,7 +67,7 @@ export namespace AnthropicEngine {
             }
 
             public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolResultBlockParam {
-                assert(fr.id);
+                if (fr.id) {} else throw new Error();
                 return {
                     type: 'tool_result',
                     tool_use_id: fr.id,
@@ -91,7 +88,7 @@ export namespace AnthropicEngine {
                 else if (toolChoice === Function.ToolChoice.REQUIRED) return { type: 'any', disable_parallel_tool_use: !parallel };
                 else if (toolChoice === Function.ToolChoice.AUTO) return { type: 'auto', disable_parallel_tool_use: !parallel };
                 else {
-                    assert(toolChoice.length === 1);
+                    if (toolChoice.length === 1) {} else throw new Error();
                     return { type: 'tool', name: toolChoice[0]!, disable_parallel_tool_use: !parallel };
                 }
             }

@@ -1,5 +1,4 @@
 import { type Static, type TSchema } from '@sinclair/typebox';
-import assert from 'node:assert';
 
 
 export interface Function<in out fd extends Function.Declaration> {
@@ -71,11 +70,11 @@ export namespace Function {
             e: Error,
         ): void {
             if (toolChoice === Function.ToolChoice.REQUIRED)
-                assert(toolCalls.length, e);
+                if (toolCalls.length) {} else throw e;
             else if (toolChoice instanceof Array) for (const fc of toolCalls)
-                assert(toolChoice.includes(fc.name), e);
+                if (toolChoice.includes(fc.name)) {} else throw e;
             else if (toolChoice === Function.ToolChoice.NONE)
-                assert(!toolCalls.length, e);
+                if (!toolCalls.length) {} else throw e;
         }
     }
 

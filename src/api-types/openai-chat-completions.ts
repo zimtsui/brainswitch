@@ -1,7 +1,6 @@
 import { ResponseInvalid, type Engine } from '../engine.ts';
 import { Function } from '../function.ts';
 import OpenAI from 'openai';
-import assert from 'node:assert';
 import { Ajv } from 'ajv';
 
 
@@ -39,7 +38,7 @@ export namespace OpenAIChatCompletionsEngine {
             }
 
             public convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageToolCall {
-                assert(fc.id);
+                if (fc.id) {} else throw new Error();
                 return {
                     id: fc.id,
                     type: 'function',
@@ -52,7 +51,7 @@ export namespace OpenAIChatCompletionsEngine {
 
             public convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
                 const fditem = this.instance.fdm[apifc.function.name] as Function.Declaration.Item.From<fdm>;
-                assert(fditem, new ResponseInvalid('Unknown function call', { cause: apifc }));
+                if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
                 const args = (() => {
                     try {
                         return JSON.parse(apifc.function.arguments);
@@ -60,10 +59,8 @@ export namespace OpenAIChatCompletionsEngine {
                         return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
                     }
                 })();
-                assert(
-                    ajv.validate(fditem.paraschema, args),
-                    new ResponseInvalid('Invalid function arguments', { cause: apifc }),
-                );
+                if (ajv.validate(fditem.paraschema, args)) {}
+                else throw new ResponseInvalid('Invalid function arguments', { cause: apifc });
                 return Function.Call.create({
                     id: apifc.id,
                     name: apifc.function.name,
@@ -73,7 +70,7 @@ export namespace OpenAIChatCompletionsEngine {
 
 
             public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionToolMessageParam {
-                assert(fr.id);
+                if (fr.id) {} else throw new Error();
                 return {
                     role: 'tool',
                     tool_call_id: fr.id,
@@ -93,13 +90,13 @@ export namespace OpenAIChatCompletionsEngine {
                 };
             }
 
-            public convertFromToolChoice(mode: Function.ToolChoice<fdm>): OpenAI.ChatCompletionToolChoiceOption {
-                if (mode === Function.ToolChoice.NONE) return 'none';
-                else if (mode === Function.ToolChoice.REQUIRED) return 'required';
-                else if (mode === Function.ToolChoice.AUTO) return 'auto';
+            public convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>): OpenAI.ChatCompletionToolChoiceOption {
+                if (toolChoice === Function.ToolChoice.NONE) return 'none';
+                else if (toolChoice === Function.ToolChoice.REQUIRED) return 'required';
+                else if (toolChoice === Function.ToolChoice.AUTO) return 'auto';
                 else {
-                    assert(mode.length === 1);
-                    return { type: 'function', function: { name: mode[0]! } };
+                    if (toolChoice.length === 1) {} else throw new Error();
+                    return { type: 'function', function: { name: toolChoice[0]! } };
                 }
             }
 
@@ -118,10 +115,8 @@ export namespace OpenAIChatCompletionsEngine {
             public handleFinishReason(completion: OpenAI.ChatCompletion, finishReason: OpenAI.ChatCompletion.Choice['finish_reason']): void {
                 if (finishReason === 'length')
                     throw new ResponseInvalid('Token limit exceeded.', { cause: completion });
-                assert(
-                    ['stop', 'tool_calls'].includes(finishReason),
-                    new ResponseInvalid('Abnormal finish reason', { cause: finishReason }),
-                );
+                if (['stop', 'tool_calls'].includes(finishReason)) {}
+                else throw new ResponseInvalid('Abnormal finish reason', { cause: finishReason });
             }
         }
     }

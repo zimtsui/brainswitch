@@ -1,7 +1,6 @@
 import { RoleMessage, type Session } from '../../session.ts';
 import { Function } from '../../function.ts';
 import OpenAI from 'openai';
-import assert from 'node:assert';
 import { OpenAIChatCompletionsCompatibleEngine } from '../openai-chatcompletions.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import { ResponseInvalid } from '../../engine.ts';
@@ -60,15 +59,15 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
             }
 
             public convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-                assert(apifc.id);
-                assert(apifc.function?.name);
-                assert(apifc.function?.arguments);
+                if (apifc.id) {} else throw new Error();
+                if (apifc.function?.name) {} else throw new Error();
+                if (apifc.function?.arguments) {} else throw new Error();
                 return this.instance.convertToFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
             }
 
             public convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion {
                 const stockChoice = stock?.choices[0];
-                assert(stockChoice?.finish_reason, new ResponseInvalid('Finish reason missing', { cause: stock }));
+                if (stockChoice?.finish_reason) {} else throw new ResponseInvalid('Finish reason missing', { cause: stock });
 
                 const completion: OpenAI.ChatCompletion = {
                     id: stock.id,
@@ -83,9 +82,9 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                             content: stockChoice.delta.content ?? null,
                             tool_calls: stockChoice.delta.tool_calls?.map(
                                 apifc => {
-                                    assert(apifc.id !== undefined);
-                                    assert(apifc.function?.name !== undefined);
-                                    assert(apifc.function?.arguments !== undefined);
+                                    if (apifc.id) {} else throw new Error();
+                                    if (apifc.function?.name) {} else throw new Error();
+                                    if (apifc.function?.arguments) {} else throw new Error();
                                     return {
                                         id: apifc.id,
                                         function: {
@@ -189,16 +188,16 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                     stock.usage ??= chunk.usage;
                 }
 
-                assert(stock);
+                if (stock) {} else throw new Error();
                 const completion = this.convertCompletionStockToCompletion(stock);
 
                 const choice = completion.choices[0];
-                assert(choice, new ResponseInvalid('Content missing', { cause: completion }));
+                if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
                 if (choice.message.content) ctx.logger.inference?.debug('\n');
 
                 this.instance.handleFinishReason(completion, choice.finish_reason);
 
-                assert(completion.usage);
+                if (completion.usage) {} else throw new Error();
                 const cost = this.instance.calcCost(completion.usage);
                 ctx.logger.cost?.(cost);
 
