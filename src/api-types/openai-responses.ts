@@ -9,70 +9,70 @@ const ajv = new Ajv();
 
 
 export namespace OpenAIResponsesEngine {
+    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 
-    export interface Base<in out fdm extends Function.Declaration.Map> {
+    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
+        Engine.Abstract<fdm>
+    {
         convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput;
         calcCost(usage: OpenAI.Responses.ResponseUsage): number;
         convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): OpenAI.Responses.FunctionTool;
         convertToFunctionCall(apifc: OpenAI.Responses.ResponseFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>>;
     }
 
-    export interface Instance<in out fdm extends Function.Declaration.Map> extends
-        Engine.Instance<fdm>,
-        OpenAIResponsesEngine.Base<fdm>
-    {}
+    export function convertFromFunctionResponse<fdm extends Function.Declaration.Map>(
+        fr: Function.Response.Distributive<Function.Declaration.From<fdm>>,
+    ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
+        if (fr.id) {} else throw new Error();
+        return {
+            type: 'function_call_output',
+            call_id: fr.id,
+            output: fr.text,
+        };
+    }
 
-    export namespace Base {
-        export class Instance<fdm extends Function.Declaration.Map> {
-            public constructor(protected instance: OpenAIResponsesEngine.Instance<fdm>) {}
+    export function calcCost<fdm extends Function.Declaration.Map>(
+        this: Engine.Abstract<fdm>,
+        usage: OpenAI.Responses.ResponseUsage,
+    ): number {
+        const cacheHitTokenCount = usage.input_tokens_details.cached_tokens;
+        const cacheMissTokenCount = usage.input_tokens - cacheHitTokenCount;
+        return	this.inputPrice * cacheMissTokenCount / 1e6 +
+                this.cachedPrice * cacheHitTokenCount / 1e6 +
+                this.outputPrice * usage.output_tokens / 1e6;
+    }
 
-            public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
-                if (fr.id) {} else throw new Error();
-                return {
-                    type: 'function_call_output',
-                    call_id: fr.id,
-                    output: fr.text,
-                };
+    export function convertFromFunctionDeclarationEntry<fdm extends Function.Declaration.Map>(
+        fdentry: Function.Declaration.Entry.From<fdm>,
+    ): OpenAI.Responses.FunctionTool {
+        return {
+            name: fdentry[0],
+            description: fdentry[1].description,
+            parameters: fdentry[1].paraschema,
+            strict: true,
+            type: 'function',
+        };
+    }
+
+    export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
+        this: Engine.Abstract<fdm>,
+        apifc: OpenAI.Responses.ResponseFunctionToolCall,
+    ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+        const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
+        if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
+        const args = (() => {
+            try {
+                return JSON.parse(apifc.arguments);
+            } catch (e) {
+                return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
             }
-
-            public calcCost(usage: OpenAI.Responses.ResponseUsage): number {
-                const cacheHitTokenCount = usage.input_tokens_details.cached_tokens;
-                const cacheMissTokenCount = usage.input_tokens - cacheHitTokenCount;
-                return	this.instance.inputPrice * cacheMissTokenCount / 1e6 +
-                        this.instance.cachedPrice * cacheHitTokenCount / 1e6 +
-                        this.instance.outputPrice * usage.output_tokens / 1e6;
-            }
-
-            public convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): OpenAI.Responses.FunctionTool {
-                return {
-                    name: fdentry[0],
-                    description: fdentry[1].description,
-                    parameters: fdentry[1].paraschema,
-                    strict: true,
-                    type: 'function',
-                };
-            }
-
-            public convertToFunctionCall(
-                apifc: OpenAI.Responses.ResponseFunctionToolCall,
-            ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-                const fditem = this.instance.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
-                if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
-                const args = (() => {
-                    try {
-                        return JSON.parse(apifc.arguments);
-                    } catch (e) {
-                        return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
-                    }
-                })();
-                if (ajv.validate(fditem.paraschema, args)) {}
-                else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
-                return Function.Call.create({
-                    id: apifc.call_id,
-                    name: apifc.name,
-                    args,
-                } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
-            }
-        }
+        })();
+        if (ajv.validate(fditem.paraschema, args)) {}
+        else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
+        return Function.Call.create({
+            id: apifc.call_id,
+            name: apifc.name,
+            args,
+        } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
     }
 }

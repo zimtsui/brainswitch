@@ -5,7 +5,6 @@ import { ProxyAgent } from 'undici';
 import { env } from 'node:process';
 
 
-
 export interface Engine {
     name: string;
 }
@@ -36,51 +35,33 @@ export namespace Engine {
         maxTokens?: number;
         proxyAgent?: ProxyAgent;
     }
-
-    export interface Instance<in out fdm extends Function.Declaration.Map> extends
-        Engine.Base<fdm>,
-        Engine
-    {
-        parallel: boolean;
+    export namespace Base {
+        export function create<fdm extends Function.Declaration.Map>(options: Options<fdm>): Base<fdm> {
+            const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
+            const inputPrice = options.inputPrice ?? 0;
+            return {
+                baseUrl: options.baseUrl,
+                apiKey: options.apiKey,
+                model: options.model,
+                name: options.name,
+                inputPrice,
+                outputPrice: options.outputPrice ?? 0,
+                cachedPrice: options.cachePrice ?? inputPrice,
+                fdm: options.functionDeclarationMap,
+                additionalOptions: options.additionalOptions,
+                throttle: options.throttle,
+                timeout: options.timeout,
+                maxTokens: options.maxTokens,
+                proxyAgent: proxyUrl ? new ProxyAgent(proxyUrl) : undefined,
+            };
+        }
     }
 
-    export namespace Base {
-        export class Instance<in out fdm extends Function.Declaration.Map> implements Engine.Base<fdm> {
-            public baseUrl: string;
-            public apiKey: string;
-            public model: string;
-            public name: string;
-            public inputPrice: number;
-            public outputPrice: number;
-            public cachedPrice: number;
-            public fdm: fdm;
-            public additionalOptions?: Record<string, unknown>;
-            public throttle: Throttle;
-            public timeout?: number;
-            public maxTokens?: number;
-
-            public proxyAgent?: ProxyAgent;
-
-            public constructor(
-                public instance: Engine.Instance<fdm>,
-                options: Engine.Options<fdm>,
-            ) {
-                this.baseUrl = options.baseUrl;
-                this.apiKey = options.apiKey;
-                this.model = options.model;
-                this.name = options.name;
-                this.inputPrice = options.inputPrice ?? 0;
-                this.outputPrice = options.outputPrice ?? 0;
-                this.cachedPrice = options.cachePrice ?? this.inputPrice;
-                this.fdm = options.functionDeclarationMap;
-                this.additionalOptions = options.additionalOptions;
-                this.throttle = options.throttle;
-                this.timeout = options.timeout;
-                this.maxTokens = options.maxTokens;
-                const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
-                this.proxyAgent = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
-            }
-        }
+    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
+        Engine,
+        Base<fdm>
+    {
+        parallel: boolean;
     }
 }
 

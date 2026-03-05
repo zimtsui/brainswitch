@@ -1,227 +1,164 @@
-import type OpenAI from 'openai';
 import { Function } from '../function.ts';
-import { Engine } from '../engine.ts';
-import { CompatibleEngine } from '../compatible-engine.ts';
 import { OpenAIChatCompletionsEngine } from '../api-types/openai-chat-completions.ts';
 import { OpenAIChatCompletionsCompatibleEngine } from './openai-chatcompletions.ts';
+import { CompatibleEngine } from '../compatible-engine.ts';
 import { OpenAIChatCompletionsCompatibleStreamEngine } from './openai-chatcompletions.d/stream.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import { type Session, RoleMessage } from '../session.ts';
+import * as Undici from 'undici';
+import { Throttle } from '../throttle.ts';
+import { Engine } from '../engine.ts';
+import OpenAI from 'openai';
 
 
 
 export namespace AliyunEngine {
+    export interface Options<fdm extends Function.Declaration.Map> extends
+        OpenAIChatCompletionsCompatibleStreamEngine.Options<fdm> {}
+
     export interface ChatCompletionChunkChoiceDelta extends OpenAI.ChatCompletionChunk.Choice.Delta {
         reasoning_content?: string;
     }
 
-    export interface Base {
-        getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
-    }
-    export interface Instance<in out fdm extends Function.Declaration.Map> extends
-        OpenAIChatCompletionsCompatibleStreamEngine.Instance<fdm>,
-        AliyunEngine.Base
+    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
+        OpenAIChatCompletionsCompatibleStreamEngine.Abstract<fdm>
     {
         getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
     }
 
-    export namespace Base {
-        export class Instance implements AliyunEngine.Base {
-            public getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
-                return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
-            }
-        }
+    export function getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
+        return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
     }
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements AliyunEngine.Instance<fdm> {
-        protected engineBase: Engine.Base<fdm>;
-        protected compatibleEngineBase: CompatibleEngine.Base<fdm>;
-        protected openAIChatCompletionsEngineBase: OpenAIChatCompletionsEngine.Base<fdm>;
-        protected openAIChatCompletionsCompatibleEngineBase: OpenAIChatCompletionsCompatibleEngine.Base<fdm>;
-        protected openAIChatCompletionsCompatibleStreamEngineBase: OpenAIChatCompletionsCompatibleStreamEngine.Base<fdm>;
-        protected aliyunEngineBase: AliyunEngine.Base;
+    export class Instance<in out fdm extends Function.Declaration.Map> implements AliyunEngine.Abstract<fdm> {
+        public baseUrl: string;
+        public apiKey: string;
+        public model: string;
+        public name: string;
+        public inputPrice: number;
+        public outputPrice: number;
+        public cachedPrice: number;
+        public fdm: fdm;
+        public additionalOptions?: Record<string, unknown>;
+        public throttle: Throttle;
+        public timeout?: number;
+        public maxTokens?: number;
+        public proxyAgent?: Undici.ProxyAgent;
 
-        public constructor(options: Engine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
-            this.compatibleEngineBase = new CompatibleEngine.Base.Instance<fdm>(this, options);
-            this.openAIChatCompletionsEngineBase = new OpenAIChatCompletionsEngine.Base.Instance<fdm>(this, options);
-            this.openAIChatCompletionsCompatibleEngineBase = new OpenAIChatCompletionsCompatibleEngine.Base.Instance<fdm>(this);
-            this.openAIChatCompletionsCompatibleStreamEngineBase = new OpenAIChatCompletionsCompatibleStreamEngine.Base.Instance<fdm>(this);
-            this.aliyunEngineBase = new AliyunEngine.Base.Instance();
-        }
+        public toolChoice: Function.ToolChoice<fdm>;
 
+        public parallel: boolean;
 
-        public get baseUrl(): string {
-            return this.engineBase.baseUrl;
-        }
-        public set baseUrl(value: string) {
-            this.engineBase.baseUrl = value;
-        }
-        public get apiKey(): string {
-            return this.engineBase.apiKey;
-        }
-        public set apiKey(value: string) {
-            this.engineBase.apiKey = value;
-        }
-        public get model(): string {
-            return this.engineBase.model;
-        }
-        public set model(value: string) {
-            this.engineBase.model = value;
-        }
-        public get name(): string {
-            return this.engineBase.name;
-        }
-        public set name(value: string) {
-            this.engineBase.name = value;
-        }
-        public get inputPrice(): number {
-            return this.engineBase.inputPrice;
-        }
-        public set inputPrice(value: number) {
-            this.engineBase.inputPrice = value;
-        }
-        public get outputPrice(): number {
-            return this.engineBase.outputPrice;
-        }
-        public set outputPrice(value: number) {
-            this.engineBase.outputPrice = value;
-        }
-        public get cachedPrice(): number {
-            return this.engineBase.cachedPrice;
-        }
-        public set cachedPrice(value: number) {
-            this.engineBase.cachedPrice = value;
-        }
-        public get fdm(): fdm {
-            return this.engineBase.fdm;
-        }
-        public set fdm(value: fdm) {
-            this.engineBase.fdm = value;
-        }
-        public get additionalOptions(): Record<string, unknown> | undefined {
-            return this.engineBase.additionalOptions;
-        }
-        public set additionalOptions(value: Record<string, unknown> | undefined) {
-            this.engineBase.additionalOptions = value;
-        }
-        public get throttle() {
-            return this.engineBase.throttle;
-        }
-        public set throttle(value) {
-            this.engineBase.throttle = value;
-        }
-        public get timeout(): number | undefined {
-            return this.engineBase.timeout;
-        }
-        public set timeout(value: number | undefined) {
-            this.engineBase.timeout = value;
-        }
-        public get maxTokens(): number | undefined {
-            return this.engineBase.maxTokens;
-        }
-        public set maxTokens(value: number | undefined) {
-            this.engineBase.maxTokens = value;
-        }
-        public get proxyAgent() {
-            return this.engineBase.proxyAgent;
-        }
-        public set proxyAgent(value) {
-            this.engineBase.proxyAgent = value;
+        public client: OpenAI;
+
+        public constructor(options: AliyunEngine.Options<fdm>) {
+            ({
+                baseUrl: this.baseUrl,
+                apiKey: this.apiKey,
+                model: this.model,
+                name: this.name,
+                inputPrice: this.inputPrice,
+                outputPrice: this.outputPrice,
+                cachedPrice: this.cachedPrice,
+                fdm: this.fdm,
+                additionalOptions: this.additionalOptions,
+                throttle: this.throttle,
+                timeout: this.timeout,
+                maxTokens: this.maxTokens,
+                proxyAgent: this.proxyAgent,
+            } = (Engine.Base.create<fdm>).call(this, options));
+
+            ({ toolChoice: this.toolChoice } = (CompatibleEngine.Base.create<fdm>).call(this, options));
+
+            ({ parallel: this.parallel } = (OpenAIChatCompletionsEngine.Base.create<fdm>).call(this, options));
+
+            this.client = new OpenAI({
+                baseURL: this.baseUrl,
+                apiKey: this.apiKey,
+                fetchOptions: {
+                    dispatcher: this.proxyAgent,
+                },
+            });
         }
 
-
-        public get toolChoice(): Function.ToolChoice<fdm> {
-            return this.compatibleEngineBase.toolChoice;
-        }
-        public set toolChoice(value: Function.ToolChoice<fdm>) {
-            this.compatibleEngineBase.toolChoice = value;
-        }
         public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.stateless(ctx, session);
+            return (CompatibleEngine.stateless<fdm>).call(this, ctx, session);
         }
         public stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.stateful(ctx, session);
+            return (CompatibleEngine.stateful<fdm>).call(this, ctx, session);
         }
         public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.appendUserMessage(session, message);
+            return (CompatibleEngine.appendUserMessage<fdm>).call(this, session, message);
         }
         public pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.pushUserMessage(session, message);
+            return (CompatibleEngine.pushUserMessage<fdm>).call(this, session, message);
         }
 
-
-        public get parallel(): boolean {
-            return this.openAIChatCompletionsEngineBase.parallel;
-        }
-        public set parallel(value: boolean) {
-            this.openAIChatCompletionsEngineBase.parallel = value;
-        }
         public convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageToolCall {
-            return this.openAIChatCompletionsEngineBase.convertFromFunctionCall(fc);
+            return (OpenAIChatCompletionsEngine.convertFromFunctionCall<fdm>).call(this, fc);
         }
         public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionToolMessageParam {
-            return this.openAIChatCompletionsEngineBase.convertFromFunctionResponse(fr);
+            return (OpenAIChatCompletionsEngine.convertFromFunctionResponse<fdm>).call(this, fr);
         }
         public convertFromToolChoice(mode: Function.ToolChoice<fdm>): OpenAI.ChatCompletionToolChoiceOption {
-            return this.openAIChatCompletionsEngineBase.convertFromToolChoice(mode);
+            return (OpenAIChatCompletionsEngine.convertFromToolChoice<fdm>).call(this, mode);
         }
         public convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-            return this.openAIChatCompletionsEngineBase.convertToFunctionCall(apifc);
+            return (OpenAIChatCompletionsEngine.convertToFunctionCall<fdm>).call(this, apifc);
         }
         public convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): OpenAI.ChatCompletionTool {
-            return this.openAIChatCompletionsEngineBase.convertFromFunctionDeclarationEntry(fdentry);
+            return (OpenAIChatCompletionsEngine.convertFromFunctionDeclarationEntry<fdm>).call(this, fdentry);
         }
         public calcCost(usage: OpenAI.CompletionUsage): number {
-            return this.openAIChatCompletionsEngineBase.calcCost(usage);
+            return (OpenAIChatCompletionsEngine.calcCost<fdm>).call(this, usage);
         }
         public extractContent(completionContent: string): string {
-            return this.openAIChatCompletionsEngineBase.extractContent(completionContent);
+            return (OpenAIChatCompletionsEngine.extractContent).call(this, completionContent);
         }
         public handleFinishReason(completion: OpenAI.ChatCompletion, finishReason: OpenAI.ChatCompletion.Choice['finish_reason']): void {
-            return this.openAIChatCompletionsEngineBase.handleFinishReason(completion, finishReason);
+            return (OpenAIChatCompletionsEngine.handleFinishReason).call(this, completion, finishReason);
         }
 
 
         public fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
-            return this.openAIChatCompletionsCompatibleEngineBase.fetch(ctx, session, signal);
+            return (OpenAIChatCompletionsCompatibleEngine.fetch<fdm>).call(this, ctx, session, signal);
         }
         public convertToAiMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>> {
-            return this.openAIChatCompletionsCompatibleEngineBase.convertToAiMessage(message);
+            return (OpenAIChatCompletionsCompatibleEngine.convertToAiMessage<fdm>).call(this, message);
         }
         public convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionAssistantMessageParam {
-            return this.openAIChatCompletionsCompatibleEngineBase.convertFromAiMessage(aiMessage);
+            return (OpenAIChatCompletionsCompatibleEngine.convertFromAiMessage<fdm>).call(this, aiMessage);
         }
         public convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): OpenAI.ChatCompletionSystemMessageParam {
-            return this.openAIChatCompletionsCompatibleEngineBase.convertFromDeveloperMessage(developerMessage);
+            return (OpenAIChatCompletionsCompatibleEngine.convertFromDeveloperMessage).call(this, developerMessage);
         }
         public convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
-            return this.openAIChatCompletionsCompatibleEngineBase.convertFromUserMessage(userMessage);
+            return (OpenAIChatCompletionsCompatibleEngine.convertFromUserMessage<fdm>).call(this, userMessage);
         }
         public convertFromRoleMessage(roleMessage: RoleMessage): OpenAI.ChatCompletionMessageParam[] {
-            return this.openAIChatCompletionsCompatibleEngineBase.convertFromRoleMessage(roleMessage);
+            return (OpenAIChatCompletionsCompatibleEngine.convertFromRoleMessage<fdm>).call(this, roleMessage);
         }
         public validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-            return this.openAIChatCompletionsCompatibleEngineBase.validateToolCallsByToolChoice(toolCalls);
+            return (OpenAIChatCompletionsCompatibleEngine.validateToolCallsByToolChoice<fdm>).call(this, toolCalls);
         }
 
 
         public makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming {
-            return this.openAIChatCompletionsCompatibleStreamEngineBase.makeParams(session);
+            return (OpenAIChatCompletionsCompatibleStreamEngine.makeParams<fdm>).call(this, session);
         }
         public convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-            return this.openAIChatCompletionsCompatibleStreamEngineBase.convertToFunctionCallFromDelta(apifc);
+            return (OpenAIChatCompletionsCompatibleStreamEngine.convertToFunctionCallFromDelta<fdm>).call(this, apifc);
         }
         public convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion {
-            return this.openAIChatCompletionsCompatibleStreamEngineBase.convertCompletionStockToCompletion(stock);
+            return (OpenAIChatCompletionsCompatibleStreamEngine.convertCompletionStockToCompletion).call(this, stock);
         }
         public fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-            return this.openAIChatCompletionsCompatibleStreamEngineBase.fetchRaw(ctx, session, signal);
+            return (OpenAIChatCompletionsCompatibleStreamEngine.fetchRaw<fdm>).call(this, ctx, session, signal);
         }
 
 
         public getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
-            return this.aliyunEngineBase.getDeltaThoughts(delta);
+            return (AliyunEngine.getDeltaThoughts).call(this, delta);
         }
     }
 

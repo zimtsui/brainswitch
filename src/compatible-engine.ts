@@ -35,85 +35,86 @@ export namespace CompatibleEngine {
         }
     }
 
-
     export interface Base<in out fdm extends Function.Declaration.Map> {
         toolChoice: Function.ToolChoice<fdm>;
+    }
+    export namespace Base {
+        export function create<fdm extends Function.Declaration.Map>(options: CompatibleEngine.Options<fdm>): Base<fdm> {
+            return {
+                toolChoice: options.toolChoice ?? Function.ToolChoice.AUTO,
+            };
+        }
+    }
+
+    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
+        Engine.Abstract<fdm>,
+        CompatibleEngine<fdm>,
+        Base<fdm>
+    {
+        parallel: boolean;
+        fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void;
     }
-    export interface Instance<in out fdm extends Function.Declaration.Map> extends
-        Engine.Instance<fdm>,
-        CompatibleEngine.Base<fdm>,
-        CompatibleEngine<fdm>
-    {
-        parallel: boolean;
-        fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-    }
 
 
-    export namespace Base {
-        export class Instance<in out fdm extends Function.Declaration.Map> implements CompatibleEngine.Base<fdm> {
-
-            public toolChoice: Function.ToolChoice<fdm>;
-
-            public constructor(
-                protected instance: CompatibleEngine.Instance<fdm>,
-                options: CompatibleEngine.Options<fdm>,
-            ) {
-                this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
-            }
-
-            public async stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-                for (let retry = 0;; retry++) {
-                    const signalTimeout = this.instance.timeout ? AbortSignal.timeout(this.instance.timeout) : undefined;
-                    const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-                        ctx.signal,
-                        signalTimeout,
-                    ]) : ctx.signal || signalTimeout;
-                    try {
-                        return await this.instance.fetch(ctx, session, signal);
-                    } catch (e) {
-                        if (ctx.signal?.aborted) throw new UserAbortion();                                  // 用户中止
-                        else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
-                        else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
-                        else if (e instanceof TypeError) {}         		                                // 网络故障
-                        else throw e;
-                        if (retry < 3) ctx.logger.message?.warn(e); else throw e;
-                    }
-                }
-            }
-            public async stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-                const response = await this.stateless(ctx, session);
-                session.chatMessages.push(response);
-                return response;
-            }
-            public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
-                return {
-                    ...session,
-                    chatMessages: [...session.chatMessages, message],
-                };
-            }
-            public pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
-                session.chatMessages.push(message);
-                return session;
-            }
-
-            public validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-                return CompatibleEngine.validateToolCallsByToolChoice(toolCalls, this.toolChoice);
+    export async function stateless<fdm extends Function.Declaration.Map>(
+        this: CompatibleEngine.Abstract<fdm>,
+        ctx: InferenceContext,
+        session: Session<Function.Declaration.From<fdm>>,
+    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        for (let retry = 0;; retry++) {
+            const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
+            const signal = ctx.signal && signalTimeout ? AbortSignal.any([
+                ctx.signal,
+                signalTimeout,
+            ]) : ctx.signal || signalTimeout;
+            try {
+                return await this.fetch(ctx, session, signal);
+            } catch (e) {
+                if (ctx.signal?.aborted) throw new UserAbortion();                                  // 用户中止
+                else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
+                else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
+                else if (e instanceof TypeError) {}         		                                // 网络故障
+                else throw e;
+                if (retry < 3) ctx.logger.message?.warn(e); else throw e;
             }
         }
     }
+    export async function stateful<fdm extends Function.Declaration.Map>(
+        this: CompatibleEngine.Abstract<fdm>,
+        ctx: InferenceContext,
+        session: Session<Function.Declaration.From<fdm>>,
+    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        const response = await this.stateless(ctx, session);
+        session.chatMessages.push(response);
+        return response;
+    }
+    export function appendUserMessage<fdm extends Function.Declaration.Map>(
+        this: CompatibleEngine.Abstract<fdm>,
+        session: Session<Function.Declaration.From<fdm>>,
+        message: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Session<Function.Declaration.From<fdm>> {
+        return {
+            ...session,
+            chatMessages: [...session.chatMessages, message],
+        };
+    }
+    export function pushUserMessage<fdm extends Function.Declaration.Map>(this: CompatibleEngine.Abstract<fdm>, session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
+        session.chatMessages.push(message);
+        return session;
+    }
 
     export function validateToolCallsByToolChoice<fdm extends Function.Declaration.Map>(
+        this: CompatibleEngine.Abstract<fdm>,
         toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
-        toolChoice: Function.ToolChoice<fdm>,
     ): void {
         Function.Call.validate<fdm>(
             toolCalls,
-            toolChoice,
+            this.toolChoice,
             new ResponseInvalid('Invalid function call', { cause: toolCalls }),
         );
     }

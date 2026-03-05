@@ -1,7 +1,6 @@
-import { Engine, ResponseInvalid } from '../engine.ts';
+import { type Engine, ResponseInvalid } from '../engine.ts';
 import { Function } from '../function.ts';
 import * as Google from '@google/genai';
-import { CompatibleEngine } from '../compatible-engine.ts';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
@@ -9,50 +8,43 @@ const ajv = new Ajv();
 
 
 export namespace GoogleEngine {
-    export interface Base<in out fdm extends Function.Declaration.Map> {
+    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
+
+    export interface Base {
         parallel: boolean;
+    }
+    export namespace Base {
+        export function create<fdm extends Function.Declaration.Map>(options: Options<fdm>): Base {
+            const parallel = options.parallelToolCall ?? true;
+            if (parallel) {} else throw new Error('Google API requires parallel tool calls.');
+            return {
+                parallel,
+            };
+        }
+    }
+
+    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
+        Engine.Abstract<fdm>,
+        Base
+    {
         convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall;
         convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>>;
         convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): Google.FunctionDeclaration;
     }
 
-    export interface Instance<in out fdm extends Function.Declaration.Map> extends
-        Engine.Instance<fdm>,
-        GoogleEngine.Base<fdm>
-    {}
-
-    export namespace Base {
-        export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleEngine.Base<fdm> {
-            public parallel: boolean;
-
-            public constructor(
-                protected instance: GoogleEngine.Instance<fdm>,
-                options: CompatibleEngine.Options<fdm>,
-            ) {
-                this.parallel = options.parallelToolCall ?? true;
-                if (this.parallel) {} else throw new Error('Google API requires parallel tool calls.');
-            }
-
-            public convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall {
-                return {
-                    id: fc.id,
-                    name: fc.name,
-                    args: fc.args as Record<string, unknown>,
-                };
-            }
-
-            public convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-                return GoogleEngine.convertToFunctionCall(googlefc, this.instance.fdm);
-            }
-
-            public convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): Google.FunctionDeclaration {
-                return GoogleEngine.convertFromFunctionDeclarationEntry(fdentry);
-            }
-
-        }
+    export function convertFromFunctionCall<fdm extends Function.Declaration.Map>(
+        this: GoogleEngine.Abstract<fdm>,
+        fc: Function.Call.Distributive<Function.Declaration.From<fdm>>,
+    ): Google.FunctionCall {
+        return {
+            id: fc.id,
+            name: fc.name,
+            args: fc.args as Record<string, unknown>,
+        };
     }
 
     export function convertFromFunctionDeclarationEntry<fdm extends Function.Declaration.Map>(
+        this: GoogleEngine.Abstract<fdm>,
         fdentry: Function.Declaration.Entry.From<fdm>,
     ): Google.FunctionDeclaration {
         const json = JSON.stringify(fdentry[1].paraschema);
@@ -76,10 +68,11 @@ export namespace GoogleEngine {
     }
 
     export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
-        googlefc: Google.FunctionCall, fdm: fdm,
+        this: GoogleEngine.Abstract<fdm>,
+        googlefc: Google.FunctionCall,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         if (googlefc.name) {} else throw new Error();
-        const fditem = fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
+        const fditem = this.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: googlefc });
         if (ajv.validate(fditem.paraschema, googlefc.args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: googlefc });

@@ -5,11 +5,16 @@ import { Engine, ResponseInvalid } from '../engine.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import { AnthropicEngine } from '../api-types/anthropic.ts';
-
+import * as Undici from 'undici';
+import { Throttle } from '../throttle.ts';
 
 
 export namespace AnthropicCompatibleEngine {
-    export interface Base<fdm extends Function.Declaration.Map> {
+
+    export interface Abstract<fdm extends Function.Declaration.Map> extends
+        CompatibleEngine.Abstract<fdm>,
+        AnthropicEngine.Abstract<fdm>
+    {
         convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[];
         convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[];
         convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Anthropic.TextBlockParam[];
@@ -19,166 +24,176 @@ export namespace AnthropicCompatibleEngine {
         fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     }
 
-    export interface Instance<fdm extends Function.Declaration.Map> extends
-        CompatibleEngine.Instance<fdm>,
-        AnthropicEngine.Instance<fdm>
-    {}
 
-    export namespace Base {
-
-        export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Base<fdm> {
-            public constructor(protected instance: AnthropicCompatibleEngine.Instance<fdm>) {}
-
-            public convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
-                return userMessage.getParts().map(part => {
-                    if (part instanceof RoleMessage.Part.Text.Instance)
-                        return {
-                            type: 'text',
-                            text: part.text,
-                        } satisfies Anthropic.TextBlockParam;
-                    else if (part instanceof Function.Response)
-                        return this.instance.convertFromFunctionResponse(part);
-                    else throw new Error();
-                });
-            }
-
-            public convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
-                if (aiMessage instanceof AnthropicCompatibleEngine.Message.Ai.Instance)
-                    return aiMessage.raw;
-                else {
-                    return aiMessage.getParts().map(part => {
-                        if (part instanceof RoleMessage.Part.Text.Instance)
-                            return {
-                                type: 'text',
-                                text: part.text,
-                            } satisfies Anthropic.TextBlockParam;
-                        else if (part instanceof Function.Call)
-                            return this.instance.convertFromFunctionCall(part);
-                        else throw new Error();
-                    });
-                }
-            }
-
-            public convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Anthropic.TextBlockParam[] {
-                return developerMessage.getParts().map(part => ({ type: 'text', text: part.text}));
-            }
-
-            public convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): Anthropic.MessageParam {
-                if (chatMessage instanceof RoleMessage.User.Instance)
-                    return { role: 'user', content: this.convertFromUserMessage(chatMessage) };
-                else if (chatMessage instanceof RoleMessage.Ai.Instance)
-                    return { role: 'assistant', content: this.convertFromAiMessage(chatMessage) };
-                else throw new Error();
-            }
-
-            public makeParams(session: Session<Function.Declaration.From<fdm>>): Anthropic.MessageCreateParamsStreaming {
-                const fdentries = Object.entries(this.instance.fdm) as Function.Declaration.Entry.From<fdm>[];
-                const tools = fdentries.map(fdentry => this.instance.convertFromFunctionDeclarationEntry(fdentry));
+    export function convertFromUserMessage<fdm extends Function.Declaration.Map>(
+        this: AnthropicEngine.Abstract<fdm>,
+        userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Anthropic.ContentBlockParam[] {
+        return userMessage.getParts().map(part => {
+            if (part instanceof RoleMessage.Part.Text.Instance)
                 return {
-                    model: this.instance.model,
-                    stream: true,
-                    messages: session.chatMessages.map(chatMessage => this.convertFromChatMessage(chatMessage)),
-                    system: session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage),
-                    tools: tools.length ? tools : undefined,
-                    max_tokens: this.instance.maxTokens ?? 64 * 1024,
-                    ...this.instance.additionalOptions,
-                };
-            }
+                    type: 'text',
+                    text: part.text,
+                } satisfies Anthropic.TextBlockParam;
+            else if (part instanceof Function.Response)
+                return this.convertFromFunctionResponse(part);
+            else throw new Error();
+        });
+    }
 
-            public convertToAiMessage(raw: Anthropic.ContentBlock[]): AnthropicCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>> {
-                const parts = raw.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
-                    if (item.type === 'text') {
-                        return [RoleMessage.Part.Text.create(item.text)];
-                    } else if (item.type === 'tool_use')
-                        return [this.instance.convertToFunctionCall(item)];
-                    else if (item.type === 'thinking')
-                        return [];
-                    else throw new Error();
-                });
-                return AnthropicCompatibleEngine.Message.Ai.create(parts, raw);
-            }
-
-            public async fetch(
-                ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
-            ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-                const params = this.makeParams(session);
-                ctx.logger.message?.trace(params);
-
-                await this.instance.throttle.requests(ctx);
-                const stream = this.instance.anthropic.messages.stream(params, { signal });
-
-                let response: Anthropic.Message | null = null;
-                for await (const event of stream) {
-                    if (event.type === 'message_start') {
-                        ctx.logger.message?.trace(event);
-                        response = structuredClone(event.message);
-                    } else {
-                        if (response) {} else throw new Error();
-                        if (event.type === 'message_delta') {
-                            ctx.logger.message?.trace(event);
-                            response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
-                            response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
-                            response.usage.input_tokens = event.usage.input_tokens ?? response.usage.input_tokens;
-                            response.usage.output_tokens = event.usage.output_tokens;
-                            response.usage.cache_read_input_tokens = event.usage.cache_read_input_tokens ?? response.usage.cache_read_input_tokens;
-                            response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
-                            response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
-                        } else if (event.type === 'message_stop') {
-                            ctx.logger.message?.trace(event);
-                        } else if (event.type === 'content_block_start') {
-                            ctx.logger.message?.trace(event);
-                            const contentBlock = structuredClone(event.content_block);
-                            response.content.push(contentBlock);
-                            if (contentBlock.type === 'tool_use') contentBlock.input = '';
-                        } else if (event.type === 'content_block_delta') {
-                            const contentBlock = response.content[event.index];
-                            if (event.delta.type === 'text_delta'){
-                                ctx.logger.inference?.debug(event.delta.text);
-                                if (contentBlock?.type === 'text') {} else throw new Error();
-                                contentBlock.text += event.delta.text;
-                            } else if (event.delta.type === 'thinking_delta') {
-                                ctx.logger.inference?.trace(event.delta.thinking);
-                                if (contentBlock?.type === 'thinking') {} else throw new Error();
-                                contentBlock.thinking += event.delta.thinking;
-                            } else if (event.delta.type === 'signature_delta') {
-                                if (contentBlock?.type === 'thinking') {} else throw new Error();
-                                contentBlock.signature += event.delta.signature;
-                            } else if (event.delta.type === 'input_json_delta') {
-                                ctx.logger.inference?.trace(event.delta.partial_json);
-                                if (contentBlock?.type === 'tool_use') {} else throw new Error();
-                                if (typeof contentBlock.input === 'string') {} else throw new Error();
-                                contentBlock.input += event.delta.partial_json;
-                            } else throw new Error('Unknown type of content block delta', { cause: event.delta });
-                        } else if (event.type === 'content_block_stop') {
-                            const contentBlock = response.content[event.index];
-                            if (contentBlock?.type === 'text') ctx.logger.inference?.debug('\n');
-                            else if (contentBlock?.type === 'thinking') ctx.logger.inference?.trace('\n');
-                            else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
-                            ctx.logger.message?.trace(event);
-                            if (contentBlock?.type === 'tool_use') {
-                                if (typeof contentBlock.input === 'string') {} else throw new Error();
-                                ctx.logger.message?.debug(contentBlock);
-                            }
-                        } else throw new Error('Unknown stream event', { cause: event });
-                    }
-                }
-                if (response) {} else throw new Error();
-                if (response.stop_reason === 'max_tokens')
-                    throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-                if (response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use') {}
-                else throw new ResponseInvalid('Abnormal stop reason', { cause: response });
-
-                const cost = this.instance.calcCost(response.usage);
-                ctx.logger.cost?.(cost);
-                ctx.logger.message?.debug(response.usage);
-
-                const aiMessage = this.convertToAiMessage(response.content);
-                this.instance.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
-
-                return aiMessage;
-            }
+    export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
+        this: AnthropicEngine.Abstract<fdm>,
+        aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
+    ): Anthropic.ContentBlockParam[] {
+        if (aiMessage instanceof AnthropicCompatibleEngine.Message.Ai.Instance)
+            return aiMessage.raw;
+        else {
+            return aiMessage.getParts().map(part => {
+                if (part instanceof RoleMessage.Part.Text.Instance)
+                    return {
+                        type: 'text',
+                        text: part.text,
+                    } satisfies Anthropic.TextBlockParam;
+                else if (part instanceof Function.Call)
+                    return this.convertFromFunctionCall(part);
+                else throw new Error();
+            });
         }
     }
+
+    export function convertFromDeveloperMessage(
+        developerMessage: RoleMessage.Developer,
+    ): Anthropic.TextBlockParam[] {
+        return developerMessage.getParts().map(part => ({ type: 'text', text: part.text}));
+    }
+
+    export function convertFromChatMessage<fdm extends Function.Declaration.Map>(
+        this: AnthropicCompatibleEngine.Abstract<fdm>,
+        chatMessage: ChatMessage<Function.Declaration.From<fdm>>,
+    ): Anthropic.MessageParam {
+        if (chatMessage instanceof RoleMessage.User.Instance)
+            return { role: 'user', content: this.convertFromUserMessage(chatMessage) };
+        else if (chatMessage instanceof RoleMessage.Ai.Instance)
+            return { role: 'assistant', content: this.convertFromAiMessage(chatMessage) };
+        else throw new Error();
+    }
+
+    export function makeParams<fdm extends Function.Declaration.Map>(
+        this: AnthropicCompatibleEngine.Abstract<fdm>,
+        session: Session<Function.Declaration.From<fdm>>,
+    ): Anthropic.MessageCreateParamsStreaming {
+        const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
+        const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
+        return {
+            model: this.model,
+            stream: true,
+            messages: session.chatMessages.map(chatMessage => this.convertFromChatMessage(chatMessage)),
+            system: session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage),
+            tools: tools.length ? tools : undefined,
+            max_tokens: this.maxTokens ?? 64 * 1024,
+            ...this.additionalOptions,
+        };
+    }
+
+    export function convertToAiMessage<fdm extends Function.Declaration.Map>(
+        this: AnthropicEngine.Abstract<fdm>,
+        raw: Anthropic.ContentBlock[],
+    ): AnthropicCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>> {
+        const parts = raw.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
+            if (item.type === 'text') {
+                return [RoleMessage.Part.Text.create(item.text)];
+            } else if (item.type === 'tool_use')
+                return [this.convertToFunctionCall(item)];
+            else if (item.type === 'thinking')
+                return [];
+            else throw new Error();
+        });
+        return AnthropicCompatibleEngine.Message.Ai.create(parts, raw);
+    }
+
+    export async function fetch<fdm extends Function.Declaration.Map>(
+        this: AnthropicCompatibleEngine.Abstract<fdm>,
+        ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
+    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        const params = this.makeParams(session);
+        ctx.logger.message?.trace(params);
+
+        await this.throttle.requests(ctx);
+        const stream = this.anthropic.messages.stream(params, { signal });
+
+        let response: Anthropic.Message | null = null;
+        for await (const event of stream) {
+            if (event.type === 'message_start') {
+                ctx.logger.message?.trace(event);
+                response = structuredClone(event.message);
+            } else {
+                if (response) {} else throw new Error();
+                if (event.type === 'message_delta') {
+                    ctx.logger.message?.trace(event);
+                    response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
+                    response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
+                    response.usage.input_tokens = event.usage.input_tokens ?? response.usage.input_tokens;
+                    response.usage.output_tokens = event.usage.output_tokens;
+                    response.usage.cache_read_input_tokens = event.usage.cache_read_input_tokens ?? response.usage.cache_read_input_tokens;
+                    response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
+                    response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
+                } else if (event.type === 'message_stop') {
+                    ctx.logger.message?.trace(event);
+                } else if (event.type === 'content_block_start') {
+                    ctx.logger.message?.trace(event);
+                    const contentBlock = structuredClone(event.content_block);
+                    response.content.push(contentBlock);
+                    if (contentBlock.type === 'tool_use') contentBlock.input = '';
+                } else if (event.type === 'content_block_delta') {
+                    const contentBlock = response.content[event.index];
+                    if (event.delta.type === 'text_delta'){
+                        ctx.logger.inference?.debug(event.delta.text);
+                        if (contentBlock?.type === 'text') {} else throw new Error();
+                        contentBlock.text += event.delta.text;
+                    } else if (event.delta.type === 'thinking_delta') {
+                        ctx.logger.inference?.trace(event.delta.thinking);
+                        if (contentBlock?.type === 'thinking') {} else throw new Error();
+                        contentBlock.thinking += event.delta.thinking;
+                    } else if (event.delta.type === 'signature_delta') {
+                        if (contentBlock?.type === 'thinking') {} else throw new Error();
+                        contentBlock.signature += event.delta.signature;
+                    } else if (event.delta.type === 'input_json_delta') {
+                        ctx.logger.inference?.trace(event.delta.partial_json);
+                        if (contentBlock?.type === 'tool_use') {} else throw new Error();
+                        if (typeof contentBlock.input === 'string') {} else throw new Error();
+                        contentBlock.input += event.delta.partial_json;
+                    } else throw new Error('Unknown type of content block delta', { cause: event.delta });
+                } else if (event.type === 'content_block_stop') {
+                    const contentBlock = response.content[event.index];
+                    if (contentBlock?.type === 'text') ctx.logger.inference?.debug('\n');
+                    else if (contentBlock?.type === 'thinking') ctx.logger.inference?.trace('\n');
+                    else if (contentBlock?.type === 'tool_use') ctx.logger.inference?.debug('\n');
+                    ctx.logger.message?.trace(event);
+                    if (contentBlock?.type === 'tool_use') {
+                        if (typeof contentBlock.input === 'string') {} else throw new Error();
+                        ctx.logger.message?.debug(contentBlock);
+                    }
+                } else throw new Error('Unknown stream event', { cause: event });
+            }
+        }
+        if (response) {} else throw new Error();
+        if (response.stop_reason === 'max_tokens')
+            throw new ResponseInvalid('Token limit exceeded.', { cause: response });
+        if (response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use') {}
+        else throw new ResponseInvalid('Abnormal stop reason', { cause: response });
+
+        const cost = this.calcCost(response.usage);
+        ctx.logger.cost?.(cost);
+        ctx.logger.message?.debug(response.usage);
+
+        const aiMessage = this.convertToAiMessage(response.content);
+        this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
+
+        return aiMessage;
+    }
+
+
+
 
     export namespace Message {
         export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
@@ -203,175 +218,109 @@ export namespace AnthropicCompatibleEngine {
     }
 
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Instance<fdm> {
-        protected engineBase: Engine.Base<fdm>;
-        protected compatibleEngineBase: CompatibleEngine.Base<fdm>;
-        protected anthropicEngineBase: AnthropicEngine.Base<fdm>;
-        protected anthropicCompatibleEngineBase: AnthropicCompatibleEngine.Base<fdm>;
+    export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Abstract<fdm> {
+        public baseUrl: string;
+        public apiKey: string;
+        public model: string;
+        public name: string;
+        public inputPrice: number;
+        public outputPrice: number;
+        public cachedPrice: number;
+        public fdm: fdm;
+        public additionalOptions?: Record<string, unknown>;
+        public throttle: Throttle;
+        public timeout?: number;
+        public maxTokens?: number;
+        public proxyAgent?: Undici.ProxyAgent;
+
+        public toolChoice: Function.ToolChoice<fdm>;
+
+        public anthropic: Anthropic;
+        public parallel: boolean;
 
         public constructor(options: AnthropicCompatibleEngine.Options<fdm>) {
-            this.engineBase = new Engine.Base.Instance<fdm>(this, options);
-            this.compatibleEngineBase = new CompatibleEngine.Base.Instance<fdm>(this, options);
-            this.anthropicEngineBase = new AnthropicEngine.Base.Instance<fdm>(this, options);
-            this.anthropicCompatibleEngineBase = new AnthropicCompatibleEngine.Base.Instance<fdm>(this);
+            ({
+                baseUrl: this.baseUrl,
+                apiKey: this.apiKey,
+                model: this.model,
+                name: this.name,
+                inputPrice: this.inputPrice,
+                outputPrice: this.outputPrice,
+                cachedPrice: this.cachedPrice,
+                fdm: this.fdm,
+                additionalOptions: this.additionalOptions,
+                throttle: this.throttle,
+                timeout: this.timeout,
+                maxTokens: this.maxTokens,
+                proxyAgent: this.proxyAgent,
+            } = (Engine.Base.create<fdm>).call(this, options));
+
+            ({ toolChoice: this.toolChoice } = (CompatibleEngine.Base.create<fdm>).call(this, options));
+
+            ({
+                parallel: this.parallel,
+                anthropic: this.anthropic,
+            } = (AnthropicEngine.Base.create<fdm>).call(this, options));
         }
 
 
-        public get baseUrl(): string {
-            return this.engineBase.baseUrl;
-        }
-        public set baseUrl(value: string) {
-            this.engineBase.baseUrl = value;
-        }
-        public get apiKey(): string {
-            return this.engineBase.apiKey;
-        }
-        public set apiKey(value: string) {
-            this.engineBase.apiKey = value;
-        }
-        public get model(): string {
-            return this.engineBase.model;
-        }
-        public set model(value: string) {
-            this.engineBase.model = value;
-        }
-        public get name(): string {
-            return this.engineBase.name;
-        }
-        public set name(value: string) {
-            this.engineBase.name = value;
-        }
-        public get inputPrice(): number {
-            return this.engineBase.inputPrice;
-        }
-        public set inputPrice(value: number) {
-            this.engineBase.inputPrice = value;
-        }
-        public get outputPrice(): number {
-            return this.engineBase.outputPrice;
-        }
-        public set outputPrice(value: number) {
-            this.engineBase.outputPrice = value;
-        }
-        public get cachedPrice(): number {
-            return this.engineBase.cachedPrice;
-        }
-        public set cachedPrice(value: number) {
-            this.engineBase.cachedPrice = value;
-        }
-        public get fdm(): fdm {
-            return this.engineBase.fdm;
-        }
-        public set fdm(value: fdm) {
-            this.engineBase.fdm = value;
-        }
-        public get additionalOptions(): Record<string, unknown> | undefined {
-            return this.engineBase.additionalOptions;
-        }
-        public set additionalOptions(value: Record<string, unknown> | undefined) {
-            this.engineBase.additionalOptions = value;
-        }
-        public get throttle() {
-            return this.engineBase.throttle;
-        }
-        public set throttle(value) {
-            this.engineBase.throttle = value;
-        }
-        public get timeout(): number | undefined {
-            return this.engineBase.timeout;
-        }
-        public set timeout(value: number | undefined) {
-            this.engineBase.timeout = value;
-        }
-        public get maxTokens(): number | undefined {
-            return this.engineBase.maxTokens;
-        }
-        public set maxTokens(value: number | undefined) {
-            this.engineBase.maxTokens = value;
-        }
-        public get proxyAgent() {
-            return this.engineBase.proxyAgent;
-        }
-        public set proxyAgent(value) {
-            this.engineBase.proxyAgent = value;
-        }
-
-
-        public get toolChoice(): Function.ToolChoice<fdm> {
-            return this.compatibleEngineBase.toolChoice;
-        }
-        public set toolChoice(value: Function.ToolChoice<fdm>) {
-            this.compatibleEngineBase.toolChoice = value;
-        }
         public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.stateless(ctx, session);
+            return (CompatibleEngine.stateless<fdm>).call(this, ctx, session);
         }
         public stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.stateful(ctx, session);
+            return (CompatibleEngine.stateful<fdm>).call(this, ctx, session);
         }
         public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.appendUserMessage(session, message);
+            return (CompatibleEngine.appendUserMessage<fdm>).call(this, session, message);
         }
         public pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
-            return this.compatibleEngineBase.pushUserMessage(session, message);
+            return (CompatibleEngine.pushUserMessage<fdm>).call(this, session, message);
         }
         public validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void {
-            return this.compatibleEngineBase.validateToolCallsByToolChoice(toolCalls);
+            return (CompatibleEngine.validateToolCallsByToolChoice<fdm>).call(this, toolCalls);
         }
 
 
-        public get anthropic(): Anthropic {
-            return this.anthropicEngineBase.anthropic;
-        }
-        public set anthropic(value: Anthropic) {
-            this.anthropicEngineBase.anthropic = value;
-        }
-        public get parallel(): boolean {
-            return this.anthropicEngineBase.parallel;
-        }
-        public set parallel(value: boolean) {
-            this.anthropicEngineBase.parallel = value;
-        }
         public convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolUseBlock {
-            return this.anthropicEngineBase.convertFromFunctionCall(fc);
+            return (AnthropicEngine.convertFromFunctionCall<fdm>).call(this, fc);
         }
         public convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>> {
-            return this.anthropicEngineBase.convertToFunctionCall(apifc);
+            return (AnthropicEngine.convertToFunctionCall<fdm>).call(this, apifc);
         }
         public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolResultBlockParam {
-            return this.anthropicEngineBase.convertFromFunctionResponse(fr);
+            return (AnthropicEngine.convertFromFunctionResponse<fdm>).call(this, fr);
         }
         public convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): Anthropic.Tool {
-            return this.anthropicEngineBase.convertFromFunctionDeclarationEntry(fdentry);
+            return (AnthropicEngine.convertFromFunctionDeclarationEntry<fdm>).call(this, fdentry);
         }
         public convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>, parallel: boolean): Anthropic.ToolChoice {
-            return this.anthropicEngineBase.convertFromToolChoice(toolChoice, parallel);
+            return (AnthropicEngine.convertFromToolChoice<fdm>).call(this, toolChoice, parallel);
         }
         public calcCost(usage: Anthropic.Usage): number {
-            return this.anthropicEngineBase.calcCost(usage);
+            return (AnthropicEngine.calcCost<fdm>).call(this, usage);
         }
 
 
         public convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
-            return this.anthropicCompatibleEngineBase.convertFromUserMessage(userMessage);
+            return (AnthropicCompatibleEngine.convertFromUserMessage<fdm>).call(this, userMessage);
         }
         public convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[] {
-            return this.anthropicCompatibleEngineBase.convertFromAiMessage(aiMessage);
+            return (AnthropicCompatibleEngine.convertFromAiMessage<fdm>).call(this, aiMessage);
         }
         public convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Anthropic.TextBlockParam[] {
-            return this.anthropicCompatibleEngineBase.convertFromDeveloperMessage(developerMessage);
+            return (AnthropicCompatibleEngine.convertFromDeveloperMessage).call(this, developerMessage);
         }
         public convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): Anthropic.MessageParam {
-            return this.anthropicCompatibleEngineBase.convertFromChatMessage(chatMessage);
+            return (AnthropicCompatibleEngine.convertFromChatMessage<fdm>).call(this, chatMessage);
         }
         public makeParams(session: Session<Function.Declaration.From<fdm>>): Anthropic.MessageCreateParamsStreaming {
-            return this.anthropicCompatibleEngineBase.makeParams(session);
+            return (AnthropicCompatibleEngine.makeParams<fdm>).call(this, session);
         }
         public convertToAiMessage(raw: Anthropic.ContentBlock[]): AnthropicCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>> {
-            return this.anthropicCompatibleEngineBase.convertToAiMessage(raw);
+            return (AnthropicCompatibleEngine.convertToAiMessage<fdm>).call(this, raw);
         }
         public fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-            return this.anthropicCompatibleEngineBase.fetch(ctx, session, signal);
+            return (AnthropicCompatibleEngine.fetch<fdm>).call(this, ctx, session, signal);
         }
 
     }
