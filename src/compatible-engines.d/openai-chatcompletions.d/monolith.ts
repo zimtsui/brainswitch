@@ -15,7 +15,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
     {
         apiURL: URL;
         makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming;
-        fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     }
 
     export function getApiURL(baseUrl: string): URL {
@@ -45,12 +45,12 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
         this: OpenAIChatCompletionsCompatibleMonolithEngine.Underhood<fdm>,
-        ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
+        wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
-        ctx.logger.message?.trace(params);
+        this.logger.message?.trace(params);
 
-        await this.throttle.requests(ctx);
+        await this.throttle.requests(wfctx);
         const res = await fetch(this.apiURL, {
             method: 'POST',
             headers: new Headers({
@@ -63,7 +63,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
         });
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const completion = await res.json() as OpenAI.ChatCompletion;
-        ctx.logger.message?.trace(completion);
+        this.logger.message?.trace(completion);
 
         const choice = completion.choices[0];
         if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
@@ -72,16 +72,16 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
 
         if (completion.usage) {} else throw new Error();
         const cost = this.calcCost(completion.usage);
-        ctx.logger.cost?.(cost);
+        wfctx.cost?.(cost);
 
         const aiMessage = this.convertToAiMessage(choice.message);
 
         // logging
         const text = aiMessage.getText();
-        if (text) ctx.logger.inference?.debug(text + '\n');
+        if (text) this.logger.inference?.debug(text + '\n');
         const apifcs = choice.message.tool_calls;
-        if (apifcs?.length) ctx.logger.message?.debug(apifcs);
-        ctx.logger.message?.debug(completion.usage);
+        if (apifcs?.length) this.logger.message?.debug(apifcs);
+        this.logger.message?.debug(completion.usage);
 
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 

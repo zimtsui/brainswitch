@@ -8,6 +8,7 @@ import { GoogleEngine } from '../../api-types/google.ts';
 import { GoogleCompatibleEngine } from '../../compatible-engines.d/google.ts';
 import { CompatibleEngine } from '../../compatible-engine.ts';
 import { Throttle } from '../../throttle.ts';
+import { type Logger } from '../../telemetry.ts';
 
 
 export interface GoogleNativeEngine<fdm extends Function.Declaration.Map> extends Engine {
@@ -17,11 +18,11 @@ export interface GoogleNativeEngine<fdm extends Function.Declaration.Map> extend
      * @throws {@link ResponseInvalid} 模型抽风
      * @throws {TypeError} 网络故障
      */
-    stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     /**
      * @param session mutable
      */
-    stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
     /**
      * @param session mutable
@@ -73,8 +74,8 @@ export namespace GoogleNativeEngine {
         GoogleNativeEngine<fdm>,
         OwnProps<fdm>
     {
-        stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-        stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content;
         convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Google.Content;
         convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Google.Content;
@@ -83,40 +84,40 @@ export namespace GoogleNativeEngine {
         convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>): Google.FunctionCallingConfig;
         appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
-        fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void;
     }
 
     export async function stateless<fdm extends Function.Declaration.Map>(
         this: GoogleNativeEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         for (let retry = 0;; retry++) {
             const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
-            const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-                ctx.signal,
+            const signal = wfctx.signal && signalTimeout ? AbortSignal.any([
+                wfctx.signal,
                 signalTimeout,
-            ]) : ctx.signal || signalTimeout;
+            ]) : wfctx.signal || signalTimeout;
             try {
-                return await this.fetch(ctx, session, signal);
+                return await this.fetch(wfctx, session, signal);
             } catch (e) {
-                if (ctx.signal?.aborted) throw USER_ABORTION;                                  // 用户中止
+                if (wfctx.signal?.aborted) throw USER_ABORTION;                                  // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) ctx.logger.message?.warn(e); else throw e;
+                if (retry < 3) this.logger.message?.warn(e); else throw e;
             }
         }
     }
 
     export async function stateful<fdm extends Function.Declaration.Map>(
         this: GoogleNativeEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-        const response = await this.stateless(ctx, session);
+        const response = await this.stateless(wfctx, session);
         session.chatMessages.push(response);
         return response;
     }
@@ -214,14 +215,14 @@ export namespace GoogleNativeEngine {
 
     export async function fetch<fdm extends Function.Declaration.Map>(
         this: GoogleNativeEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const systemInstruction = session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage);
         const contents = this.convertFromChatMessages(session.chatMessages);
 
-        await this.throttle.requests(ctx);
+        await this.throttle.requests(wfctx);
 
         const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
         const functionDeclarations = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
@@ -243,7 +244,7 @@ export namespace GoogleNativeEngine {
             } : undefined,
         };
 
-        ctx.logger.message?.trace(reqbody);
+        this.logger.message?.trace(reqbody);
 
         const res = await Undici.fetch(this.apiURL, {
             method: 'POST',
@@ -255,7 +256,7 @@ export namespace GoogleNativeEngine {
             dispatcher: this.proxyAgent,
             signal,
         });
-        ctx.logger.message?.trace(res);
+        this.logger.message?.trace(res);
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as Google.GenerateContentResponse;
 
@@ -267,12 +268,12 @@ export namespace GoogleNativeEngine {
 
 
         for (const part of response.candidates[0].content.parts) {
-            if (part.text) ctx.logger.inference?.debug(part.text+'\n');
-            if (part.functionCall) ctx.logger.message?.debug(part.functionCall);
+            if (part.text) this.logger.inference?.debug(part.text+'\n');
+            if (part.functionCall) this.logger.message?.debug(part.functionCall);
         }
         if (response.usageMetadata?.promptTokenCount) {}
         else throw new Error('Prompt token count absent', { cause: response });
-        ctx.logger.message?.debug(response.usageMetadata);
+        this.logger.message?.debug(response.usageMetadata);
 
         const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
         const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
@@ -283,7 +284,7 @@ export namespace GoogleNativeEngine {
             this.cachePrice * cacheHitTokenCount / 1e6 +
             this.outputPrice * candidatesTokenCount / 1e6 +
             this.outputPrice * thinkingTokenCount / 1e6;
-        ctx.logger.cost?.(cost);
+        wfctx.cost?.(cost);
 
         const aiMessage = this.convertToAiMessage(response.candidates[0].content);
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
@@ -315,6 +316,7 @@ export namespace GoogleNativeEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
+        public logger: Logger;
 
         public parallelToolCall: boolean;
 
@@ -339,6 +341,7 @@ export namespace GoogleNativeEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
+                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
 
             ({ parallelToolCall: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
@@ -353,11 +356,11 @@ export namespace GoogleNativeEngine {
         }
 
 
-        public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (GoogleNativeEngine.stateless<fdm>).call(this, ctx, session);
+        public stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (GoogleNativeEngine.stateless<fdm>).call(this, wfctx, session);
         }
-        public stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (GoogleNativeEngine.stateful<fdm>).call(this, ctx, session);
+        public stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (GoogleNativeEngine.stateful<fdm>).call(this, wfctx, session);
         }
         public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
             return (GoogleNativeEngine.appendUserMessage<fdm>).call(this, session, message);
@@ -401,8 +404,8 @@ export namespace GoogleNativeEngine {
         }
 
 
-        public fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-            return (GoogleNativeEngine.fetch<fdm>).call(this, ctx, session, signal);
+        public fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+            return (GoogleNativeEngine.fetch<fdm>).call(this, wfctx, session, signal);
         }
 
     }

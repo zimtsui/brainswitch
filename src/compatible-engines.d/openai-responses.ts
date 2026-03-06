@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import * as Undici from 'undici';
 import { OpenAIResponsesEngine } from '../api-types/openai-responses.ts';
 import { Throttle } from '../throttle.ts';
+import { type Logger } from '../telemetry.ts';
 
 
 
@@ -35,9 +36,9 @@ export namespace OpenAIResponsesCompatibleEngine {
         convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput;
         convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed;
         makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseCreateParamsNonStreaming;
-        logAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void;
-        fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-        fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>>;
+        logAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): void;
+        fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>>;
     }
 
 
@@ -159,32 +160,35 @@ export namespace OpenAIResponsesCompatibleEngine {
         };
     }
 
-    export function logAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void {
+    export function logAiMessage<fdm extends Function.Declaration.Map>(
+        this: Engine.Underhood<fdm>,
+        output: OpenAI.Responses.ResponseOutputItem[],
+    ): void {
         for (const item of output)
             if (item.type === 'message') {
                 if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
-                ctx.logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
+                this.logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
             } else if (item.type === 'function_call')
-                ctx.logger.message?.debug(item);
+                this.logger.message?.debug(item);
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
         this: OpenAIResponsesCompatibleEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
     ): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>> {
-        return await this.fetchRaw(ctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
+        return await this.fetchRaw(wfctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
     }
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
         this: OpenAIResponsesCompatibleEngine.Underhood<fdm>,
-        ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
+        wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeMonolithParams(session);
-        ctx.logger.message?.trace(params);
+        this.logger.message?.trace(params);
 
-        await this.throttle.requests(ctx);
+        await this.throttle.requests(wfctx);
         const res = await Undici.fetch(
             this.apiURL,
             {
@@ -200,25 +204,24 @@ export namespace OpenAIResponsesCompatibleEngine {
         );
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as OpenAI.Responses.Response;
-        ctx.logger.message?.trace(response);
+        this.logger.message?.trace(response);
         if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
             throw new ResponseInvalid('Token limit exceeded.', { cause: response });
         if (response.status === 'completed') {}
         else throw new ResponseInvalid('Abnormal response status', { cause: response });
 
-        this.logAiMessage(ctx, response.output);
+        this.logAiMessage(response.output);
 
         if (response.usage) {} else throw new Error();
         const cost = this.calcCost(response.usage);
-        ctx.logger.cost?.(cost);
-        ctx.logger.message?.debug(response.usage);
+        wfctx.cost?.(cost);
+        this.logger.message?.debug(response.usage);
 
         const aiMessage = this.convertToAiMessage(response.output);
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 
         return aiMessage;
     }
-
 
 
 
@@ -236,6 +239,7 @@ export namespace OpenAIResponsesCompatibleEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
+        public logger: Logger;
 
         public apiURL: URL;
         public parallelToolCall: boolean;
@@ -257,6 +261,7 @@ export namespace OpenAIResponsesCompatibleEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
+                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
             ({ parallelToolCall: this.parallelToolCall } = (OpenAIResponsesEngine.OwnProps.init<fdm>).call(this, options));
@@ -264,11 +269,11 @@ export namespace OpenAIResponsesCompatibleEngine {
         }
 
 
-        public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (CompatibleEngine.stateless<fdm>).call(this, ctx, session);
+        public stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (CompatibleEngine.stateless<fdm>).call(this, wfctx, session);
         }
-        public stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (CompatibleEngine.stateful<fdm>).call(this, ctx, session);
+        public stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (CompatibleEngine.stateful<fdm>).call(this, wfctx, session);
         }
         public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
             return (CompatibleEngine.appendUserMessage<fdm>).call(this, session, message);
@@ -319,14 +324,14 @@ export namespace OpenAIResponsesCompatibleEngine {
         public makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseCreateParamsNonStreaming {
             return (OpenAIResponsesCompatibleEngine.makeMonolithParams<fdm>).call(this, session);
         }
-        public logAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void {
-            return (OpenAIResponsesCompatibleEngine.logAiMessage).call(this, ctx, output);
+        public logAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): void {
+            return (OpenAIResponsesCompatibleEngine.logAiMessage).call(this, output);
         }
-        public fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
-            return (OpenAIResponsesCompatibleEngine.fetch<fdm>).call(this, ctx, session, signal);
+        public fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
+            return (OpenAIResponsesCompatibleEngine.fetch<fdm>).call(this, wfctx, session, signal);
         }
-        public fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>> {
-            return (OpenAIResponsesCompatibleEngine.fetchRaw<fdm>).call(this, ctx, session, signal);
+        public fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>> {
+            return (OpenAIResponsesCompatibleEngine.fetchRaw<fdm>).call(this, wfctx, session, signal);
         }
     }
 

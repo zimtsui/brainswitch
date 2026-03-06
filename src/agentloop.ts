@@ -8,7 +8,7 @@ import { type CompatibleEngine } from './compatible-engine.ts';
  * @param session mutable
  */
 export async function *agentloop<fdm extends Function.Declaration.Map>(
-    ctx: InferenceContext,
+    wfctx: InferenceContext,
     session: Session<Function.Declaration.From<fdm>>,
     engine: CompatibleEngine<fdm>,
     fnm: Function.Map<fdm>,
@@ -16,7 +16,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 ): AsyncGenerator<string, string, void> {
     type fdu = Function.Declaration.From<fdm>;
     for (let i = 0; i < limit; i++) {
-        const response = await engine.stateful(ctx, session);
+        const response = await engine.stateful(wfctx, session);
         const fcs = response.getFunctionCalls();
         if (!fcs.length) return response.getOnlyText();
         const pfrs: Promise<Function.Response.Distributive<fdu>>[] = [];

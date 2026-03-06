@@ -19,7 +19,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
         makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming;
         convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>>;
         convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion;
-        fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string | null;
     }
 
@@ -100,12 +100,12 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
         this: OpenAIChatCompletionsCompatibleStreamEngine.Underhood<fdm>,
-        ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
+        wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
-        ctx.logger.message?.trace(params);
+        this.logger.message?.trace(params);
 
-        await this.throttle.requests(ctx);
+        await this.throttle.requests(wfctx);
 
         const stream = await this.client.chat.completions.create(params, { signal });
         let stock: OpenAI.ChatCompletionChunk | null = null;
@@ -135,9 +135,9 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                 if (deltaThoughts) {
                     if (!thinking) {
                         thinking = true;
-                        ctx.logger.inference?.trace('<think>\n');
+                        this.logger.inference?.trace('<think>\n');
                     }
-                    ctx.logger.inference?.trace(deltaThoughts);
+                    this.logger.inference?.trace(deltaThoughts);
                     thoughts ??= '';
                     thoughts += deltaThoughts;
                 }
@@ -146,9 +146,9 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                 if (deltaChoice.delta.content) {
                     if (thinking) {
                         thinking = false;
-                        ctx.logger.inference?.trace('\n</think>\n');
+                        this.logger.inference?.trace('\n</think>\n');
                     }
-                    ctx.logger.inference?.debug(deltaChoice.delta.content);
+                    this.logger.inference?.debug(deltaChoice.delta.content);
                     stock.choices[0]!.delta.content ??= '';
                     stock.choices[0]!.delta.content! += deltaChoice.delta.content;
                 }
@@ -157,7 +157,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                 if (deltaChoice.delta.tool_calls) {
                     if (thinking) {
                         thinking = false;
-                        ctx.logger.inference?.trace('\n</think>\n');
+                        this.logger.inference?.trace('\n</think>\n');
                     }
                     stock.choices[0]!.delta.tool_calls ??= [];
                     for (const deltaToolCall of deltaChoice.delta.tool_calls) {
@@ -188,20 +188,20 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
 
         const choice = completion.choices[0];
         if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
-        if (choice.message.content) ctx.logger.inference?.debug('\n');
+        if (choice.message.content) this.logger.inference?.debug('\n');
 
         this.handleFinishReason(completion, choice.finish_reason);
 
         if (completion.usage) {} else throw new Error();
         const cost = this.calcCost(completion.usage);
-        ctx.logger.cost?.(cost);
+        wfctx.cost?.(cost);
 
         const aiMessage = this.convertToAiMessage(choice.message);
 
         // logging
         const apifcs = choice.message.tool_calls;
-        if (apifcs?.length) ctx.logger.message?.debug(apifcs);
-        ctx.logger.message?.debug(completion.usage);
+        if (apifcs?.length) this.logger.message?.debug(apifcs);
+        this.logger.message?.debug(completion.usage);
 
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 

@@ -10,7 +10,7 @@ import * as CompatibleAgentloopModule from '../../agentloop.ts';
  * @param session mutable
  */
 export async function *agentloop<fdm extends Function.Declaration.Map>(
-    ctx: InferenceContext,
+    wfctx: InferenceContext,
     session: Session<Function.Declaration.From<fdm>>,
     engine: OpenAIResponsesNativeEngine<fdm>,
     tlm: Tool.Map<fdm>,
@@ -18,7 +18,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
 ): AsyncGenerator<string, string, void> {
     type fdu = Function.Declaration.From<fdm>;
     for (let i = 0; i < limit; i++) {
-        const response = await engine.stateful(ctx, session);
+        const response = await engine.stateful(wfctx, session);
         const tcs = response.getToolCalls();
         if (!tcs.length) return response.getOnlyText();
         const ptcs: Promise<Tool.Response<fdu>>[] = [];

@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import * as Undici from 'undici';
 import { OpenAIResponsesEngine } from '../../api-types/openai-responses.ts';
 import { Throttle } from '../../throttle.ts';
+import { type Logger } from '../../telemetry.ts';
 
 
 export interface OpenAIResponsesNativeEngine<fdm extends Function.Declaration.Map> extends Engine {
@@ -16,11 +17,11 @@ export interface OpenAIResponsesNativeEngine<fdm extends Function.Declaration.Ma
      * @throws {@link ResponseInvalid} 模型抽风
      * @throws {TypeError} 网络故障
      */
-    stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     /**
      * @param session mutable
      */
-    stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
     /**
      * @param session mutable
@@ -65,8 +66,8 @@ export namespace OpenAIResponsesNativeEngine {
         OpenAIResponsesNativeEngine<fdm>,
         OwnProps<fdm>
     {
-        stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-        stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         convertToAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): RoleMessage.Ai<Function.Declaration.From<fdm>>;
@@ -75,42 +76,42 @@ export namespace OpenAIResponsesNativeEngine {
         convertFromChatMessage(chatMessage: ChatMessage<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInput;
         convertFromToolChoice(toolChoice: Tool.Choice<fdm>): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed;
         makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseCreateParamsNonStreaming;
-        logAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void;
-        fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-        fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        logAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): void;
+        fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         validateToolCallsByToolChoice(toolCalls: Tool.Call<Function.Declaration.From<fdm>>[]): void;
     }
 
 
     export async function stateless<fdm extends Function.Declaration.Map>(
         this: OpenAIResponsesNativeEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         for (let retry = 0;; retry++) {
             const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
-            const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-                ctx.signal,
+            const signal = wfctx.signal && signalTimeout ? AbortSignal.any([
+                wfctx.signal,
                 signalTimeout,
-            ]) : ctx.signal || signalTimeout;
+            ]) : wfctx.signal || signalTimeout;
             try {
-                return await this.fetch(ctx, session, signal);
+                return await this.fetch(wfctx, session, signal);
             } catch (e) {
-                if (ctx.signal?.aborted) throw USER_ABORTION;                                       // 用户中止
+                if (wfctx.signal?.aborted) throw USER_ABORTION;                                       // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) ctx.logger.message?.warn(e); else throw e;
+                if (retry < 3) this.logger.message?.warn(e); else throw e;
             }
         }
     }
     export async function stateful<fdm extends Function.Declaration.Map>(
         this: OpenAIResponsesNativeEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-        const response = await this.stateless(ctx, session);
+        const response = await this.stateless(wfctx, session);
         session.chatMessages.push(response);
         return response;
     }
@@ -236,37 +237,37 @@ export namespace OpenAIResponsesNativeEngine {
         };
     }
 
-    export function logAiMessage(
-        ctx: InferenceContext,
+    export function logAiMessage<fdm extends Function.Declaration.Map>(
+        this: Engine.Underhood<fdm>,
         output: OpenAI.Responses.ResponseOutputItem[],
     ): void {
         for (const item of output)
             if (item.type === 'message') {
                 if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
-                ctx.logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
+                this.logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
             } else if (item.type === 'function_call')
-                ctx.logger.message?.debug(item);
+                this.logger.message?.debug(item);
             else if (item.type === 'apply_patch_call')
-                ctx.logger.message?.debug(item);
+                this.logger.message?.debug(item);
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
         this: OpenAIResponsesNativeEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-        return await this.fetchRaw(ctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
+        return await this.fetchRaw(wfctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
     }
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
         this: OpenAIResponsesNativeEngine.Underhood<fdm>,
-        ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
+        wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeMonolithParams(session);
-        ctx.logger.message?.trace(params);
+        this.logger.message?.trace(params);
 
-        await this.throttle.requests(ctx);
+        await this.throttle.requests(wfctx);
         const res = await Undici.fetch(
             this.apiURL,
             {
@@ -282,18 +283,18 @@ export namespace OpenAIResponsesNativeEngine {
         );
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as OpenAI.Responses.Response;
-        ctx.logger.message?.trace(response);
+        this.logger.message?.trace(response);
         if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
             throw new ResponseInvalid('Token limit exceeded.', { cause: response });
         if (response.status === 'completed') {}
         else throw new ResponseInvalid('Abnormal response status', { cause: response });
 
-        this.logAiMessage(ctx, response.output);
+        this.logAiMessage(response.output);
 
         if (response.usage) {} else throw new Error();
         const cost = this.calcCost(response.usage);
-        ctx.logger.cost?.(cost);
-        ctx.logger.message?.debug(response.usage);
+        wfctx.cost?.(cost);
+        this.logger.message?.debug(response.usage);
 
         const aiMessage = this.convertToAiMessage(response.output);
         this.validateToolCallsByToolChoice(aiMessage.getToolCalls());
@@ -332,6 +333,7 @@ export namespace OpenAIResponsesNativeEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
+        public logger: Logger;
 
         public apiURL: URL;
         public parallelToolCall: boolean;
@@ -353,6 +355,7 @@ export namespace OpenAIResponsesNativeEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
+                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
 
             ({ parallelToolCall: this.parallelToolCall } = (OpenAIResponsesEngine.OwnProps.init<fdm>).call(this, options));
@@ -377,11 +380,11 @@ export namespace OpenAIResponsesNativeEngine {
         }
 
 
-        public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (OpenAIResponsesNativeEngine.stateless<fdm>).call(this, ctx, session);
+        public stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (OpenAIResponsesNativeEngine.stateless<fdm>).call(this, wfctx, session);
         }
-        public stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (OpenAIResponsesNativeEngine.stateful<fdm>).call(this, ctx, session);
+        public stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (OpenAIResponsesNativeEngine.stateful<fdm>).call(this, wfctx, session);
         }
         public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
             return (OpenAIResponsesNativeEngine.appendUserMessage<fdm>).call(this, session, message);
@@ -389,11 +392,11 @@ export namespace OpenAIResponsesNativeEngine {
         public pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
             return (OpenAIResponsesNativeEngine.pushUserMessage<fdm>).call(this, session, message);
         }
-        public async fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
-            return (OpenAIResponsesNativeEngine.fetch<fdm>).call(this, ctx, session, signal);
+        public async fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
+            return (OpenAIResponsesNativeEngine.fetch<fdm>).call(this, wfctx, session, signal);
         }
-        public async fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
-            return (OpenAIResponsesNativeEngine.fetchRaw<fdm>).call(this, ctx, session, signal);
+        public async fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
+            return (OpenAIResponsesNativeEngine.fetchRaw<fdm>).call(this, wfctx, session, signal);
         }
         public convertToAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): RoleMessage.Ai<Function.Declaration.From<fdm>> {
             return (OpenAIResponsesNativeEngine.convertToAiMessage<fdm>).call(this, output);
@@ -413,8 +416,8 @@ export namespace OpenAIResponsesNativeEngine {
         public makeMonolithParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseCreateParamsNonStreaming {
             return (OpenAIResponsesNativeEngine.makeMonolithParams<fdm>).call(this, session);
         }
-        public logAiMessage(ctx: InferenceContext, output: OpenAI.Responses.ResponseOutputItem[]): void {
-            return (OpenAIResponsesNativeEngine.logAiMessage).call(this, ctx, output);
+        public logAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): void {
+            return (OpenAIResponsesNativeEngine.logAiMessage<fdm>).call(this, output);
         }
         public validateToolCallsByToolChoice(toolCalls: Tool.Call<Function.Declaration.From<fdm>>[]): void {
             return (OpenAIResponsesNativeEngine.validateToolCallsByToolChoice<fdm>).call(this, toolCalls);

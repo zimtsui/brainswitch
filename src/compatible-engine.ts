@@ -12,11 +12,11 @@ export interface CompatibleEngine<in out fdm extends Function.Declaration.Map> e
      * @throws {@link ResponseInvalid} 模型抽风
      * @throws {TypeError} 网络故障
      */
-    stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     /**
      * @param session mutable
      */
-    stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
     /**
      * @param session mutable
@@ -52,9 +52,9 @@ export namespace CompatibleEngine {
         OwnProps<fdm>
     {
         parallelToolCall: boolean;
-        fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-        stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-        stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void;
@@ -63,33 +63,33 @@ export namespace CompatibleEngine {
 
     export async function stateless<fdm extends Function.Declaration.Map>(
         this: CompatibleEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         for (let retry = 0;; retry++) {
             const signalTimeout = this.timeout ? AbortSignal.timeout(this.timeout) : undefined;
-            const signal = ctx.signal && signalTimeout ? AbortSignal.any([
-                ctx.signal,
+            const signal = wfctx.signal && signalTimeout ? AbortSignal.any([
+                wfctx.signal,
                 signalTimeout,
-            ]) : ctx.signal || signalTimeout;
+            ]) : wfctx.signal || signalTimeout;
             try {
-                return await this.fetch(ctx, session, signal);
+                return await this.fetch(wfctx, session, signal);
             } catch (e) {
-                if (ctx.signal?.aborted) throw USER_ABORTION;                                       // 用户中止
+                if (wfctx.signal?.aborted) throw USER_ABORTION;                                       // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) ctx.logger.message?.warn(e); else throw e;
+                if (retry < 3) this.logger.message?.warn(e); else throw e;
             }
         }
     }
     export async function stateful<fdm extends Function.Declaration.Map>(
         this: CompatibleEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-        const response = await this.stateless(ctx, session);
+        const response = await this.stateless(wfctx, session);
         session.chatMessages.push(response);
         return response;
     }

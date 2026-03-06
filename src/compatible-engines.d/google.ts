@@ -7,6 +7,7 @@ import * as Undici from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { GoogleEngine } from '../api-types/google.ts';
 import { Throttle } from '../throttle.ts';
+import { type Logger } from '../telemetry.ts';
 
 
 
@@ -42,7 +43,7 @@ export namespace GoogleCompatibleEngine {
         convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[];
         convertToAiMessage(content: Google.Content): GoogleCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>;
         convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>): Google.FunctionCallingConfig;
-        fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+        fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     }
 
     export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
@@ -77,14 +78,14 @@ export namespace GoogleCompatibleEngine {
 
     export async function fetch<fdm extends Function.Declaration.Map>(
         this: GoogleCompatibleEngine.Underhood<fdm>,
-        ctx: InferenceContext,
+        wfctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const systemInstruction = session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage);
         const contents = this.convertFromChatMessages(session.chatMessages);
 
-        await this.throttle.requests(ctx);
+        await this.throttle.requests(wfctx);
 
         const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
         const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
@@ -103,7 +104,7 @@ export namespace GoogleCompatibleEngine {
             } : undefined,
         };
 
-        ctx.logger.message?.trace(reqbody);
+        this.logger.message?.trace(reqbody);
 
         const res = await Undici.fetch(this.apiURL, {
             method: 'POST',
@@ -115,7 +116,7 @@ export namespace GoogleCompatibleEngine {
             dispatcher: this.proxyAgent,
             signal,
         });
-        ctx.logger.message?.trace(res);
+        this.logger.message?.trace(res);
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as Google.GenerateContentResponse;
 
@@ -127,11 +128,11 @@ export namespace GoogleCompatibleEngine {
 
 
         for (const part of response.candidates[0].content.parts) {
-            if (part.text) ctx.logger.inference?.debug(part.text+'\n');
-            if (part.functionCall) ctx.logger.message?.debug(part.functionCall);
+            if (part.text) this.logger.inference?.debug(part.text+'\n');
+            if (part.functionCall) this.logger.message?.debug(part.functionCall);
         }
         if (response.usageMetadata?.promptTokenCount) {} else throw new Error('Prompt token count absent', { cause: response });
-        ctx.logger.message?.debug(response.usageMetadata);
+        this.logger.message?.debug(response.usageMetadata);
 
         const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
         const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
@@ -142,7 +143,7 @@ export namespace GoogleCompatibleEngine {
             this.cachePrice * cacheHitTokenCount / 1e6 +
             this.outputPrice * candidatesTokenCount / 1e6 +
             this.outputPrice * thinkingTokenCount / 1e6;
-        ctx.logger.cost?.(cost);
+        wfctx.cost?.(cost);
 
         const aiMessage = this.convertToAiMessage(response.candidates[0].content);
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
@@ -228,6 +229,7 @@ export namespace GoogleCompatibleEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
+        public logger: Logger;
 
         public toolChoice: Function.ToolChoice<fdm>;
 
@@ -250,17 +252,18 @@ export namespace GoogleCompatibleEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
+                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
             ({ parallelToolCall: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
             ({ apiURL: this.apiURL } = (GoogleCompatibleEngine.OwnProps.init<fdm>).call(this, options));
         }
 
-        public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (CompatibleEngine.stateless<fdm>).call(this, ctx, session);
+        public stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (CompatibleEngine.stateless<fdm>).call(this, wfctx, session);
         }
-        public stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (CompatibleEngine.stateful<fdm>).call(this, ctx, session);
+        public stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (CompatibleEngine.stateful<fdm>).call(this, wfctx, session);
         }
         public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
             return (CompatibleEngine.appendUserMessage<fdm>).call(this, session, message);
@@ -302,8 +305,8 @@ export namespace GoogleCompatibleEngine {
         public convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>): Google.FunctionCallingConfig {
             return (GoogleCompatibleEngine.convertFromToolChoice<fdm>).call(this, toolChoice);
         }
-        public fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-            return (GoogleCompatibleEngine.fetch<fdm>).call(this, ctx, session, signal);
+        public fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+            return (GoogleCompatibleEngine.fetch<fdm>).call(this, wfctx, session, signal);
         }
 
     }

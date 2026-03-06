@@ -10,11 +10,11 @@ export class Throttle {
         this.interval = Math.ceil(60*1000 / this.rpm);
     }
 
-    public async requests(ctx: InferenceContext): Promise<void> {
-        await ctx.busy?.acquireRead();
+    public async requests(wfctx: InferenceContext): Promise<void> {
+        await wfctx.busy?.acquireRead();
         const pwr = Promise.withResolvers<void>();
-        const callback = () => pwr.reject(ctx.signal?.reason);
-        ctx.signal?.addEventListener('abort', callback);
+        const callback = () => pwr.reject(wfctx.signal?.reason);
+        wfctx.signal?.addEventListener('abort', callback);
         const waiting = this.valve.acquire();
         try {
             await Promise.race([waiting, pwr.promise]);
@@ -23,8 +23,8 @@ export class Throttle {
             waiting.then(() => this.valve.release()).catch(() => {});
             throw e;
         } finally {
-            ctx.signal?.removeEventListener('abort', callback);
-            ctx.busy?.releaseRead();
+            wfctx.signal?.removeEventListener('abort', callback);
+            wfctx.busy?.releaseRead();
         }
     }
 

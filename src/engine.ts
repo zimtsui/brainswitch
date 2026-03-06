@@ -3,6 +3,7 @@ import { EndpointSpec } from './endpoint-spec.ts';
 import { Throttle } from './throttle.ts';
 import { ProxyAgent } from 'undici';
 import { env } from 'node:process';
+import { type Logger } from './telemetry.ts';
 
 
 export interface Engine {
@@ -12,6 +13,7 @@ export interface Engine {
 export namespace Engine {
     export interface Options<in out fdm extends Function.Declaration.Map> extends EndpointSpec, Options.Tools<fdm> {
         throttle: Throttle;
+        logger: Logger;
     }
     export namespace Options {
         export interface Tools<in out fdm extends Function.Declaration.Map> {
@@ -34,6 +36,7 @@ export namespace Engine {
         timeout?: number;
         maxTokens?: number;
         proxyAgent?: ProxyAgent;
+        logger: Logger;
     }
     export namespace OwnProps {
         export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps<fdm> {
@@ -53,6 +56,7 @@ export namespace Engine {
                 timeout: options.timeout,
                 maxTokens: options.maxTokens,
                 proxyAgent: proxyUrl ? new ProxyAgent(proxyUrl) : undefined,
+                logger: options.logger
             };
         }
     }

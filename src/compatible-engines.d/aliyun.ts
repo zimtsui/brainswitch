@@ -9,6 +9,7 @@ import * as Undici from 'undici';
 import { Throttle } from '../throttle.ts';
 import { Engine } from '../engine.ts';
 import OpenAI from 'openai';
+import { type Logger } from '../telemetry.ts';
 
 
 
@@ -64,6 +65,7 @@ export namespace AliyunEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
+        public logger: Logger;
 
         public toolChoice: Function.ToolChoice<fdm>;
 
@@ -86,17 +88,18 @@ export namespace AliyunEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
+                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
             ({ parallelToolCall: this.parallelToolCall } = (OpenAIChatCompletionsEngine.OwnProps.init<fdm>).call(this, options));
             ({ client: this.client } = (AliyunEngine.OwnProps.init<fdm>).call(this, options));
         }
 
-        public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (CompatibleEngine.stateless<fdm>).call(this, ctx, session);
+        public stateless(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (CompatibleEngine.stateless<fdm>).call(this, wfctx, session);
         }
-        public stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
-            return (CompatibleEngine.stateful<fdm>).call(this, ctx, session);
+        public stateful(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
+            return (CompatibleEngine.stateful<fdm>).call(this, wfctx, session);
         }
         public appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>) {
             return (CompatibleEngine.appendUserMessage<fdm>).call(this, session, message);
@@ -131,8 +134,8 @@ export namespace AliyunEngine {
         }
 
 
-        public fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
-            return (OpenAIChatCompletionsCompatibleEngine.fetch<fdm>).call(this, ctx, session, signal);
+        public fetch(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal) {
+            return (OpenAIChatCompletionsCompatibleEngine.fetch<fdm>).call(this, wfctx, session, signal);
         }
         public convertToAiMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>> {
             return (OpenAIChatCompletionsCompatibleEngine.convertToAiMessage<fdm>).call(this, message);
@@ -163,8 +166,8 @@ export namespace AliyunEngine {
         public convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion {
             return (OpenAIChatCompletionsCompatibleStreamEngine.convertCompletionStockToCompletion).call(this, stock);
         }
-        public fetchRaw(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
-            return (OpenAIChatCompletionsCompatibleStreamEngine.fetchRaw<fdm>).call(this, ctx, session, signal);
+        public fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+            return (OpenAIChatCompletionsCompatibleStreamEngine.fetchRaw<fdm>).call(this, wfctx, session, signal);
         }
 
 
