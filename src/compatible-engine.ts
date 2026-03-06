@@ -7,7 +7,7 @@ import { USER_ABORTION, InferenceTimeout, ResponseInvalid, type Engine } from '.
 
 export interface CompatibleEngine<in out fdm extends Function.Declaration.Map> extends Engine {
     /**
-     * @throws {@link UserAbortion} 用户中止
+     * @throws {@link USER_ABORTION} 用户中止
      * @throws {@link InferenceTimeout} 推理超时
      * @throws {@link ResponseInvalid} 模型抽风
      * @throws {TypeError} 网络故障
