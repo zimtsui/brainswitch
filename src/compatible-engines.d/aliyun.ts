@@ -13,8 +13,28 @@ import OpenAI from 'openai';
 
 
 export namespace AliyunEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
         OpenAIChatCompletionsCompatibleStreamEngine.Options<fdm> {}
+
+    export interface OwnProps {
+        client: OpenAI;
+    }
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(
+            this: OpenAIChatCompletionsCompatibleStreamEngine.Underhood<fdm>,
+            options: Options<fdm>,
+        ): OwnProps {
+            return {
+                client: new OpenAI({
+                    baseURL: this.baseUrl,
+                    apiKey: this.apiKey,
+                    fetchOptions: {
+                        dispatcher: this.proxyAgent,
+                    },
+                }),
+            }
+        }
+    }
 
     export interface ChatCompletionChunkChoiceDelta extends OpenAI.ChatCompletionChunk.Choice.Delta {
         reasoning_content?: string;
@@ -67,18 +87,9 @@ export namespace AliyunEngine {
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
-
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
-
-            ({ parallel: this.parallelToolCall } = (OpenAIChatCompletionsEngine.OwnProps.init<fdm>).call(this, options));
-
-            this.client = new OpenAI({
-                baseURL: this.baseUrl,
-                apiKey: this.apiKey,
-                fetchOptions: {
-                    dispatcher: this.proxyAgent,
-                },
-            });
+            ({ parallelToolCall: this.parallelToolCall } = (OpenAIChatCompletionsEngine.OwnProps.init<fdm>).call(this, options));
+            ({ client: this.client } = (AliyunEngine.OwnProps.init<fdm>).call(this, options));
         }
 
         public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {

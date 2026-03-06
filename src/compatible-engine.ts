@@ -1,7 +1,7 @@
 import { RoleMessage, type Session } from './session.ts';
 import { Function } from './function.ts';
 import { type InferenceContext } from './inference-context.ts';
-import { UserAbortion, InferenceTimeout, ResponseInvalid, type Engine } from './engine.ts';
+import { USER_ABORTION, InferenceTimeout, ResponseInvalid, type Engine } from './engine.ts';
 
 
 
@@ -27,7 +27,7 @@ export interface CompatibleEngine<in out fdm extends Function.Declaration.Map> e
 export namespace CompatibleEngine {
     export interface Options<in out fdm extends Function.Declaration.Map> extends
         Engine.Options<fdm>,
-        CompatibleEngine.Options.Tools<fdm>
+        Options.Tools<fdm>
     {}
     export namespace Options {
         export interface Tools<in out fdm extends Function.Declaration.Map> extends Engine.Options.Tools<fdm> {
@@ -75,7 +75,7 @@ export namespace CompatibleEngine {
             try {
                 return await this.fetch(ctx, session, signal);
             } catch (e) {
-                if (ctx.signal?.aborted) throw new UserAbortion();                                  // 用户中止
+                if (ctx.signal?.aborted) throw USER_ABORTION;                                       // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障

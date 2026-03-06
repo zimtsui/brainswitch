@@ -9,7 +9,7 @@ import { type OpenAIChatCompletionsEngine } from '../api-types/openai-chat-compl
 
 
 export namespace OpenAIChatCompletionsCompatibleEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
         OpenAIChatCompletionsEngine.Options<fdm>,
         CompatibleEngine.Options<fdm>
     {}

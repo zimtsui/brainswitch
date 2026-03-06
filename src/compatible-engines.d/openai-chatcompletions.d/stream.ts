@@ -8,7 +8,7 @@ import { ResponseInvalid } from '../../engine.ts';
 
 
 export namespace OpenAIChatCompletionsCompatibleStreamEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
         OpenAIChatCompletionsCompatibleEngine.Options<fdm> {}
 
 

@@ -8,17 +8,17 @@ const ajv = new Ajv();
 
 
 export namespace GoogleEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
+    export interface Options<in out fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 
     export interface OwnProps {
-        parallel: boolean;
+        parallelToolCall: boolean;
     }
     export namespace OwnProps {
         export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps {
-            const parallel = options.parallelToolCall ?? true;
-            if (parallel) {} else throw new Error('Google API requires parallel tool calls.');
+            const parallelToolCall = options.parallelToolCall ?? true;
+            if (parallelToolCall) {} else throw new Error('Google API requires parallel tool calls.');
             return {
-                parallel,
+                parallelToolCall,
             };
         }
     }

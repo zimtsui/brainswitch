@@ -10,12 +10,12 @@ import { Throttle } from '../throttle.ts';
 
 
 export namespace AnthropicCompatibleEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
         CompatibleEngine.Options<fdm>,
         AnthropicEngine.Options<fdm>
     {}
 
-    export interface Underhood<fdm extends Function.Declaration.Map> extends
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
         CompatibleEngine.Underhood<fdm>,
         AnthropicEngine.Underhood<fdm>
     {
@@ -262,7 +262,7 @@ export namespace AnthropicCompatibleEngine {
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
             ({
-                parallel: this.parallelToolCall,
+                parallelToolCall: this.parallelToolCall,
                 anthropic: this.anthropic,
             } = (AnthropicEngine.OwnProps.init<fdm>).call(this, options));
         }

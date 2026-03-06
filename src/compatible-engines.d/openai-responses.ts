@@ -12,7 +12,7 @@ import { Throttle } from '../throttle.ts';
 
 export namespace OpenAIResponsesCompatibleEngine {
 
-    export interface Options<fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
         CompatibleEngine.Options<fdm>,
         OpenAIResponsesEngine.Options<fdm>
     {}
@@ -20,7 +20,6 @@ export namespace OpenAIResponsesCompatibleEngine {
 
     export interface OwnProps {
         apiURL: URL;
-        parallel: boolean;
     }
 
     export interface Underhood<in out fdm extends Function.Declaration.Map> extends
@@ -259,11 +258,9 @@ export namespace OpenAIResponsesCompatibleEngine {
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
-
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
-
+            ({ parallelToolCall: this.parallelToolCall } = (OpenAIResponsesEngine.OwnProps.init<fdm>).call(this, options));
             this.apiURL = new URL(`${this.baseUrl}/responses`);
-            this.parallelToolCall = options.parallelToolCall ?? false;
         }
 
 

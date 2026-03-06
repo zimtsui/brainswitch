@@ -1,7 +1,7 @@
 import { Function } from '../../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from './session.ts';
 import { Tool } from './tool.ts';
-import { ResponseInvalid, Engine, UserAbortion, InferenceTimeout } from '../../engine.ts';
+import { ResponseInvalid, Engine, USER_ABORTION, InferenceTimeout } from '../../engine.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import OpenAI from 'openai';
 import * as Undici from 'undici';
@@ -29,7 +29,7 @@ export interface OpenAIResponsesNativeEngine<fdm extends Function.Declaration.Ma
 }
 
 export namespace OpenAIResponsesNativeEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
         Engine.Options<fdm>,
         OpenAIResponsesEngine.Options<fdm>
     {
@@ -37,14 +37,34 @@ export namespace OpenAIResponsesNativeEngine {
         toolChoice?: Tool.Choice<fdm>;
     }
 
-    export interface Underhood<fdm extends Function.Declaration.Map> extends
-        OpenAIResponsesEngine.Underhood<fdm>,
-        OpenAIResponsesNativeEngine<fdm>
-    {
+    export interface ParentUnderhood<in out fdm extends Function.Declaration.Map> extends
+        Engine.Underhood<fdm>,
+        OpenAIResponsesEngine.Underhood<fdm>
+    {}
+
+    export interface OwnProps<in out fdm extends Function.Declaration.Map> {
         apiURL: URL;
         toolChoice: Tool.Choice<fdm>;
         applyPatch: boolean;
-        parallelToolCall: boolean;
+    }
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(
+            this: ParentUnderhood<fdm>,
+            options: Options<fdm>
+        ): OwnProps<fdm> {
+            return {
+                apiURL: new URL(`${this.baseUrl}/responses`),
+                toolChoice: options.toolChoice ?? Function.ToolChoice.AUTO,
+                applyPatch: options.applyPatch ?? false,
+            };
+        }
+    }
+
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        ParentUnderhood<fdm>,
+        OpenAIResponsesNativeEngine<fdm>,
+        OwnProps<fdm>
+    {
         stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
@@ -76,7 +96,7 @@ export namespace OpenAIResponsesNativeEngine {
             try {
                 return await this.fetch(ctx, session, signal);
             } catch (e) {
-                if (ctx.signal?.aborted) throw new UserAbortion();                                  // 用户中止
+                if (ctx.signal?.aborted) throw USER_ABORTION;                                       // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
@@ -335,11 +355,12 @@ export namespace OpenAIResponsesNativeEngine {
                 proxyAgent: this.proxyAgent,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            this.apiURL = new URL(`${this.baseUrl}/responses`);
-            this.parallelToolCall = options.parallelToolCall ?? false;
-            this.applyPatch = options.applyPatch ?? false;
-            this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
-
+            ({ parallelToolCall: this.parallelToolCall } = (OpenAIResponsesEngine.OwnProps.init<fdm>).call(this, options));
+            ({
+                applyPatch: this.applyPatch,
+                toolChoice: this.toolChoice,
+                apiURL: this.apiURL,
+            } = (OwnProps.init<fdm>).call(this, options));
         }
 
         public convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {

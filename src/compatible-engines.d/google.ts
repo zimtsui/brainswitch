@@ -23,6 +23,7 @@ export namespace GoogleCompatibleEngine {
     export namespace OwnProps {
         export function init<fdm extends Function.Declaration.Map>(
             this: Engine.Underhood<fdm>,
+            options: Options<fdm>,
         ): OwnProps<fdm> {
             return {
                 apiURL: new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`),
@@ -250,12 +251,9 @@ export namespace GoogleCompatibleEngine {
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
-
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
-
-            ({ parallel: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
-
-            ({ apiURL: this.apiURL } = (GoogleCompatibleEngine.OwnProps.init<fdm>).call(this));
+            ({ parallelToolCall: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
+            ({ apiURL: this.apiURL } = (GoogleCompatibleEngine.OwnProps.init<fdm>).call(this, options));
         }
 
         public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {

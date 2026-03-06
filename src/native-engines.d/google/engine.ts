@@ -1,6 +1,6 @@
 import { Function } from '../../function.ts';
 import { RoleMessage, type ChatMessage, type Session } from './session.ts';
-import { ResponseInvalid, Engine, UserAbortion, InferenceTimeout } from '../../engine.ts';
+import { ResponseInvalid, Engine, USER_ABORTION, InferenceTimeout } from '../../engine.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';
@@ -30,7 +30,7 @@ export interface GoogleNativeEngine<fdm extends Function.Declaration.Map> extend
 }
 
 export namespace GoogleNativeEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
         Engine.Options<fdm>,
         CompatibleEngine.Options.Tools<fdm>,
         GoogleEngine.Options<fdm>
@@ -40,15 +40,39 @@ export namespace GoogleNativeEngine {
         googleSearch?: boolean;
     }
 
-    export interface Underhood<fdm extends Function.Declaration.Map> extends
-        GoogleEngine.Underhood<fdm>,
-        GoogleNativeEngine<fdm>
-    {
-        toolChoice: Function.ToolChoice<fdm>;
+    export interface OwnProps<in out fdm extends Function.Declaration.Map> {
+        apiURL: URL;
         codeExecution: boolean;
         urlContext: boolean;
         googleSearch: boolean;
-        parallelToolCall: boolean;
+        toolChoice: Function.ToolChoice<fdm>;
+    }
+
+    export interface ParentUnderhood<in out fdm extends Function.Declaration.Map> extends
+        Engine.Underhood<fdm>,
+        GoogleEngine.Underhood<fdm>
+    {}
+
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(
+            this: ParentUnderhood<fdm>,
+            options: Options<fdm>,
+        ): OwnProps<fdm> {
+            return {
+                apiURL: new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`),
+                codeExecution: options.codeExecution ?? false,
+                urlContext: options.urlContext ?? false,
+                googleSearch: options.googleSearch ?? false,
+                toolChoice: options.toolChoice ?? Function.ToolChoice.AUTO,
+            };
+        }
+    }
+
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        ParentUnderhood<fdm>,
+        GoogleNativeEngine<fdm>,
+        OwnProps<fdm>
+    {
         stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content;
@@ -61,7 +85,6 @@ export namespace GoogleNativeEngine {
         pushUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
         fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         validateToolCallsByToolChoice(toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[]): void;
-        apiURL: URL;
     }
 
     export async function stateless<fdm extends Function.Declaration.Map>(
@@ -78,7 +101,7 @@ export namespace GoogleNativeEngine {
             try {
                 return await this.fetch(ctx, session, signal);
             } catch (e) {
-                if (ctx.signal?.aborted) throw new UserAbortion();                                  // 用户中止
+                if (ctx.signal?.aborted) throw USER_ABORTION;                                  // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
@@ -318,13 +341,15 @@ export namespace GoogleNativeEngine {
                 proxyAgent: this.proxyAgent,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            ({ parallel: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
+            ({ parallelToolCall: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
 
-            this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
-            this.codeExecution = options.codeExecution ?? false;
-            this.urlContext = options.urlContext ?? false;
-            this.googleSearch = options.googleSearch ?? false;
-            this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+            ({
+                apiURL: this.apiURL,
+                codeExecution: this.codeExecution,
+                urlContext: this.urlContext,
+                googleSearch: this.googleSearch,
+                toolChoice: this.toolChoice,
+            } = (GoogleNativeEngine.OwnProps.init<fdm>).call(this, options));
         }
 
 

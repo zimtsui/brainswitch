@@ -9,10 +9,22 @@ const ajv = new Ajv();
 
 
 export namespace OpenAIResponsesEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
+    export interface Options<in out fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
+
+    export interface OwnProps {
+        parallelToolCall: boolean;
+    }
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps {
+            return {
+                parallelToolCall: options.parallelToolCall ?? false,
+            };
+        }
+    }
 
     export interface Underhood<in out fdm extends Function.Declaration.Map> extends
-        Engine.Underhood<fdm>
+        Engine.Underhood<fdm>,
+        OwnProps
     {
         convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput;
         calcCost(usage: OpenAI.Responses.ResponseUsage): number;

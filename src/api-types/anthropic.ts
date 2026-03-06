@@ -9,20 +9,19 @@ const ajv = new Ajv();
 
 
 export namespace AnthropicEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
+    export interface Options<in out fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 
     export interface OwnProps {
-        parallel: boolean;
+        parallelToolCall: boolean;
         anthropic: Anthropic,
     }
-    export interface ParentProps<fdm extends Function.Declaration.Map> extends Engine.Underhood<fdm> {}
     export namespace OwnProps {
         export function init<fdm extends Function.Declaration.Map>(
-            this: ParentProps<fdm>,
+            this: Engine.Underhood<fdm>,
             options: Options<fdm>,
         ): OwnProps {
             return {
-                parallel: options.parallelToolCall ?? false,
+                parallelToolCall: options.parallelToolCall ?? false,
                 anthropic: new Anthropic({
                     baseURL: this.baseUrl,
                     apiKey: this.apiKey,
@@ -32,8 +31,8 @@ export namespace AnthropicEngine {
         }
     }
 
-    export interface Underhood<fdm extends Function.Declaration.Map> extends
-        ParentProps<fdm>,
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        Engine.Underhood<fdm>,
         OwnProps
     {
         parallelToolCall: boolean;
@@ -41,7 +40,7 @@ export namespace AnthropicEngine {
         convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>>;
         convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolResultBlockParam;
         convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): Anthropic.Tool;
-        convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>, parallel: boolean): Anthropic.ToolChoice;
+        convertFromToolChoice(toolChoice: Function.ToolChoice<fdm>, parallelToolCall: boolean): Anthropic.ToolChoice;
         calcCost(usage: Anthropic.Usage): number;
     }
 
@@ -97,14 +96,14 @@ export namespace AnthropicEngine {
 
     export function convertFromToolChoice<fdm extends Function.Declaration.Map>(
         toolChoice: Function.ToolChoice<fdm>,
-        parallel: boolean,
+        parallelToolCall: boolean,
     ): Anthropic.ToolChoice {
         if (toolChoice === Function.ToolChoice.NONE) return { type: 'none' };
-        else if (toolChoice === Function.ToolChoice.REQUIRED) return { type: 'any', disable_parallel_tool_use: !parallel };
-        else if (toolChoice === Function.ToolChoice.AUTO) return { type: 'auto', disable_parallel_tool_use: !parallel };
+        else if (toolChoice === Function.ToolChoice.REQUIRED) return { type: 'any', disable_parallel_tool_use: !parallelToolCall };
+        else if (toolChoice === Function.ToolChoice.AUTO) return { type: 'auto', disable_parallel_tool_use: !parallelToolCall };
         else {
             if (toolChoice.length === 1) {} else throw new Error();
-            return { type: 'tool', name: toolChoice[0]!, disable_parallel_tool_use: !parallel };
+            return { type: 'tool', name: toolChoice[0]!, disable_parallel_tool_use: !parallelToolCall };
         }
     }
 
@@ -119,5 +118,4 @@ export namespace AnthropicEngine {
                 this.outputPrice * usage.output_tokens / 1e6;
     }
 
-    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 }

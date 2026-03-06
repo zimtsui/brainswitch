@@ -66,7 +66,7 @@ export namespace Engine {
 }
 
 export class ResponseInvalid extends Error {}
-export class UserAbortion extends Error {}
+export const USER_ABORTION = Symbol();
 export class InferenceTimeout extends Error {}
 
 
