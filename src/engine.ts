@@ -27,7 +27,7 @@ export namespace Engine {
         name: string;
         inputPrice: number;
         outputPrice: number;
-        cachedPrice: number;
+        cachePrice: number;
         fdm: fdm;
         additionalOptions?: Record<string, unknown>;
         throttle: Throttle;
@@ -46,7 +46,7 @@ export namespace Engine {
                 name: options.name,
                 inputPrice,
                 outputPrice: options.outputPrice ?? 0,
-                cachedPrice: options.cachePrice ?? inputPrice,
+                cachePrice: options.cachePrice ?? inputPrice,
                 fdm: options.functionDeclarationMap,
                 additionalOptions: options.additionalOptions,
                 throttle: options.throttle,
@@ -61,7 +61,7 @@ export namespace Engine {
         Engine,
         OwnProps<fdm>
     {
-        parallel: boolean;
+        parallelToolCall: boolean;
     }
 }
 

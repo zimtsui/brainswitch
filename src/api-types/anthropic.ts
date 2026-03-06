@@ -36,7 +36,7 @@ export namespace AnthropicEngine {
         ParentProps<fdm>,
         OwnProps
     {
-        parallel: boolean;
+        parallelToolCall: boolean;
         convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolUseBlock;
         convertToFunctionCall(apifc: Anthropic.ToolUseBlock): Function.Call.Distributive<Function.Declaration.From<fdm>>;
         convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolResultBlockParam;
@@ -115,7 +115,7 @@ export namespace AnthropicEngine {
         const cacheHitTokenCount = usage.cache_read_input_tokens || 0;
         const cacheMissTokenCount = usage.input_tokens - cacheHitTokenCount;
         return	this.inputPrice * cacheMissTokenCount / 1e6 +
-                this.cachedPrice * cacheHitTokenCount / 1e6 +
+                this.cachePrice * cacheHitTokenCount / 1e6 +
                 this.outputPrice * usage.output_tokens / 1e6;
     }
 

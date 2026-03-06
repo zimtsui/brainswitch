@@ -37,7 +37,7 @@ export namespace AliyunEngine {
         public name: string;
         public inputPrice: number;
         public outputPrice: number;
-        public cachedPrice: number;
+        public cachePrice: number;
         public fdm: fdm;
         public additionalOptions?: Record<string, unknown>;
         public throttle: Throttle;
@@ -47,7 +47,7 @@ export namespace AliyunEngine {
 
         public toolChoice: Function.ToolChoice<fdm>;
 
-        public parallel: boolean;
+        public parallelToolCall: boolean;
 
         public client: OpenAI;
 
@@ -59,7 +59,7 @@ export namespace AliyunEngine {
                 name: this.name,
                 inputPrice: this.inputPrice,
                 outputPrice: this.outputPrice,
-                cachedPrice: this.cachedPrice,
+                cachePrice: this.cachePrice,
                 fdm: this.fdm,
                 additionalOptions: this.additionalOptions,
                 throttle: this.throttle,
@@ -70,7 +70,7 @@ export namespace AliyunEngine {
 
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
-            ({ parallel: this.parallel } = (OpenAIChatCompletionsEngine.OwnProps.init<fdm>).call(this, options));
+            ({ parallel: this.parallelToolCall } = (OpenAIChatCompletionsEngine.OwnProps.init<fdm>).call(this, options));
 
             this.client = new OpenAI({
                 baseURL: this.baseUrl,

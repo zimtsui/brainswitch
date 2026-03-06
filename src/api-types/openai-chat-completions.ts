@@ -116,7 +116,7 @@ export namespace OpenAIChatCompletionsEngine {
         const cacheHitTokenCount = usage.prompt_tokens_details?.cached_tokens ?? 0;
         const cacheMissTokenCount = usage.prompt_tokens - cacheHitTokenCount;
         return	this.inputPrice * cacheMissTokenCount / 1e6 +
-                this.cachedPrice * cacheHitTokenCount / 1e6 +
+                this.cachePrice * cacheHitTokenCount / 1e6 +
                 this.outputPrice * usage.completion_tokens / 1e6;
     }
 

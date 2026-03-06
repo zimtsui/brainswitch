@@ -229,7 +229,7 @@ export namespace AnthropicCompatibleEngine {
         public name: string;
         public inputPrice: number;
         public outputPrice: number;
-        public cachedPrice: number;
+        public cachePrice: number;
         public fdm: fdm;
         public additionalOptions?: Record<string, unknown>;
         public throttle: Throttle;
@@ -240,7 +240,7 @@ export namespace AnthropicCompatibleEngine {
         public toolChoice: Function.ToolChoice<fdm>;
 
         public anthropic: Anthropic;
-        public parallel: boolean;
+        public parallelToolCall: boolean;
 
         public constructor(options: AnthropicCompatibleEngine.Options<fdm>) {
             ({
@@ -250,7 +250,7 @@ export namespace AnthropicCompatibleEngine {
                 name: this.name,
                 inputPrice: this.inputPrice,
                 outputPrice: this.outputPrice,
-                cachedPrice: this.cachedPrice,
+                cachePrice: this.cachePrice,
                 fdm: this.fdm,
                 additionalOptions: this.additionalOptions,
                 throttle: this.throttle,
@@ -262,7 +262,7 @@ export namespace AnthropicCompatibleEngine {
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
             ({
-                parallel: this.parallel,
+                parallel: this.parallelToolCall,
                 anthropic: this.anthropic,
             } = (AnthropicEngine.OwnProps.init<fdm>).call(this, options));
         }

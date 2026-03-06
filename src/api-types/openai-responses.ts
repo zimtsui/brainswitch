@@ -38,7 +38,7 @@ export namespace OpenAIResponsesEngine {
         const cacheHitTokenCount = usage.input_tokens_details.cached_tokens;
         const cacheMissTokenCount = usage.input_tokens - cacheHitTokenCount;
         return	this.inputPrice * cacheMissTokenCount / 1e6 +
-                this.cachedPrice * cacheHitTokenCount / 1e6 +
+                this.cachePrice * cacheHitTokenCount / 1e6 +
                 this.outputPrice * usage.output_tokens / 1e6;
     }
 

@@ -37,7 +37,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
             ],
             tools: tools.length ? tools : undefined,
             tool_choice: tools.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
-            parallel_tool_calls: tools.length ? this.parallel : undefined,
+            parallel_tool_calls: tools.length ? this.parallelToolCall : undefined,
             stream: true,
             stream_options: {
                 include_usage: true

@@ -44,7 +44,7 @@ export namespace OpenAIResponsesNativeEngine {
         apiURL: URL;
         toolChoice: Tool.Choice<fdm>;
         applyPatch: boolean;
-        parallel: boolean;
+        parallelToolCall: boolean;
         stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         appendUserMessage(session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>>;
@@ -210,7 +210,7 @@ export namespace OpenAIResponsesNativeEngine {
             instructions: session.developerMessage && this.convertFromDeveloperMessage(session.developerMessage),
             tools: tools.length ? tools : undefined,
             tool_choice: tools.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
-            parallel_tool_calls: fdentries.length ? this.parallel : undefined,
+            parallel_tool_calls: fdentries.length ? this.parallelToolCall : undefined,
             max_output_tokens: this.maxTokens,
             ...this.additionalOptions,
         };
@@ -305,7 +305,7 @@ export namespace OpenAIResponsesNativeEngine {
         public name: string;
         public inputPrice: number;
         public outputPrice: number;
-        public cachedPrice: number;
+        public cachePrice: number;
         public fdm: fdm;
         public additionalOptions?: Record<string, unknown>;
         public throttle: Throttle;
@@ -314,7 +314,7 @@ export namespace OpenAIResponsesNativeEngine {
         public proxyAgent?: Undici.ProxyAgent;
 
         public apiURL: URL;
-        public parallel: boolean;
+        public parallelToolCall: boolean;
         public applyPatch: boolean;
         public toolChoice: Tool.Choice<fdm>;
 
@@ -326,7 +326,7 @@ export namespace OpenAIResponsesNativeEngine {
                 name: this.name,
                 inputPrice: this.inputPrice,
                 outputPrice: this.outputPrice,
-                cachedPrice: this.cachedPrice,
+                cachePrice: this.cachePrice,
                 fdm: this.fdm,
                 additionalOptions: this.additionalOptions,
                 throttle: this.throttle,
@@ -336,7 +336,7 @@ export namespace OpenAIResponsesNativeEngine {
             } = (Engine.OwnProps.init<fdm>).call(this, options));
 
             this.apiURL = new URL(`${this.baseUrl}/responses`);
-            this.parallel = options.parallelToolCall ?? false;
+            this.parallelToolCall = options.parallelToolCall ?? false;
             this.applyPatch = options.applyPatch ?? false;
             this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
 

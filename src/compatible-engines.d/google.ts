@@ -138,7 +138,7 @@ export namespace GoogleCompatibleEngine {
         const thinkingTokenCount = response.usageMetadata.thoughtsTokenCount ?? 0;
         const cost =
             this.inputPrice * cacheMissTokenCount / 1e6 +
-            this.cachedPrice * cacheHitTokenCount / 1e6 +
+            this.cachePrice * cacheHitTokenCount / 1e6 +
             this.outputPrice * candidatesTokenCount / 1e6 +
             this.outputPrice * thinkingTokenCount / 1e6;
         ctx.logger.cost?.(cost);
@@ -220,7 +220,7 @@ export namespace GoogleCompatibleEngine {
         public name: string;
         public inputPrice: number;
         public outputPrice: number;
-        public cachedPrice: number;
+        public cachePrice: number;
         public fdm: fdm;
         public additionalOptions?: Record<string, unknown>;
         public throttle: Throttle;
@@ -230,7 +230,7 @@ export namespace GoogleCompatibleEngine {
 
         public toolChoice: Function.ToolChoice<fdm>;
 
-        public parallel: boolean;
+        public parallelToolCall: boolean;
 
         public apiURL: URL;
 
@@ -242,7 +242,7 @@ export namespace GoogleCompatibleEngine {
                 name: this.name,
                 inputPrice: this.inputPrice,
                 outputPrice: this.outputPrice,
-                cachedPrice: this.cachedPrice,
+                cachePrice: this.cachePrice,
                 fdm: this.fdm,
                 additionalOptions: this.additionalOptions,
                 throttle: this.throttle,
@@ -253,7 +253,7 @@ export namespace GoogleCompatibleEngine {
 
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
-            ({ parallel: this.parallel } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
+            ({ parallel: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
 
             ({ apiURL: this.apiURL } = (GoogleCompatibleEngine.OwnProps.init<fdm>).call(this));
         }

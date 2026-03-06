@@ -48,7 +48,7 @@ export namespace GoogleNativeEngine {
         codeExecution: boolean;
         urlContext: boolean;
         googleSearch: boolean;
-        parallel: boolean;
+        parallelToolCall: boolean;
         stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         stateful(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content;
@@ -257,7 +257,7 @@ export namespace GoogleNativeEngine {
         const thinkingTokenCount = response.usageMetadata.thoughtsTokenCount ?? 0;
         const cost =
             this.inputPrice * cacheMissTokenCount / 1e6 +
-            this.cachedPrice * cacheHitTokenCount / 1e6 +
+            this.cachePrice * cacheHitTokenCount / 1e6 +
             this.outputPrice * candidatesTokenCount / 1e6 +
             this.outputPrice * thinkingTokenCount / 1e6;
         ctx.logger.cost?.(cost);
@@ -285,7 +285,7 @@ export namespace GoogleNativeEngine {
         public name: string;
         public inputPrice: number;
         public outputPrice: number;
-        public cachedPrice: number;
+        public cachePrice: number;
         public fdm: fdm;
         public additionalOptions?: Record<string, unknown>;
         public throttle: Throttle;
@@ -293,7 +293,7 @@ export namespace GoogleNativeEngine {
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
 
-        public parallel: boolean;
+        public parallelToolCall: boolean;
 
         public apiURL: URL;
         public codeExecution: boolean;
@@ -309,7 +309,7 @@ export namespace GoogleNativeEngine {
                 name: this.name,
                 inputPrice: this.inputPrice,
                 outputPrice: this.outputPrice,
-                cachedPrice: this.cachedPrice,
+                cachePrice: this.cachePrice,
                 fdm: this.fdm,
                 additionalOptions: this.additionalOptions,
                 throttle: this.throttle,
@@ -318,7 +318,7 @@ export namespace GoogleNativeEngine {
                 proxyAgent: this.proxyAgent,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            ({ parallel: this.parallel } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
+            ({ parallel: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
 
             this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
             this.codeExecution = options.codeExecution ?? false;
