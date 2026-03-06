@@ -20,8 +20,8 @@ export namespace AliyunEngine {
         reasoning_content?: string;
     }
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        OpenAIChatCompletionsCompatibleStreamEngine.Abstract<fdm>
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        OpenAIChatCompletionsCompatibleStreamEngine.Underhood<fdm>
     {
         getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
     }
@@ -30,7 +30,7 @@ export namespace AliyunEngine {
         return (delta as AliyunEngine.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
     }
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements AliyunEngine.Abstract<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements AliyunEngine.Underhood<fdm> {
         public baseUrl: string;
         public apiKey: string;
         public model: string;
@@ -66,11 +66,11 @@ export namespace AliyunEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-            } = (Engine.Base.create<fdm>).call(this, options));
+            } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            ({ toolChoice: this.toolChoice } = (CompatibleEngine.Base.create<fdm>).call(this, options));
+            ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
-            ({ parallel: this.parallel } = (OpenAIChatCompletionsEngine.Base.create<fdm>).call(this, options));
+            ({ parallel: this.parallel } = (OpenAIChatCompletionsEngine.OwnProps.init<fdm>).call(this, options));
 
             this.client = new OpenAI({
                 baseURL: this.baseUrl,

@@ -6,18 +6,35 @@ import * as Google from '@google/genai';
 import * as Undici from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { GoogleEngine } from '../api-types/google.ts';
-import { env } from 'node:process';
 import { Throttle } from '../throttle.ts';
 
 
 
 export namespace GoogleCompatibleEngine {
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        GoogleEngine.Abstract<fdm>,
-        CompatibleEngine.Abstract<fdm>
-    {
+    export interface Options<in out fdm extends Function.Declaration.Map> extends
+        CompatibleEngine.Options<fdm>,
+        GoogleEngine.Options<fdm>
+    {}
+
+    export interface OwnProps<in out fdm extends Function.Declaration.Map> {
         apiURL: URL;
+    }
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(
+            this: Engine.Underhood<fdm>,
+        ): OwnProps<fdm> {
+            return {
+                apiURL: new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`),
+            };
+        }
+    }
+
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        GoogleEngine.Underhood<fdm>,
+        CompatibleEngine.Underhood<fdm>,
+        OwnProps<fdm>
+    {
         convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Google.Content;
         convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Google.Content;
         convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Google.Content;
@@ -27,15 +44,8 @@ export namespace GoogleCompatibleEngine {
         fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
     }
 
-    export function cons<fdm extends Function.Declaration.Map>(
-        this: GoogleCompatibleEngine.Abstract<fdm>,
-    ): void {
-        this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
-    }
-
-
     export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleCompatibleEngine.Abstract<fdm>,
+        this: GoogleCompatibleEngine.Underhood<fdm>,
         aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
     ): Google.Content {
         if (aiMessage instanceof GoogleCompatibleEngine.Message.Ai.Instance)
@@ -54,7 +64,7 @@ export namespace GoogleCompatibleEngine {
     }
 
     export function convertFromChatMessages<fdm extends Function.Declaration.Map>(
-        this: GoogleCompatibleEngine.Abstract<fdm>,
+        this: GoogleCompatibleEngine.Underhood<fdm>,
         chatMessages: ChatMessage<Function.Declaration.From<fdm>>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
@@ -65,7 +75,7 @@ export namespace GoogleCompatibleEngine {
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
-        this: GoogleCompatibleEngine.Abstract<fdm>,
+        this: GoogleCompatibleEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
@@ -170,7 +180,7 @@ export namespace GoogleCompatibleEngine {
     }
 
     export function convertToAiMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleCompatibleEngine.Abstract<fdm>,
+        this: GoogleCompatibleEngine.Underhood<fdm>,
         content: Google.Content,
     ): GoogleCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>> {
         if (content.parts) {} else throw new Error();
@@ -203,7 +213,7 @@ export namespace GoogleCompatibleEngine {
     }
 
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleEngine.Abstract<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleCompatibleEngine.Underhood<fdm> {
         public baseUrl: string;
         public apiKey: string;
         public model: string;
@@ -239,13 +249,13 @@ export namespace GoogleCompatibleEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-            } = (Engine.Base.create<fdm>).call(this, options));
+            } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            ({ toolChoice: this.toolChoice } = (CompatibleEngine.Base.create<fdm>).call(this, options));
+            ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
-            ({ parallel: this.parallel } = (GoogleEngine.Base.create<fdm>).call(this, options));
+            ({ parallel: this.parallel } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
 
-            this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
+            ({ apiURL: this.apiURL } = (GoogleCompatibleEngine.OwnProps.init<fdm>).call(this));
         }
 
         public stateless(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>) {
@@ -299,8 +309,6 @@ export namespace GoogleCompatibleEngine {
         }
 
     }
-
-    export interface Options<in out fdm extends Function.Declaration.Map> extends CompatibleEngine.Options<fdm> {}
 
     export function create<fdm extends Function.Declaration.Map>(options: CompatibleEngine.Options<fdm>): CompatibleEngine<fdm> {
         return new GoogleCompatibleEngine.Instance(options);

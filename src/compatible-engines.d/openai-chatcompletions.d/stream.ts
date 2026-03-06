@@ -12,8 +12,8 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
         OpenAIChatCompletionsCompatibleEngine.Options<fdm> {}
 
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>
     {
         client: OpenAI;
         makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming;
@@ -24,7 +24,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
     }
 
     export function makeParams<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
     ): OpenAI.ChatCompletionCreateParamsStreaming {
         const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
@@ -48,7 +48,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
     }
 
     export function convertToFunctionCallFromDelta<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
         apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         if (apifc.id) {} else throw new Error();
@@ -99,7 +99,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
     }
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleStreamEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleStreamEngine.Underhood<fdm>,
         ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);

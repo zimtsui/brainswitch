@@ -14,9 +14,9 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
         CompatibleEngine.Options<fdm>
     {}
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        CompatibleEngine.Abstract<fdm>,
-        OpenAIChatCompletionsEngine.Abstract<fdm>
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        CompatibleEngine.Underhood<fdm>,
+        OpenAIChatCompletionsEngine.Underhood<fdm>
     {
         fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
         convertToAiMessage(message: OpenAI.ChatCompletionMessage): RoleMessage.Ai<Function.Declaration.From<fdm>>;
@@ -29,7 +29,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
@@ -38,7 +38,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
     }
 
     export function convertToAiMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
         message: OpenAI.ChatCompletionMessage,
     ): RoleMessage.Ai<Function.Declaration.From<fdm>> {
         const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
@@ -62,7 +62,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
     }
 
     export function convertFromUserMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsEngine.Underhood<fdm>,
         userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
         const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text.Instance);
@@ -75,7 +75,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
     }
 
     export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsEngine.Underhood<fdm>,
         aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
     ): OpenAI.ChatCompletionAssistantMessageParam {
         const parts = aiMessage.getParts();
@@ -89,7 +89,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
     }
 
     export function convertFromRoleMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
         roleMessage: RoleMessage,
     ): OpenAI.ChatCompletionMessageParam[] {
         if (roleMessage instanceof RoleMessage.Developer.Instance)
@@ -102,7 +102,7 @@ export namespace OpenAIChatCompletionsCompatibleEngine {
     }
 
     export function validateToolCallsByToolChoice<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
         toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
     ): void {
         // https://community.openai.com/t/function-call-with-finish-reason-of-stop/437226/7

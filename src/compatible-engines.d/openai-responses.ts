@@ -12,15 +12,21 @@ import { Throttle } from '../throttle.ts';
 
 export namespace OpenAIResponsesCompatibleEngine {
 
-    export interface Base {
+    export interface Options<fdm extends Function.Declaration.Map> extends
+        CompatibleEngine.Options<fdm>,
+        OpenAIResponsesEngine.Options<fdm>
+    {}
+
+
+    export interface OwnProps {
         apiURL: URL;
         parallel: boolean;
     }
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        CompatibleEngine.Abstract<fdm>,
-        OpenAIResponsesEngine.Abstract<fdm>,
-        Base
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        CompatibleEngine.Underhood<fdm>,
+        OpenAIResponsesEngine.Underhood<fdm>,
+        OwnProps
     {
         convertToAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>;
         convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseFunctionToolCall;
@@ -37,7 +43,7 @@ export namespace OpenAIResponsesCompatibleEngine {
 
 
     export function convertToAiMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesEngine.Abstract<fdm>,
+        this: OpenAIResponsesEngine.Underhood<fdm>,
         output: OpenAI.Responses.ResponseOutputItem[],
     ): OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>> {
         const parts = output.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
@@ -67,7 +73,7 @@ export namespace OpenAIResponsesCompatibleEngine {
 
 
     export function convertFromUserMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesEngine.Abstract<fdm>,
+        this: OpenAIResponsesEngine.Underhood<fdm>,
         userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseInput {
         return userMessage.getParts().map(part => {
@@ -84,7 +90,7 @@ export namespace OpenAIResponsesCompatibleEngine {
     }
 
     export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesCompatibleEngine.Abstract<fdm>,
+        this: OpenAIResponsesCompatibleEngine.Underhood<fdm>,
         aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseInput {
         if (aiMessage instanceof OpenAIResponsesCompatibleEngine.Message.Ai.Instance)
@@ -108,7 +114,7 @@ export namespace OpenAIResponsesCompatibleEngine {
     }
 
     export function convertFromChatMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesCompatibleEngine.Abstract<fdm>,
+        this: OpenAIResponsesCompatibleEngine.Underhood<fdm>,
         chatMessage: ChatMessage<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseInput {
         if (chatMessage instanceof RoleMessage.User.Instance)
@@ -135,7 +141,7 @@ export namespace OpenAIResponsesCompatibleEngine {
     }
 
     export function makeMonolithParams<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesCompatibleEngine.Abstract<fdm>,
+        this: OpenAIResponsesCompatibleEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
         const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
@@ -164,7 +170,7 @@ export namespace OpenAIResponsesCompatibleEngine {
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesCompatibleEngine.Abstract<fdm>,
+        this: OpenAIResponsesCompatibleEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
@@ -173,7 +179,7 @@ export namespace OpenAIResponsesCompatibleEngine {
     }
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesCompatibleEngine.Abstract<fdm>,
+        this: OpenAIResponsesCompatibleEngine.Underhood<fdm>,
         ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeMonolithParams(session);
@@ -217,7 +223,7 @@ export namespace OpenAIResponsesCompatibleEngine {
 
 
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesCompatibleEngine.Abstract<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesCompatibleEngine.Underhood<fdm> {
         public baseUrl: string;
         public apiKey: string;
         public model: string;
@@ -252,9 +258,9 @@ export namespace OpenAIResponsesCompatibleEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-            } = (Engine.Base.create<fdm>).call(this, options));
+            } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            ({ toolChoice: this.toolChoice } = (CompatibleEngine.Base.create<fdm>).call(this, options));
+            ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
             this.apiURL = new URL(`${this.baseUrl}/responses`);
             this.parallel = options.parallelToolCall ?? false;
@@ -327,8 +333,6 @@ export namespace OpenAIResponsesCompatibleEngine {
         }
     }
 
-
-    export interface Options<fdm extends Function.Declaration.Map> extends CompatibleEngine.Options<fdm> {}
 
     export function create<fdm extends Function.Declaration.Map>(
         options: OpenAIResponsesCompatibleEngine.Options<fdm>,

@@ -1,6 +1,6 @@
 import { RoleMessage, type Session } from '../../session.ts';
 import { Function } from '../../function.ts';
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 import { OpenAIChatCompletionsCompatibleEngine } from '../openai-chatcompletions.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import { fetch } from 'undici';
@@ -10,8 +10,8 @@ import { ResponseInvalid } from '../../engine.ts';
 
 export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>
     {
         apiURL: URL;
         makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsNonStreaming;
@@ -23,7 +23,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
     }
 
     export function makeParams<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
     ): OpenAI.ChatCompletionCreateParamsNonStreaming {
         const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
@@ -44,7 +44,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
     }
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleMonolithEngine.Abstract<fdm>,
+        this: OpenAIChatCompletionsCompatibleMonolithEngine.Underhood<fdm>,
         ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);

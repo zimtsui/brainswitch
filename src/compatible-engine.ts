@@ -35,21 +35,21 @@ export namespace CompatibleEngine {
         }
     }
 
-    export interface Base<in out fdm extends Function.Declaration.Map> {
+    export interface OwnProps<in out fdm extends Function.Declaration.Map> {
         toolChoice: Function.ToolChoice<fdm>;
     }
-    export namespace Base {
-        export function create<fdm extends Function.Declaration.Map>(options: CompatibleEngine.Options<fdm>): Base<fdm> {
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(options: CompatibleEngine.Options<fdm>): OwnProps<fdm> {
             return {
                 toolChoice: options.toolChoice ?? Function.ToolChoice.AUTO,
             };
         }
     }
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        Engine.Abstract<fdm>,
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        Engine.Underhood<fdm>,
         CompatibleEngine<fdm>,
-        Base<fdm>
+        OwnProps<fdm>
     {
         parallel: boolean;
         fetch(ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
@@ -62,7 +62,7 @@ export namespace CompatibleEngine {
 
 
     export async function stateless<fdm extends Function.Declaration.Map>(
-        this: CompatibleEngine.Abstract<fdm>,
+        this: CompatibleEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -85,7 +85,7 @@ export namespace CompatibleEngine {
         }
     }
     export async function stateful<fdm extends Function.Declaration.Map>(
-        this: CompatibleEngine.Abstract<fdm>,
+        this: CompatibleEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -94,7 +94,7 @@ export namespace CompatibleEngine {
         return response;
     }
     export function appendUserMessage<fdm extends Function.Declaration.Map>(
-        this: CompatibleEngine.Abstract<fdm>,
+        this: CompatibleEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
         message: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Session<Function.Declaration.From<fdm>> {
@@ -103,13 +103,13 @@ export namespace CompatibleEngine {
             chatMessages: [...session.chatMessages, message],
         };
     }
-    export function pushUserMessage<fdm extends Function.Declaration.Map>(this: CompatibleEngine.Abstract<fdm>, session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
+    export function pushUserMessage<fdm extends Function.Declaration.Map>(this: CompatibleEngine.Underhood<fdm>, session: Session<Function.Declaration.From<fdm>>, message: RoleMessage.User<Function.Declaration.From<fdm>>): Session<Function.Declaration.From<fdm>> {
         session.chatMessages.push(message);
         return session;
     }
 
     export function validateToolCallsByToolChoice<fdm extends Function.Declaration.Map>(
-        this: CompatibleEngine.Abstract<fdm>,
+        this: CompatibleEngine.Underhood<fdm>,
         toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
     ): void {
         Function.Call.validate<fdm>(

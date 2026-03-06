@@ -20,7 +20,7 @@ export namespace Engine {
         }
     }
 
-    export interface Base<in out fdm extends Function.Declaration.Map> {
+    export interface OwnProps<in out fdm extends Function.Declaration.Map> {
         baseUrl: string;
         apiKey: string;
         model: string;
@@ -35,8 +35,8 @@ export namespace Engine {
         maxTokens?: number;
         proxyAgent?: ProxyAgent;
     }
-    export namespace Base {
-        export function create<fdm extends Function.Declaration.Map>(options: Options<fdm>): Base<fdm> {
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps<fdm> {
             const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
             const inputPrice = options.inputPrice ?? 0;
             return {
@@ -57,9 +57,9 @@ export namespace Engine {
         }
     }
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
         Engine,
-        Base<fdm>
+        OwnProps<fdm>
     {
         parallel: boolean;
     }

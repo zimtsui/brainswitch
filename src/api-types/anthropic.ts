@@ -11,16 +11,16 @@ const ajv = new Ajv();
 export namespace AnthropicEngine {
     export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 
-    export interface Base {
+    export interface OwnProps {
         parallel: boolean;
         anthropic: Anthropic,
     }
-    export interface Parent<fdm extends Function.Declaration.Map> extends Engine.Abstract<fdm> {}
-    export namespace Base {
-        export function create<fdm extends Function.Declaration.Map>(
-            this: Parent<fdm>,
+    export interface ParentProps<fdm extends Function.Declaration.Map> extends Engine.Underhood<fdm> {}
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(
+            this: ParentProps<fdm>,
             options: Options<fdm>,
-        ): Base {
+        ): OwnProps {
             return {
                 parallel: options.parallelToolCall ?? false,
                 anthropic: new Anthropic({
@@ -32,9 +32,9 @@ export namespace AnthropicEngine {
         }
     }
 
-    export interface Abstract<fdm extends Function.Declaration.Map> extends
-        Parent<fdm>,
-        Base
+    export interface Underhood<fdm extends Function.Declaration.Map> extends
+        ParentProps<fdm>,
+        OwnProps
     {
         parallel: boolean;
         convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Anthropic.ToolUseBlock;
@@ -53,7 +53,7 @@ export namespace AnthropicEngine {
     }
 
     export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
-        this: Engine.Abstract<fdm>,
+        this: Engine.Underhood<fdm>,
         apifc: Anthropic.ToolUseBlock,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
@@ -109,7 +109,7 @@ export namespace AnthropicEngine {
     }
 
     export function calcCost<fdm extends Function.Declaration.Map>(
-        this: Engine.Abstract<fdm>,
+        this: Engine.Underhood<fdm>,
         usage: Anthropic.Usage,
     ): number {
         const cacheHitTokenCount = usage.cache_read_input_tokens || 0;

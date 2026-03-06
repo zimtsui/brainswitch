@@ -30,14 +30,18 @@ export interface GoogleNativeEngine<fdm extends Function.Declaration.Map> extend
 }
 
 export namespace GoogleNativeEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm>, CompatibleEngine.Options<fdm> {
+    export interface Options<fdm extends Function.Declaration.Map> extends
+        Engine.Options<fdm>,
+        CompatibleEngine.Options.Tools<fdm>,
+        GoogleEngine.Options<fdm>
+    {
         codeExecution?: boolean;
         urlContext?: boolean;
         googleSearch?: boolean;
     }
 
-    export interface Abstract<fdm extends Function.Declaration.Map> extends
-        GoogleEngine.Abstract<fdm>,
+    export interface Underhood<fdm extends Function.Declaration.Map> extends
+        GoogleEngine.Underhood<fdm>,
         GoogleNativeEngine<fdm>
     {
         toolChoice: Function.ToolChoice<fdm>;
@@ -61,7 +65,7 @@ export namespace GoogleNativeEngine {
     }
 
     export async function stateless<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -85,7 +89,7 @@ export namespace GoogleNativeEngine {
     }
 
     export async function stateful<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -95,7 +99,7 @@ export namespace GoogleNativeEngine {
     }
 
     export function appendUserMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
         message: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Session<Function.Declaration.From<fdm>> {
@@ -106,7 +110,7 @@ export namespace GoogleNativeEngine {
     }
 
     export function pushUserMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
         message: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Session<Function.Declaration.From<fdm>> {
@@ -115,7 +119,7 @@ export namespace GoogleNativeEngine {
     }
 
     export function convertToAiMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         content: Google.Content,
     ): RoleMessage.Ai<Function.Declaration.From<fdm>> {
         if (content.parts) {} else throw new Error();
@@ -147,28 +151,28 @@ export namespace GoogleNativeEngine {
     }
 
     export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
     ): Google.Content {
         return aiMessage.getRaw();
     }
 
     export function convertFromUserMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Google.Content {
         return (GoogleCompatibleEngine.convertFromUserMessage<fdm>).call(this, userMessage);
     }
 
     export function convertFromDeveloperMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         developerMessage: RoleMessage.Developer,
     ): Google.Content {
         return (GoogleCompatibleEngine.convertFromDeveloperMessage<fdm>).call(this, developerMessage);
     }
 
     export function convertFromChatMessages<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         chatMessages: ChatMessage<Function.Declaration.From<fdm>>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
@@ -179,14 +183,14 @@ export namespace GoogleNativeEngine {
     }
 
     export function convertFromToolChoice<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         toolChoice: Function.ToolChoice<fdm>,
     ): Google.FunctionCallingConfig {
         return (GoogleCompatibleEngine.convertFromToolChoice<fdm>).call(this, toolChoice);
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
@@ -264,7 +268,7 @@ export namespace GoogleNativeEngine {
     }
 
     export function validateToolCallsByToolChoice<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Abstract<fdm>,
+        this: GoogleNativeEngine.Underhood<fdm>,
         toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
     ): void {
         Function.Call.validate<fdm>(
@@ -274,7 +278,7 @@ export namespace GoogleNativeEngine {
         );
     }
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleNativeEngine.Abstract<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements GoogleNativeEngine.Underhood<fdm> {
         public baseUrl: string;
         public apiKey: string;
         public model: string;
@@ -312,9 +316,9 @@ export namespace GoogleNativeEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-            } = (Engine.Base.create<fdm>).call(this, options));
+            } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            ({ parallel: this.parallel } = (GoogleEngine.Base.create<fdm>).call(this, options));
+            ({ parallel: this.parallel } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));
 
             this.apiURL = new URL(`${this.baseUrl}/v1beta/models/${this.model}:generateContent`);
             this.codeExecution = options.codeExecution ?? false;

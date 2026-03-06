@@ -11,8 +11,8 @@ const ajv = new Ajv();
 export namespace OpenAIResponsesEngine {
     export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        Engine.Abstract<fdm>
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        Engine.Underhood<fdm>
     {
         convertFromFunctionResponse(fr: Function.Response.Distributive<Function.Declaration.From<fdm>>): OpenAI.Responses.ResponseInputItem.FunctionCallOutput;
         calcCost(usage: OpenAI.Responses.ResponseUsage): number;
@@ -32,7 +32,7 @@ export namespace OpenAIResponsesEngine {
     }
 
     export function calcCost<fdm extends Function.Declaration.Map>(
-        this: Engine.Abstract<fdm>,
+        this: Engine.Underhood<fdm>,
         usage: OpenAI.Responses.ResponseUsage,
     ): number {
         const cacheHitTokenCount = usage.input_tokens_details.cached_tokens;
@@ -55,7 +55,7 @@ export namespace OpenAIResponsesEngine {
     }
 
     export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
-        this: Engine.Abstract<fdm>,
+        this: Engine.Underhood<fdm>,
         apifc: OpenAI.Responses.ResponseFunctionToolCall,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         const fditem = this.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;

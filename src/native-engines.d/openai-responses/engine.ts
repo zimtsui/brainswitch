@@ -29,13 +29,16 @@ export interface OpenAIResponsesNativeEngine<fdm extends Function.Declaration.Ma
 }
 
 export namespace OpenAIResponsesNativeEngine {
-    export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {
+    export interface Options<fdm extends Function.Declaration.Map> extends
+        Engine.Options<fdm>,
+        OpenAIResponsesEngine.Options<fdm>
+    {
         applyPatch?: boolean;
         toolChoice?: Tool.Choice<fdm>;
     }
 
-    export interface Abstract<fdm extends Function.Declaration.Map> extends
-        OpenAIResponsesEngine.Abstract<fdm>,
+    export interface Underhood<fdm extends Function.Declaration.Map> extends
+        OpenAIResponsesEngine.Underhood<fdm>,
         OpenAIResponsesNativeEngine<fdm>
     {
         apiURL: URL;
@@ -60,7 +63,7 @@ export namespace OpenAIResponsesNativeEngine {
 
 
     export async function stateless<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesNativeEngine.Abstract<fdm>,
+        this: OpenAIResponsesNativeEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -83,7 +86,7 @@ export namespace OpenAIResponsesNativeEngine {
         }
     }
     export async function stateful<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesNativeEngine.Abstract<fdm>,
+        this: OpenAIResponsesNativeEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
@@ -111,7 +114,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
     export function convertToAiMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesEngine.Abstract<fdm>,
+        this: OpenAIResponsesEngine.Underhood<fdm>,
         output: OpenAI.Responses.ResponseOutputItem[],
     ): RoleMessage.Ai<Function.Declaration.From<fdm>> {
         const parts = output.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
@@ -130,7 +133,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
     export function convertFromUserMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesEngine.Abstract<fdm>,
+        this: OpenAIResponsesEngine.Underhood<fdm>,
         userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseInput {
         return userMessage.getParts().map(part => {
@@ -160,7 +163,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
     export function convertFromChatMessage<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesNativeEngine.Abstract<fdm>,
+        this: OpenAIResponsesNativeEngine.Underhood<fdm>,
         chatMessage: ChatMessage<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseInput {
         if (chatMessage instanceof RoleMessage.User.Instance)
@@ -193,7 +196,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
     export function makeMonolithParams<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesNativeEngine.Abstract<fdm>,
+        this: OpenAIResponsesNativeEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
         const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
@@ -228,7 +231,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesNativeEngine.Abstract<fdm>,
+        this: OpenAIResponsesNativeEngine.Underhood<fdm>,
         ctx: InferenceContext,
         session: Session<Function.Declaration.From<fdm>>,
         signal?: AbortSignal,
@@ -237,7 +240,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
     export async function fetchRaw<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesNativeEngine.Abstract<fdm>,
+        this: OpenAIResponsesNativeEngine.Underhood<fdm>,
         ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeMonolithParams(session);
@@ -279,7 +282,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
     export function validateToolCallsByToolChoice<fdm extends Function.Declaration.Map>(
-        this: OpenAIResponsesNativeEngine.Abstract<fdm>,
+        this: OpenAIResponsesNativeEngine.Underhood<fdm>,
         toolCalls: Tool.Call<Function.Declaration.From<fdm>>[],
     ): void {
         if (this.toolChoice === Function.ToolChoice.REQUIRED)
@@ -295,7 +298,7 @@ export namespace OpenAIResponsesNativeEngine {
     }
 
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesNativeEngine.Abstract<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements OpenAIResponsesNativeEngine.Underhood<fdm> {
         public baseUrl: string;
         public apiKey: string;
         public model: string;
@@ -330,7 +333,7 @@ export namespace OpenAIResponsesNativeEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-            } = (Engine.Base.create<fdm>).call(this, options));
+            } = (Engine.OwnProps.init<fdm>).call(this, options));
 
             this.apiURL = new URL(`${this.baseUrl}/responses`);
             this.parallel = options.parallelToolCall ?? false;

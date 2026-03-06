@@ -10,20 +10,20 @@ const ajv = new Ajv();
 export namespace OpenAIChatCompletionsEngine {
     export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 
-    export interface Base {
+    export interface OwnProps {
         parallel: boolean;
     }
-    export namespace Base {
-        export function create<fdm extends Function.Declaration.Map>(options: Options<fdm>): Base {
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps {
             return {
                 parallel: options.parallelToolCall ?? false,
             };
         }
     }
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        Engine.Abstract<fdm>,
-        Base
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        Engine.Underhood<fdm>,
+        OwnProps
     {
         convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionMessageToolCall;
         convertToFunctionCall(apifc: OpenAI.ChatCompletionMessageFunctionToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>>;
@@ -50,7 +50,7 @@ export namespace OpenAIChatCompletionsEngine {
     }
 
     export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
-        this: Engine.Abstract<fdm>,
+        this: Engine.Underhood<fdm>,
         apifc: OpenAI.ChatCompletionMessageFunctionToolCall,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         const fditem = this.fdm[apifc.function.name] as Function.Declaration.Item.From<fdm>;
@@ -110,7 +110,7 @@ export namespace OpenAIChatCompletionsEngine {
     }
 
     export function calcCost<fdm extends Function.Declaration.Map>(
-        this: Engine.Abstract<fdm>,
+        this: Engine.Underhood<fdm>,
         usage: OpenAI.CompletionUsage,
     ): number {
         const cacheHitTokenCount = usage.prompt_tokens_details?.cached_tokens ?? 0;

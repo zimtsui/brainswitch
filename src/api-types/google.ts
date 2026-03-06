@@ -10,11 +10,11 @@ const ajv = new Ajv();
 export namespace GoogleEngine {
     export interface Options<fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
 
-    export interface Base {
+    export interface OwnProps {
         parallel: boolean;
     }
-    export namespace Base {
-        export function create<fdm extends Function.Declaration.Map>(options: Options<fdm>): Base {
+    export namespace OwnProps {
+        export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps {
             const parallel = options.parallelToolCall ?? true;
             if (parallel) {} else throw new Error('Google API requires parallel tool calls.');
             return {
@@ -23,9 +23,9 @@ export namespace GoogleEngine {
         }
     }
 
-    export interface Abstract<in out fdm extends Function.Declaration.Map> extends
-        Engine.Abstract<fdm>,
-        Base
+    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
+        Engine.Underhood<fdm>,
+        OwnProps
     {
         convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall;
         convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>>;
@@ -33,7 +33,7 @@ export namespace GoogleEngine {
     }
 
     export function convertFromFunctionCall<fdm extends Function.Declaration.Map>(
-        this: GoogleEngine.Abstract<fdm>,
+        this: GoogleEngine.Underhood<fdm>,
         fc: Function.Call.Distributive<Function.Declaration.From<fdm>>,
     ): Google.FunctionCall {
         return {
@@ -44,7 +44,7 @@ export namespace GoogleEngine {
     }
 
     export function convertFromFunctionDeclarationEntry<fdm extends Function.Declaration.Map>(
-        this: GoogleEngine.Abstract<fdm>,
+        this: GoogleEngine.Underhood<fdm>,
         fdentry: Function.Declaration.Entry.From<fdm>,
     ): Google.FunctionDeclaration {
         const json = JSON.stringify(fdentry[1].paraschema);
@@ -68,7 +68,7 @@ export namespace GoogleEngine {
     }
 
     export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
-        this: GoogleEngine.Abstract<fdm>,
+        this: GoogleEngine.Underhood<fdm>,
         googlefc: Google.FunctionCall,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         if (googlefc.name) {} else throw new Error();

@@ -10,10 +10,14 @@ import { Throttle } from '../throttle.ts';
 
 
 export namespace AnthropicCompatibleEngine {
+    export interface Options<fdm extends Function.Declaration.Map> extends
+        CompatibleEngine.Options<fdm>,
+        AnthropicEngine.Options<fdm>
+    {}
 
-    export interface Abstract<fdm extends Function.Declaration.Map> extends
-        CompatibleEngine.Abstract<fdm>,
-        AnthropicEngine.Abstract<fdm>
+    export interface Underhood<fdm extends Function.Declaration.Map> extends
+        CompatibleEngine.Underhood<fdm>,
+        AnthropicEngine.Underhood<fdm>
     {
         convertFromUserMessage(userMessage: RoleMessage.User<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[];
         convertFromAiMessage(aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>): Anthropic.ContentBlockParam[];
@@ -26,7 +30,7 @@ export namespace AnthropicCompatibleEngine {
 
 
     export function convertFromUserMessage<fdm extends Function.Declaration.Map>(
-        this: AnthropicEngine.Abstract<fdm>,
+        this: AnthropicEngine.Underhood<fdm>,
         userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Anthropic.ContentBlockParam[] {
         return userMessage.getParts().map(part => {
@@ -42,7 +46,7 @@ export namespace AnthropicCompatibleEngine {
     }
 
     export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
-        this: AnthropicEngine.Abstract<fdm>,
+        this: AnthropicEngine.Underhood<fdm>,
         aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
     ): Anthropic.ContentBlockParam[] {
         if (aiMessage instanceof AnthropicCompatibleEngine.Message.Ai.Instance)
@@ -68,7 +72,7 @@ export namespace AnthropicCompatibleEngine {
     }
 
     export function convertFromChatMessage<fdm extends Function.Declaration.Map>(
-        this: AnthropicCompatibleEngine.Abstract<fdm>,
+        this: AnthropicCompatibleEngine.Underhood<fdm>,
         chatMessage: ChatMessage<Function.Declaration.From<fdm>>,
     ): Anthropic.MessageParam {
         if (chatMessage instanceof RoleMessage.User.Instance)
@@ -79,7 +83,7 @@ export namespace AnthropicCompatibleEngine {
     }
 
     export function makeParams<fdm extends Function.Declaration.Map>(
-        this: AnthropicCompatibleEngine.Abstract<fdm>,
+        this: AnthropicCompatibleEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
     ): Anthropic.MessageCreateParamsStreaming {
         const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
@@ -96,7 +100,7 @@ export namespace AnthropicCompatibleEngine {
     }
 
     export function convertToAiMessage<fdm extends Function.Declaration.Map>(
-        this: AnthropicEngine.Abstract<fdm>,
+        this: AnthropicEngine.Underhood<fdm>,
         raw: Anthropic.ContentBlock[],
     ): AnthropicCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>> {
         const parts = raw.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
@@ -112,7 +116,7 @@ export namespace AnthropicCompatibleEngine {
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
-        this: AnthropicCompatibleEngine.Abstract<fdm>,
+        this: AnthropicCompatibleEngine.Underhood<fdm>,
         ctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
@@ -218,7 +222,7 @@ export namespace AnthropicCompatibleEngine {
     }
 
 
-    export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Abstract<fdm> {
+    export class Instance<in out fdm extends Function.Declaration.Map> implements AnthropicCompatibleEngine.Underhood<fdm> {
         public baseUrl: string;
         public apiKey: string;
         public model: string;
@@ -253,14 +257,14 @@ export namespace AnthropicCompatibleEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-            } = (Engine.Base.create<fdm>).call(this, options));
+            } = (Engine.OwnProps.init<fdm>).call(this, options));
 
-            ({ toolChoice: this.toolChoice } = (CompatibleEngine.Base.create<fdm>).call(this, options));
+            ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
 
             ({
                 parallel: this.parallel,
                 anthropic: this.anthropic,
-            } = (AnthropicEngine.Base.create<fdm>).call(this, options));
+            } = (AnthropicEngine.OwnProps.init<fdm>).call(this, options));
         }
 
 
@@ -329,5 +333,4 @@ export namespace AnthropicCompatibleEngine {
         return new AnthropicCompatibleEngine.Instance<fdm>(options);
     }
 
-    export interface Options<fdm extends Function.Declaration.Map> extends CompatibleEngine.Options<fdm> {}
 }
