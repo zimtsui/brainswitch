@@ -165,7 +165,7 @@ export namespace GoogleCompatibleEngine {
         return Google.createUserContent(parts);
     }
 
-    export function convertFromDeveloperMessage<fdm extends Function.Declaration.Map>(
+    export function convertFromDeveloperMessage(
         developerMessage: RoleMessage.Developer,
     ): Google.Content {
         const parts = developerMessage.getParts().map(part => Google.createPartFromText(part.text));
@@ -294,7 +294,7 @@ export namespace GoogleCompatibleEngine {
             return (GoogleCompatibleEngine.convertFromAiMessage<fdm>).call(this, aiMessage);
         }
         public convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): Google.Content {
-            return (GoogleCompatibleEngine.convertFromDeveloperMessage<fdm>).call(this, developerMessage);
+            return (GoogleCompatibleEngine.convertFromDeveloperMessage).call(this, developerMessage);
         }
         public convertFromChatMessages(chatMessages: ChatMessage<Function.Declaration.From<fdm>>[]): Google.Content[] {
             return (GoogleCompatibleEngine.convertFromChatMessages<fdm>).call(this, chatMessages);

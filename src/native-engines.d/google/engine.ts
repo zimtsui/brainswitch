@@ -123,7 +123,6 @@ export namespace GoogleNativeEngine {
     }
 
     export function appendUserMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
         message: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Session<Function.Declaration.From<fdm>> {
@@ -134,7 +133,6 @@ export namespace GoogleNativeEngine {
     }
 
     export function pushUserMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Underhood<fdm>,
         session: Session<Function.Declaration.From<fdm>>,
         message: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Session<Function.Declaration.From<fdm>> {
@@ -175,24 +173,23 @@ export namespace GoogleNativeEngine {
     }
 
     export function convertFromAiMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Underhood<fdm>,
         aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
     ): Google.Content {
         return aiMessage.getRaw();
     }
 
     export function convertFromUserMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Underhood<fdm>,
+        this: Engine.Underhood<fdm>,
         userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
     ): Google.Content {
         return (GoogleCompatibleEngine.convertFromUserMessage<fdm>).call(this, userMessage);
     }
 
     export function convertFromDeveloperMessage<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Underhood<fdm>,
+        this: Engine.Underhood<fdm>,
         developerMessage: RoleMessage.Developer,
     ): Google.Content {
-        return (GoogleCompatibleEngine.convertFromDeveloperMessage<fdm>).call(this, developerMessage);
+        return (GoogleCompatibleEngine.convertFromDeveloperMessage).call(this, developerMessage);
     }
 
     export function convertFromChatMessages<fdm extends Function.Declaration.Map>(
@@ -207,7 +204,7 @@ export namespace GoogleNativeEngine {
     }
 
     export function convertFromToolChoice<fdm extends Function.Declaration.Map>(
-        this: GoogleNativeEngine.Underhood<fdm>,
+        this: Engine.Underhood<fdm>,
         toolChoice: Function.ToolChoice<fdm>,
     ): Google.FunctionCallingConfig {
         return (GoogleCompatibleEngine.convertFromToolChoice<fdm>).call(this, toolChoice);
