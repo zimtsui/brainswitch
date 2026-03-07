@@ -8,7 +8,7 @@ export const logger = {
         Presets.Level,
         (chunk: string, level) => exporter.stream({
             scope: '@zimtsui/typelog',
-            channel: 'inference',
+            channel: 'Inference',
             level,
             payload: chunk,
         }),
@@ -17,7 +17,7 @@ export const logger = {
         Presets.Level,
         (payload: unknown, level) => exporter.monolith({
             scope: '@zimtsui/typelog',
-            channel: 'message',
+            channel: 'Message',
             level,
             payload,
         }),
