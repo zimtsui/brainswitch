@@ -4,6 +4,7 @@ import type OpenAI from 'openai';
 import { OpenAIChatCompletionsCompatibleEngine } from '../openai-chatcompletions.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import { ResponseInvalid } from '../../engine.ts';
+import { logger } from '../../telemetry.ts';
 
 
 
@@ -103,7 +104,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
         wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
-        this.logger.message?.trace(params);
+        logger.message?.trace(params);
 
         await this.throttle.requests(wfctx);
 
@@ -135,9 +136,9 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                 if (deltaThoughts) {
                     if (!thinking) {
                         thinking = true;
-                        this.logger.inference?.trace('<think>\n');
+                        logger.inference?.trace('<think>\n');
                     }
-                    this.logger.inference?.trace(deltaThoughts);
+                    logger.inference?.trace(deltaThoughts);
                     thoughts ??= '';
                     thoughts += deltaThoughts;
                 }
@@ -146,9 +147,9 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                 if (deltaChoice.delta.content) {
                     if (thinking) {
                         thinking = false;
-                        this.logger.inference?.trace('\n</think>\n');
+                        logger.inference?.trace('\n</think>\n');
                     }
-                    this.logger.inference?.debug(deltaChoice.delta.content);
+                    logger.inference?.debug(deltaChoice.delta.content);
                     stock.choices[0]!.delta.content ??= '';
                     stock.choices[0]!.delta.content! += deltaChoice.delta.content;
                 }
@@ -157,7 +158,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
                 if (deltaChoice.delta.tool_calls) {
                     if (thinking) {
                         thinking = false;
-                        this.logger.inference?.trace('\n</think>\n');
+                        logger.inference?.trace('\n</think>\n');
                     }
                     stock.choices[0]!.delta.tool_calls ??= [];
                     for (const deltaToolCall of deltaChoice.delta.tool_calls) {
@@ -188,7 +189,7 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
 
         const choice = completion.choices[0];
         if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
-        if (choice.message.content) this.logger.inference?.debug('\n');
+        if (choice.message.content) logger.inference?.debug('\n');
 
         this.handleFinishReason(completion, choice.finish_reason);
 
@@ -200,8 +201,8 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
 
         // logging
         const apifcs = choice.message.tool_calls;
-        if (apifcs?.length) this.logger.message?.debug(apifcs);
-        this.logger.message?.debug(completion.usage);
+        if (apifcs?.length) logger.message?.debug(apifcs);
+        logger.message?.debug(completion.usage);
 
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 

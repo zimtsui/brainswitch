@@ -9,7 +9,6 @@ import * as Undici from 'undici';
 import { Throttle } from '../throttle.ts';
 import { Engine } from '../engine.ts';
 import OpenAI from 'openai';
-import { type Logger } from '../telemetry.ts';
 
 
 
@@ -65,7 +64,6 @@ export namespace AliyunEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
-        public logger: Logger;
 
         public toolChoice: Function.ToolChoice<fdm>;
 
@@ -88,7 +86,6 @@ export namespace AliyunEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
             ({ parallelToolCall: this.parallelToolCall } = (OpenAIChatCompletionsEngine.OwnProps.init<fdm>).call(this, options));

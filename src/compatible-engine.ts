@@ -2,6 +2,7 @@ import { RoleMessage, type Session } from './session.ts';
 import { Function } from './function.ts';
 import { type InferenceContext } from './inference-context.ts';
 import { USER_ABORTION, InferenceTimeout, ResponseInvalid, type Engine } from './engine.ts';
+import { logger } from './telemetry.ts';
 
 
 
@@ -80,7 +81,7 @@ export namespace CompatibleEngine {
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) this.logger.message?.warn(e); else throw e;
+                if (retry < 3) logger.message?.warn(e); else throw e;
             }
         }
     }

@@ -5,6 +5,7 @@ import { OpenAIChatCompletionsCompatibleEngine } from '../openai-chatcompletions
 import { type InferenceContext } from '../../inference-context.ts';
 import { fetch } from 'undici';
 import { ResponseInvalid } from '../../engine.ts';
+import { logger } from '../../telemetry.ts';
 
 
 
@@ -48,7 +49,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
         wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
-        this.logger.message?.trace(params);
+        logger.message?.trace(params);
 
         await this.throttle.requests(wfctx);
         const res = await fetch(this.apiURL, {
@@ -63,7 +64,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
         });
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const completion = await res.json() as OpenAI.ChatCompletion;
-        this.logger.message?.trace(completion);
+        logger.message?.trace(completion);
 
         const choice = completion.choices[0];
         if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
@@ -78,10 +79,10 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
 
         // logging
         const text = aiMessage.getText();
-        if (text) this.logger.inference?.debug(text + '\n');
+        if (text) logger.inference?.debug(text + '\n');
         const apifcs = choice.message.tool_calls;
-        if (apifcs?.length) this.logger.message?.debug(apifcs);
-        this.logger.message?.debug(completion.usage);
+        if (apifcs?.length) logger.message?.debug(apifcs);
+        logger.message?.debug(completion.usage);
 
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 

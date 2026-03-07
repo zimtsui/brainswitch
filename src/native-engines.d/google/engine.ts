@@ -8,7 +8,7 @@ import { GoogleEngine } from '../../api-types/google.ts';
 import { GoogleCompatibleEngine } from '../../compatible-engines.d/google.ts';
 import { CompatibleEngine } from '../../compatible-engine.ts';
 import { Throttle } from '../../throttle.ts';
-import { type Logger } from '../../telemetry.ts';
+import { logger } from '../../telemetry.ts';
 
 
 export interface GoogleNativeEngine<fdm extends Function.Declaration.Map> extends Engine {
@@ -107,7 +107,7 @@ export namespace GoogleNativeEngine {
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) this.logger.message?.warn(e); else throw e;
+                if (retry < 3) logger.message?.warn(e); else throw e;
             }
         }
     }
@@ -241,7 +241,7 @@ export namespace GoogleNativeEngine {
             } : undefined,
         };
 
-        this.logger.message?.trace(reqbody);
+        logger.message?.trace(reqbody);
 
         const res = await Undici.fetch(this.apiURL, {
             method: 'POST',
@@ -253,7 +253,7 @@ export namespace GoogleNativeEngine {
             dispatcher: this.proxyAgent,
             signal,
         });
-        this.logger.message?.trace(res);
+        logger.message?.trace(res);
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as Google.GenerateContentResponse;
 
@@ -265,12 +265,12 @@ export namespace GoogleNativeEngine {
 
 
         for (const part of response.candidates[0].content.parts) {
-            if (part.text) this.logger.inference?.debug(part.text+'\n');
-            if (part.functionCall) this.logger.message?.debug(part.functionCall);
+            if (part.text) logger.inference?.debug(part.text+'\n');
+            if (part.functionCall) logger.message?.debug(part.functionCall);
         }
         if (response.usageMetadata?.promptTokenCount) {}
         else throw new Error('Prompt token count absent', { cause: response });
-        this.logger.message?.debug(response.usageMetadata);
+        logger.message?.debug(response.usageMetadata);
 
         const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
         const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
@@ -313,7 +313,6 @@ export namespace GoogleNativeEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
-        public logger: Logger;
 
         public parallelToolCall: boolean;
 
@@ -338,7 +337,6 @@ export namespace GoogleNativeEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
 
             ({ parallelToolCall: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));

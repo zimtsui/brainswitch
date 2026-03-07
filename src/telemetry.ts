@@ -1,8 +1,25 @@
-import { type Channel } from '@zimtsui/typelog';
+import { Channel } from '@zimtsui/typelog';
 import * as Presets from '@zimtsui/typelog/presets';
+import { exporter } from '@zimtsui/typelog/fallback';
 
 
-export interface Logger {
-    inference?: Channel<typeof Presets.Level, string>;
-    message?: Channel<typeof Presets.Level, unknown>;
-}
+export const logger = {
+    inference: Channel.create<typeof Presets.Level, string>(
+        Presets.Level,
+        (chunk: string, level) => exporter.stream({
+            scope: '@zimtsui/typelog',
+            channel: 'inference',
+            level,
+            payload: chunk,
+        }),
+    ),
+    message: Channel.create<typeof Presets.Level, unknown>(
+        Presets.Level,
+        (payload: unknown, level) => exporter.monolith({
+            scope: '@zimtsui/typelog',
+            channel: 'message',
+            level,
+            payload,
+        }),
+    ),
+};

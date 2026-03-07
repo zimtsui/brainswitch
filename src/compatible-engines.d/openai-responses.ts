@@ -7,7 +7,7 @@ import OpenAI from 'openai';
 import * as Undici from 'undici';
 import { OpenAIResponsesEngine } from '../api-types/openai-responses.ts';
 import { Throttle } from '../throttle.ts';
-import { type Logger } from '../telemetry.ts';
+import { logger } from '../telemetry.ts';
 
 
 
@@ -167,9 +167,9 @@ export namespace OpenAIResponsesCompatibleEngine {
         for (const item of output)
             if (item.type === 'message') {
                 if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
-                this.logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
+                logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
             } else if (item.type === 'function_call')
-                this.logger.message?.debug(item);
+                logger.message?.debug(item);
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
@@ -186,7 +186,7 @@ export namespace OpenAIResponsesCompatibleEngine {
         wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<OpenAIResponsesCompatibleEngine.Message.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeMonolithParams(session);
-        this.logger.message?.trace(params);
+        logger.message?.trace(params);
 
         await this.throttle.requests(wfctx);
         const res = await Undici.fetch(
@@ -204,7 +204,7 @@ export namespace OpenAIResponsesCompatibleEngine {
         );
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as OpenAI.Responses.Response;
-        this.logger.message?.trace(response);
+        logger.message?.trace(response);
         if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
             throw new ResponseInvalid('Token limit exceeded.', { cause: response });
         if (response.status === 'completed') {}
@@ -215,7 +215,7 @@ export namespace OpenAIResponsesCompatibleEngine {
         if (response.usage) {} else throw new Error();
         const cost = this.calcCost(response.usage);
         wfctx.cost?.(cost);
-        this.logger.message?.debug(response.usage);
+        logger.message?.debug(response.usage);
 
         const aiMessage = this.convertToAiMessage(response.output);
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
@@ -239,7 +239,6 @@ export namespace OpenAIResponsesCompatibleEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
-        public logger: Logger;
 
         public apiURL: URL;
         public parallelToolCall: boolean;
@@ -261,7 +260,6 @@ export namespace OpenAIResponsesCompatibleEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
             ({ parallelToolCall: this.parallelToolCall } = (OpenAIResponsesEngine.OwnProps.init<fdm>).call(this, options));

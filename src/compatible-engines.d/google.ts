@@ -7,7 +7,7 @@ import * as Undici from 'undici';
 import { type InferenceContext } from '../inference-context.ts';
 import { GoogleEngine } from '../api-types/google.ts';
 import { Throttle } from '../throttle.ts';
-import { type Logger } from '../telemetry.ts';
+import { logger } from '../telemetry.ts';
 
 
 
@@ -104,7 +104,7 @@ export namespace GoogleCompatibleEngine {
             } : undefined,
         };
 
-        this.logger.message?.trace(reqbody);
+        logger.message?.trace(reqbody);
 
         const res = await Undici.fetch(this.apiURL, {
             method: 'POST',
@@ -116,7 +116,7 @@ export namespace GoogleCompatibleEngine {
             dispatcher: this.proxyAgent,
             signal,
         });
-        this.logger.message?.trace(res);
+        logger.message?.trace(res);
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as Google.GenerateContentResponse;
 
@@ -128,11 +128,11 @@ export namespace GoogleCompatibleEngine {
 
 
         for (const part of response.candidates[0].content.parts) {
-            if (part.text) this.logger.inference?.debug(part.text+'\n');
-            if (part.functionCall) this.logger.message?.debug(part.functionCall);
+            if (part.text) logger.inference?.debug(part.text+'\n');
+            if (part.functionCall) logger.message?.debug(part.functionCall);
         }
         if (response.usageMetadata?.promptTokenCount) {} else throw new Error('Prompt token count absent', { cause: response });
-        this.logger.message?.debug(response.usageMetadata);
+        logger.message?.debug(response.usageMetadata);
 
         const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
         const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;
@@ -229,7 +229,6 @@ export namespace GoogleCompatibleEngine {
         public timeout?: number;
         public maxTokens?: number;
         public proxyAgent?: Undici.ProxyAgent;
-        public logger: Logger;
 
         public toolChoice: Function.ToolChoice<fdm>;
 
@@ -252,7 +251,6 @@ export namespace GoogleCompatibleEngine {
                 timeout: this.timeout,
                 maxTokens: this.maxTokens,
                 proxyAgent: this.proxyAgent,
-                logger: this.logger,
             } = (Engine.OwnProps.init<fdm>).call(this, options));
             ({ toolChoice: this.toolChoice } = (CompatibleEngine.OwnProps.init<fdm>).call(this, options));
             ({ parallelToolCall: this.parallelToolCall } = (GoogleEngine.OwnProps.init<fdm>).call(this, options));

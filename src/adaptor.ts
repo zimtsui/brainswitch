@@ -8,16 +8,15 @@ import { OpenAIResponsesCompatibleEngine } from './compatible-engines.d/openai-r
 import { AnthropicCompatibleEngine } from './compatible-engines.d/anthropic.ts';
 import { OpenAIResponsesNativeEngine } from './native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from './native-engines.d/google/engine.ts';
-import { type Logger } from './telemetry.ts';
 
 
 export class Adaptor {
-    public static create(config: Config, logger: Logger): Adaptor {
-        return new Adaptor(config, logger);
+    public static create(config: Config): Adaptor {
+        return new Adaptor(config);
     }
 
     private throttles = new Map<string, Throttle>();
-    protected constructor(public config: Config, public logger: Logger) {
+    protected constructor(public config: Config) {
         for (const endpointId in this.config.brainswitch.endpoints) {
             const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;
             this.throttles.set(endpointId, new Throttle(rpm));
@@ -40,7 +39,6 @@ export class Adaptor {
             toolChoice,
             parallelToolCall,
             throttle,
-            logger: this.logger,
         };
         if (endpointSpec.apiType === 'openai-responses')
             return OpenAIResponsesCompatibleEngine.create<fdm>(options);
@@ -71,7 +69,6 @@ export class Adaptor {
             parallelToolCall,
             throttle,
             applyPatch,
-            logger: this.logger,
         };
         return OpenAIResponsesNativeEngine.create<fdm>(options);
     }
@@ -98,7 +95,6 @@ export class Adaptor {
             codeExecution,
             urlContext,
             googleSearch,
-            logger: this.logger,
         };
         return GoogleNativeEngine.create<fdm>(options);
     }
