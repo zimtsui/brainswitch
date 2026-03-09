@@ -102,7 +102,7 @@ export namespace GoogleNativeEngine {
             try {
                 return await this.fetch(wfctx, session, signal);
             } catch (e) {
-                if (wfctx.signal?.aborted) throw USER_ABORTION;                                  // 用户中止
+                if (wfctx.signal?.aborted) throw USER_ABORTION;                                     // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
