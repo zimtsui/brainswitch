@@ -1,6 +1,6 @@
 {
   "name": "@zimtsui/brainswitch",
-  "version": "0.0.45",
+  "version": "0.0.46",
   "exports": {
     ".": "./build/exports.js",
     "./openai-responses": "./build/native-engines.d/openai-responses/exports.js",
@@ -43,7 +43,7 @@
     "ava": "^7.0.0"
   },
   "ava": {
-  	"failWithoutAssertions": false,
+    "failWithoutAssertions": false,
     "verbose": true
   }
 }
