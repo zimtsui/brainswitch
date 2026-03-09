@@ -15,7 +15,7 @@
   },
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "ava ./build/test.js",
     "build": "tsc -b ./src/tsconfig.json",
     "clean": "rm -rf ./build && rm -rf ./docs",
     "docs": "typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts ./src/native-engines.d/*/exports.ts",
@@ -38,5 +38,12 @@
     "@types/node": "^22.17.2",
     "@zimtsui/coroutine-locks": "^0.0.25",
     "@zimtsui/typelog": "^0.0.18"
+  },
+  "devDependencies": {
+    "ava": "^7.0.0"
+  },
+  "ava": {
+  	"failWithoutAssertions": false,
+    "verbose": true
   }
 }
