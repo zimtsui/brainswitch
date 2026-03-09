@@ -55,6 +55,14 @@ function makeAiMessage(text = 'ok'): RoleMessage.Ai<fdu> {
     return RoleMessage.Ai.create([RoleMessage.Part.Text.create(text)]);
 }
 
+function makeInferenceContext(): InferenceContext {
+    return {
+        busy: null,
+        signal: null,
+        cost() {},
+    };
+}
+
 
 test('OpenAIResponses compatible engine: composition initializes mixed own props', t => {
     const options: OpenAIResponsesCompatibleEngine.Options<fdm> = {
@@ -105,7 +113,7 @@ test('CompatibleEngine.stateless retries ResponseInvalid and succeeds', async t 
         return ai;
     };
 
-    const wfctx: InferenceContext = {};
+    const wfctx = makeInferenceContext();
     const response = await engine.stateless(wfctx, makeSession());
 
     t.is(attempts, 3);
@@ -124,7 +132,7 @@ test('CompatibleEngine stateful/append/push message semantics are correct', asyn
     engine.fetch = async () => ai;
 
     const session = makeSession();
-    const response = await engine.stateful({}, session);
+    const response = await engine.stateful(makeInferenceContext(), session);
     t.is(response, ai);
     t.deepEqual(session.chatMessages, [ai]);
 
