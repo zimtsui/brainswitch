@@ -1,6 +1,6 @@
 import { Channel } from '@zimtsui/typelog';
 import * as Presets from '@zimtsui/typelog/presets';
-import { exporter } from '@zimtsui/typelog/fallback';
+import { exporter } from '@zimtsui/typelog/exporter';
 
 
 export const logger = {
