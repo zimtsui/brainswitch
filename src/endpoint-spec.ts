@@ -19,8 +19,8 @@ export namespace EndpointSpec {
         outputPrice: Type.Optional(Type.Number()),
         cachePrice: Type.Optional(Type.Number()),
         additionalOptions: Type.Optional(Type.Record(Type.String(), Type.Any())),
-        rpm: Type.Optional(Type.Number()),
-        timeout: Type.Optional(Type.Number()),
-        maxTokens: Type.Optional(Type.Number()),
+        rpm: Type.Optional(Type.Number({ minimum: 0 })),
+        timeout: Type.Optional(Type.Number({ minimum: 0 })),
+        maxTokens: Type.Optional(Type.Number({ minimum: 0 })),
     });
 }
