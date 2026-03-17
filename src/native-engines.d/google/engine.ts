@@ -107,7 +107,7 @@ export namespace GoogleNativeEngine {
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) logger.message?.warn(e); else throw e;
+                if (retry < 3) logger.message.warn(e); else throw e;
             }
         }
     }
@@ -241,7 +241,7 @@ export namespace GoogleNativeEngine {
             } : undefined,
         };
 
-        logger.message?.trace(reqbody);
+        logger.message.trace(reqbody);
 
         const res = await Undici.fetch(this.apiURL, {
             method: 'POST',
@@ -253,7 +253,7 @@ export namespace GoogleNativeEngine {
             dispatcher: this.proxyAgent,
             signal,
         });
-        logger.message?.trace(res);
+        logger.message.trace(res);
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as Google.GenerateContentResponse;
 
@@ -265,12 +265,12 @@ export namespace GoogleNativeEngine {
 
 
         for (const part of response.candidates[0].content.parts) {
-            if (part.text) logger.inference?.debug(part.text+'\n');
-            if (part.functionCall) logger.message?.debug(part.functionCall);
+            if (part.text) logger.inference.debug(part.text+'\n');
+            if (part.functionCall) logger.message.debug(part.functionCall);
         }
         if (response.usageMetadata?.promptTokenCount) {}
         else throw new Error('Prompt token count absent', { cause: response });
-        logger.message?.debug(response.usageMetadata);
+        logger.message.debug(response.usageMetadata);
 
         const candidatesTokenCount = response.usageMetadata.candidatesTokenCount ?? 0;
         const cacheHitTokenCount = response.usageMetadata.cachedContentTokenCount ?? 0;

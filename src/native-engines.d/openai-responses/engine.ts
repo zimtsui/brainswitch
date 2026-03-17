@@ -102,7 +102,7 @@ export namespace OpenAIResponsesNativeEngine {
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) logger.message?.warn(e); else throw e;
+                if (retry < 3) logger.message.warn(e); else throw e;
             }
         }
     }
@@ -244,11 +244,11 @@ export namespace OpenAIResponsesNativeEngine {
         for (const item of output)
             if (item.type === 'message') {
                 if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
-                logger.inference?.debug(item.content.map(part => part.text).join('')+'\n');
+                logger.inference.debug(item.content.map(part => part.text).join('')+'\n');
             } else if (item.type === 'function_call')
-                logger.message?.debug(item);
+                logger.message.debug(item);
             else if (item.type === 'apply_patch_call')
-                logger.message?.debug(item);
+                logger.message.debug(item);
     }
 
     export async function fetch<fdm extends Function.Declaration.Map>(
@@ -265,7 +265,7 @@ export namespace OpenAIResponsesNativeEngine {
         wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeMonolithParams(session);
-        logger.message?.trace(params);
+        logger.message.trace(params);
 
         await this.throttle.requests(wfctx);
         const res = await Undici.fetch(
@@ -283,7 +283,7 @@ export namespace OpenAIResponsesNativeEngine {
         );
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as OpenAI.Responses.Response;
-        logger.message?.trace(response);
+        logger.message.trace(response);
         if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
             throw new ResponseInvalid('Token limit exceeded.', { cause: response });
         if (response.status === 'completed') {}
@@ -294,7 +294,7 @@ export namespace OpenAIResponsesNativeEngine {
         if (response.usage) {} else throw new Error();
         const cost = this.calcCost(response.usage);
         wfctx.cost?.(cost);
-        logger.message?.debug(response.usage);
+        logger.message.debug(response.usage);
 
         const aiMessage = this.convertToAiMessage(response.output);
         this.validateToolCallsByToolChoice(aiMessage.getToolCalls());

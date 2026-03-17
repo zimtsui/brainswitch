@@ -81,7 +81,7 @@ export namespace CompatibleEngine {
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
                 else if (e instanceof TypeError) {}         		                                // 网络故障
                 else throw e;
-                if (retry < 3) logger.message?.warn(e); else throw e;
+                if (retry < 3) logger.message.warn(e); else throw e;
             }
         }
     }

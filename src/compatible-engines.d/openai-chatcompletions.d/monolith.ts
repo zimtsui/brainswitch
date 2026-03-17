@@ -49,7 +49,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
         wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
-        logger.message?.trace(params);
+        logger.message.trace(params);
 
         await this.throttle.requests(wfctx);
         const res = await fetch(this.apiURL, {
@@ -64,7 +64,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
         });
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const completion = await res.json() as OpenAI.ChatCompletion;
-        logger.message?.trace(completion);
+        logger.message.trace(completion);
 
         const choice = completion.choices[0];
         if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
@@ -73,16 +73,15 @@ export namespace OpenAIChatCompletionsCompatibleMonolithEngine {
 
         if (completion.usage) {} else throw new Error();
         const cost = this.calcCost(completion.usage);
-        wfctx.cost?.(cost);
 
         const aiMessage = this.convertToAiMessage(choice.message);
 
-        // logging
         const text = aiMessage.getText();
-        if (text) logger.inference?.debug(text + '\n');
+        if (text) logger.inference.debug(text);
         const apifcs = choice.message.tool_calls;
-        if (apifcs?.length) logger.message?.debug(apifcs);
-        logger.message?.debug(completion.usage);
+        if (apifcs?.length) logger.message.debug(apifcs);
+        logger.message.debug(completion.usage);
+        wfctx.cost?.(cost);
 
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
 

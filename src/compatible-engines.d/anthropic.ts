@@ -121,7 +121,7 @@ export namespace AnthropicCompatibleEngine {
         wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
-        logger.message?.trace(params);
+        logger.message.trace(params);
 
         await this.throttle.requests(wfctx);
         const stream = this.anthropic.messages.stream(params, { signal });
@@ -129,12 +129,12 @@ export namespace AnthropicCompatibleEngine {
         let response: Anthropic.Message | null = null;
         for await (const event of stream) {
             if (event.type === 'message_start') {
-                logger.message?.trace(event);
+                logger.message.trace(event);
                 response = structuredClone(event.message);
             } else {
                 if (response) {} else throw new Error();
                 if (event.type === 'message_delta') {
-                    logger.message?.trace(event);
+                    logger.message.trace(event);
                     response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
                     response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
                     response.usage.input_tokens = event.usage.input_tokens ?? response.usage.input_tokens;
@@ -143,40 +143,40 @@ export namespace AnthropicCompatibleEngine {
                     response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
                     response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
                 } else if (event.type === 'message_stop') {
-                    logger.message?.trace(event);
+                    logger.message.trace(event);
                 } else if (event.type === 'content_block_start') {
-                    logger.message?.trace(event);
+                    logger.message.trace(event);
                     const contentBlock = structuredClone(event.content_block);
                     response.content.push(contentBlock);
                     if (contentBlock.type === 'tool_use') contentBlock.input = '';
                 } else if (event.type === 'content_block_delta') {
                     const contentBlock = response.content[event.index];
                     if (event.delta.type === 'text_delta'){
-                        logger.inference?.debug(event.delta.text);
+                        logger.inference.debug(event.delta.text);
                         if (contentBlock?.type === 'text') {} else throw new Error();
                         contentBlock.text += event.delta.text;
                     } else if (event.delta.type === 'thinking_delta') {
-                        logger.inference?.trace(event.delta.thinking);
+                        logger.inference.trace(event.delta.thinking);
                         if (contentBlock?.type === 'thinking') {} else throw new Error();
                         contentBlock.thinking += event.delta.thinking;
                     } else if (event.delta.type === 'signature_delta') {
                         if (contentBlock?.type === 'thinking') {} else throw new Error();
                         contentBlock.signature += event.delta.signature;
                     } else if (event.delta.type === 'input_json_delta') {
-                        logger.inference?.trace(event.delta.partial_json);
+                        logger.inference.trace(event.delta.partial_json);
                         if (contentBlock?.type === 'tool_use') {} else throw new Error();
                         if (typeof contentBlock.input === 'string') {} else throw new Error();
                         contentBlock.input += event.delta.partial_json;
                     } else throw new Error('Unknown type of content block delta', { cause: event.delta });
                 } else if (event.type === 'content_block_stop') {
                     const contentBlock = response.content[event.index];
-                    if (contentBlock?.type === 'text') logger.inference?.debug('\n');
-                    else if (contentBlock?.type === 'thinking') logger.inference?.trace('\n');
-                    else if (contentBlock?.type === 'tool_use') logger.inference?.debug('\n');
-                    logger.message?.trace(event);
+                    if (contentBlock?.type === 'text') logger.inference.debug('\n');
+                    else if (contentBlock?.type === 'thinking') logger.inference.trace('\n');
+                    else if (contentBlock?.type === 'tool_use') logger.inference.debug('\n');
+                    logger.message.trace(event);
                     if (contentBlock?.type === 'tool_use') {
                         if (typeof contentBlock.input === 'string') {} else throw new Error();
-                        logger.message?.debug(contentBlock);
+                        logger.message.debug(contentBlock);
                     }
                 } else throw new Error('Unknown stream event', { cause: event });
             }
@@ -187,9 +187,9 @@ export namespace AnthropicCompatibleEngine {
         if (response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use') {}
         else throw new ResponseInvalid('Abnormal stop reason', { cause: response });
 
+        logger.message.debug(response.usage);
         const cost = this.calcCost(response.usage);
         wfctx.cost?.(cost);
-        logger.message?.debug(response.usage);
 
         const aiMessage = this.convertToAiMessage(response.content);
         this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
