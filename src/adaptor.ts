@@ -96,6 +96,6 @@ export class Adaptor {
             urlContext,
             googleSearch,
         };
-        return GoogleNativeEngine.create<fdm>(options);
+        return new GoogleNativeEngine<fdm>(options);
     }
 }
