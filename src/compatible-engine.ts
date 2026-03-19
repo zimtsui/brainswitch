@@ -8,13 +8,10 @@ import { logger } from './telemetry.ts';
 
 export abstract class CompatibleEngine<in out fdm extends Function.Declaration.Map> extends Engine<fdm> {
     protected toolChoice: Function.ToolChoice<fdm>;
-    protected override parallelToolCall: boolean;
 
     public constructor(options: CompatibleEngine.Options<fdm>) {
         super(options);
         this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
-        this.parallelToolCall = options.parallelToolCall ?? true;
-        if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
     }
 
     protected abstract infer(

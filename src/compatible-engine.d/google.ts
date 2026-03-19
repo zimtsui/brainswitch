@@ -16,9 +16,12 @@ export class GoogleCompatibleEngine<in out fdm extends Function.Declaration.Map>
     protected billing: GoogleBilling;
     protected toolCallValidator: ToolCallValidator<fdm>;
     protected transport: GoogleCompatibleTransport<fdm>;
+    protected override parallelToolCall: boolean;
 
     public constructor(options: GoogleCompatibleEngine.Options<fdm>) {
         super(options);
+        this.parallelToolCall = options.parallelToolCall ?? true;
+        if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
         this.toolCodec = new GoogleToolCodec({
             fdm: this.fdm,
             parallelToolCall: this.parallelToolCall,

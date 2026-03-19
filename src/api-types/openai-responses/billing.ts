@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import type { Pricing } from '../../engine.ts';
 
 
 export class OpenAIResponsesBilling {
@@ -9,17 +10,15 @@ export class OpenAIResponsesBilling {
         const cacheHitTokenCount = usage.input_tokens_details.cached_tokens;
         const cacheMissTokenCount = usage.input_tokens - cacheHitTokenCount;
         return (
-            this.ctx.inputPrice * cacheMissTokenCount / 1e6 +
-            this.ctx.cachePrice * cacheHitTokenCount / 1e6 +
-            this.ctx.outputPrice * usage.output_tokens / 1e6
+            this.ctx.pricing.inputPrice * cacheMissTokenCount / 1e6 +
+            this.ctx.pricing.cachePrice * cacheHitTokenCount / 1e6 +
+            this.ctx.pricing.outputPrice * usage.output_tokens / 1e6
         );
     }
 }
 
 export namespace OpenAIResponsesBilling {
     export interface Context {
-        inputPrice: number;
-        cachePrice: number;
-        outputPrice: number;
+        pricing: Pricing;
     }
 }
