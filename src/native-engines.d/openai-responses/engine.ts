@@ -5,7 +5,7 @@ import { ResponseInvalid, Engine, USER_ABORTION, InferenceTimeout } from '../../
 import { type InferenceContext } from '../../inference-context.ts';
 import OpenAI from 'openai';
 import * as Undici from 'undici';
-import { OpenAIResponsesEngine } from '../../api-types/openai-responses.ts';
+import { OpenAIResponsesEngine } from '../../api-types/openai-responses/billing.ts';
 import { Throttle } from '../../throttle.ts';
 import { logger } from '../../telemetry.ts';
 

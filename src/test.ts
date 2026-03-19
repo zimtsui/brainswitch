@@ -9,10 +9,10 @@ import { type InferenceContext } from './inference-context.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Throttle } from './throttle.ts';
 
-import { OpenAIResponsesCompatibleEngine } from './compatible-engines.d/openai-responses.ts';
-import { GoogleCompatibleEngine } from './compatible-engines.d/google.ts';
-import { AnthropicCompatibleEngine } from './compatible-engines.d/anthropic.ts';
-import { AliyunEngine } from './compatible-engines.d/aliyun.ts';
+import { OpenAIResponsesCompatibleEngine } from './compatible.d/openai-responses.ts';
+import { GoogleCompatibleEngine } from './compatible.d/google/transport.ts';
+import { AnthropicCompatibleEngine } from './compatible.d/anthropic.ts';
+import { AliyunEngine } from './compatible.d/aliyun.ts';
 
 
 const fdm = {

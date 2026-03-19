@@ -1,64 +1,66 @@
 import { RoleMessage, type Session } from '../../session.ts';
 import { Function } from '../../function.ts';
-import type OpenAI from 'openai';
-import { OpenAIChatCompletionsCompatibleEngine } from '../openai-chatcompletions.ts';
+import OpenAI from 'openai';
+import { OpenAIChatCompletionsCompatibleTransport } from '../openai-chatcompletions/transport.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import { ResponseInvalid } from '../../engine.ts';
 import { logger } from '../../telemetry.ts';
+import type { ToolCallValidator } from '../../compatible/tool-call-validator.ts';
+import type { OpenAIChatCompletionsBilling } from '../../api-types/openai-chatcompletion/billing.ts';
+import type { OpenAIChatCompletionsToolCodec } from '../../api-types/openai-chatcompletion/tool-codec.ts';
+import { Throttle } from '../../throttle.ts';
+import * as Undici from 'undici';
+import { type OpenAIChatCompletionsCompatibleMessageCodec } from '../openai-chatcompletions/message-codec.ts';
 
 
 
-export namespace OpenAIChatCompletionsCompatibleStreamEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends
-        OpenAIChatCompletionsCompatibleEngine.Options<fdm> {}
-
-
-    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
-        OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>
-    {
-        client: OpenAI;
-        makeParams(session: Session<Function.Declaration.From<fdm>>): OpenAI.ChatCompletionCreateParamsStreaming;
-        convertToFunctionCallFromDelta(apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall): Function.Call.Distributive<Function.Declaration.From<fdm>>;
-        convertCompletionStockToCompletion(stock: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletion;
-        fetchRaw(wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
-        getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string | null;
+export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends Function.Declaration.Map> extends
+    OpenAIChatCompletionsCompatibleTransport<fdm>
+{
+    protected client: OpenAI;
+    public constructor(protected ctx: OpenAIChatCompletionsCompatibleStream.Context<fdm>) {
+        super();
+        this.client = new OpenAI({
+            baseURL: this.ctx.baseUrl,
+            apiKey: this.ctx.apiKey,
+            fetchOptions: {
+                dispatcher: this.ctx.proxyAgent,
+            },
+        })
     }
 
-    export function makeParams<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
+    protected makeParams(
         session: Session<Function.Declaration.From<fdm>>,
     ): OpenAI.ChatCompletionCreateParamsStreaming {
-        const fdentries = Object.entries(this.fdm) as Function.Declaration.Entry.From<fdm>[];
-        const tools = fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
+        const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
-            model: this.model,
+            model: this.ctx.model,
             messages: [
-                ...(session.developerMessage ? this.convertFromRoleMessage(session.developerMessage) : []),
-                ...session.chatMessages.flatMap(chatMessage => this.convertFromRoleMessage(chatMessage)),
+                ...(session.developerMessage ? this.ctx.messageCodec.convertFromRoleMessage(session.developerMessage) : []),
+                ...session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.convertFromRoleMessage(chatMessage)),
             ],
             tools: tools.length ? tools : undefined,
-            tool_choice: tools.length ? this.convertFromToolChoice(this.toolChoice) : undefined,
-            parallel_tool_calls: tools.length ? this.parallelToolCall : undefined,
+            tool_choice: tools.length ? this.ctx.toolCodec.convertFromToolChoice(this.ctx.toolChoice) : undefined,
+            parallel_tool_calls: tools.length ? this.ctx.parallelToolCall : undefined,
             stream: true,
             stream_options: {
                 include_usage: true
             },
-            max_completion_tokens: this.maxTokens ?? undefined,
-            ...this.additionalOptions,
+            max_completion_tokens: this.ctx.maxTokens ?? undefined,
+            ...this.ctx.additionalOptions,
         };
     }
 
-    export function convertToFunctionCallFromDelta<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleEngine.Underhood<fdm>,
+    public convertToFunctionCallFromDelta(
         apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         if (apifc.id) {} else throw new Error();
         if (apifc.function?.name) {} else throw new Error();
         if (apifc.function?.arguments) {} else throw new Error();
-        return this.convertToFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
+        return this.ctx.toolCodec.convertToFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
     }
 
-    export function convertCompletionStockToCompletion(
+    public convertCompletionStockToCompletion(
         stock: OpenAI.ChatCompletionChunk,
     ): OpenAI.ChatCompletion {
         const stockChoice = stock?.choices[0];
@@ -99,14 +101,13 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
         return completion;
     }
 
-    export async function fetchRaw<fdm extends Function.Declaration.Map>(
-        this: OpenAIChatCompletionsCompatibleStreamEngine.Underhood<fdm>,
+    public async fetchRaw(
         wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
-        await this.throttle.requests(wfctx);
+        await this.ctx.throttle.requests(wfctx);
 
         const stream = await this.client.chat.completions.create(params, { signal });
         let stock: OpenAI.ChatCompletionChunk | null = null;
@@ -194,17 +195,39 @@ export namespace OpenAIChatCompletionsCompatibleStreamEngine {
         this.handleFinishReason(completion, choice.finish_reason);
 
         if (completion.usage) {} else throw new Error();
-        const cost = this.calcCost(completion.usage);
+        const cost = this.ctx.billing.charge(completion.usage);
 
-        const aiMessage = this.convertToAiMessage(choice.message);
+        const aiMessage = this.ctx.messageCodec.convertToAiMessage(choice.message);
 
         const apifcs = choice.message.tool_calls;
         if (apifcs?.length) logger.message.debug(apifcs);
         logger.message.debug(completion.usage);
         wfctx.cost?.(cost);
 
-        this.validateToolCallsByToolChoice(aiMessage.getFunctionCalls());
+        this.ctx.toolCallValidator.validate(aiMessage.getFunctionCalls());
 
         return aiMessage;
+    }
+
+    protected abstract getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string;
+}
+
+export namespace OpenAIChatCompletionsCompatibleStream {
+    export interface Context<in out fdm extends Function.Declaration.Map> {
+        baseUrl: string;
+        apiKey: string;
+        model: string;
+        fdm: fdm;
+        maxTokens?: number;
+        throttle: Throttle;
+        additionalOptions?: Record<string, unknown>;
+        toolChoice: Function.ToolChoice<fdm>;
+        parallelToolCall: boolean;
+        proxyAgent?: Undici.ProxyAgent;
+
+        messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm>;
+        toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
+        billing: OpenAIChatCompletionsBilling<fdm>;
+        toolCallValidator: ToolCallValidator<fdm>;
     }
 }

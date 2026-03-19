@@ -5,8 +5,58 @@ import { ProxyAgent } from 'undici';
 import { env } from 'node:process';
 
 
-export interface Engine {
-    name: string;
+export interface Pricing {
+    inputPrice: number;
+    cachePrice: number;
+    outputPrice: number;
+}
+export interface ProviderSpec {
+    baseUrl: string;
+    apiKey: string;
+    proxyAgent?: ProxyAgent;
+}
+export interface InferenceSpec {
+    model: string;
+    additionalOptions?: Record<string, unknown>;
+    maxTokens?: number;
+    timeout?: number;
+}
+
+export abstract class Engine<in out fdm extends Function.Declaration.Map> {
+    protected providerSpec: ProviderSpec;
+    protected inferenceSpec: InferenceSpec;
+    public name: string;
+    public pricing: Pricing;
+    public fdm: fdm;
+    protected throttle: Throttle;
+    protected abstract parallelToolCall: boolean;
+
+    public constructor(options: Engine.Options<fdm>) {
+        const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
+
+        this.providerSpec = {
+            baseUrl: options.baseUrl,
+            apiKey: options.apiKey,
+            proxyAgent: proxyUrl ? new ProxyAgent(proxyUrl) : undefined,
+        };
+
+        this.name = options.name;
+        this.inferenceSpec = {
+            model: options.model,
+            additionalOptions: options.additionalOptions,
+            timeout: options.timeout,
+            maxTokens: options.maxTokens,
+        };
+
+        const inputPrice = options.inputPrice ?? 0;
+        this.pricing = {
+            inputPrice,
+            outputPrice: options.outputPrice ?? 0,
+            cachePrice: options.cachePrice ?? inputPrice,
+        };
+        this.fdm = options.functionDeclarationMap;
+        this.throttle = options.throttle;
+    }
 }
 
 export namespace Engine {
@@ -19,54 +69,10 @@ export namespace Engine {
             parallelToolCall?: boolean;
         }
     }
-
-    export interface OwnProps<in out fdm extends Function.Declaration.Map> {
-        baseUrl: string;
-        apiKey: string;
-        model: string;
-        name: string;
-        inputPrice: number;
-        outputPrice: number;
-        cachePrice: number;
-        fdm: fdm;
-        additionalOptions?: Record<string, unknown>;
-        throttle: Throttle;
-        timeout?: number;
-        maxTokens?: number;
-        proxyAgent?: ProxyAgent;
-    }
-    export namespace OwnProps {
-        export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps<fdm> {
-            const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
-            const inputPrice = options.inputPrice ?? 0;
-            return {
-                baseUrl: options.baseUrl,
-                apiKey: options.apiKey,
-                model: options.model,
-                name: options.name,
-                inputPrice,
-                outputPrice: options.outputPrice ?? 0,
-                cachePrice: options.cachePrice ?? inputPrice,
-                fdm: options.functionDeclarationMap,
-                additionalOptions: options.additionalOptions,
-                throttle: options.throttle,
-                timeout: options.timeout,
-                maxTokens: options.maxTokens,
-                proxyAgent: proxyUrl ? new ProxyAgent(proxyUrl) : undefined,
-            };
-        }
-    }
-
-    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
-        Engine,
-        OwnProps<fdm>
-    {
-        parallelToolCall: boolean;
-    }
 }
 
 export class ResponseInvalid extends Error {}
-export const USER_ABORTION = Symbol();
+export class UserAbortion {}
 export class InferenceTimeout extends Error {}
 
 

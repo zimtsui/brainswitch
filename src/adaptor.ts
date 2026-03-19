@@ -2,10 +2,10 @@ import { Config } from '#config';
 import { Function } from './function.ts';
 import { type CompatibleEngine } from './compatible-engine.ts';
 import { Throttle } from './throttle.ts';
-import { GoogleCompatibleEngine } from './compatible-engines.d/google.ts';
-import { AliyunEngine } from './compatible-engines.d/aliyun.ts';
-import { OpenAIResponsesCompatibleEngine } from './compatible-engines.d/openai-responses.ts';
-import { AnthropicCompatibleEngine } from './compatible-engines.d/anthropic.ts';
+import { GoogleCompatibleEngine } from './compatible-engine.d/google.ts';
+import { AliyunEngine } from './compatible.d/aliyun.ts';
+import { OpenAIResponsesCompatibleEngine } from './compatible.d/openai-responses.ts';
+import { AnthropicCompatibleEngine } from './compatible.d/anthropic.ts';
 import { OpenAIResponsesNativeEngine } from './native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from './native-engines.d/google/engine.ts';
 
@@ -43,7 +43,7 @@ export class Adaptor {
         if (endpointSpec.apiType === 'openai-responses')
             return OpenAIResponsesCompatibleEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'google')
-            return GoogleCompatibleEngine.create<fdm>(options);
+            return new GoogleCompatibleEngine<fdm>(options);
         else if (endpointSpec.apiType === 'aliyun')
             return AliyunEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'anthropic')

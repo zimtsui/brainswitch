@@ -4,8 +4,8 @@ import { ResponseInvalid, Engine, USER_ABORTION, InferenceTimeout } from '../../
 import { type InferenceContext } from '../../inference-context.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';
-import { GoogleEngine } from '../../api-types/google.ts';
-import { GoogleCompatibleEngine } from '../../compatible-engines.d/google.ts';
+import { GoogleEngine } from '../../api-types/google/restful-request.ts';
+import { GoogleCompatibleEngine } from '../../compatible.d/google/transport.ts';
 import { CompatibleEngine } from '../../compatible-engine.ts';
 import { Throttle } from '../../throttle.ts';
 import { logger } from '../../telemetry.ts';

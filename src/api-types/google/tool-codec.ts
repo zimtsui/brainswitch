@@ -1,5 +1,5 @@
-import { type Engine, ResponseInvalid } from '../engine.ts';
-import { Function } from '../function.ts';
+import { ResponseInvalid } from '../../engine.ts';
+import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import Ajv from 'ajv';
 
@@ -7,33 +7,10 @@ const ajv = new Ajv();
 
 
 
-export namespace GoogleEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {}
+export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
+    public constructor(protected ctx: GoogleToolCodec.Context<fdm>) {}
 
-    export interface OwnProps {
-        parallelToolCall: boolean;
-    }
-    export namespace OwnProps {
-        export function init<fdm extends Function.Declaration.Map>(options: Options<fdm>): OwnProps {
-            const parallelToolCall = options.parallelToolCall ?? true;
-            if (parallelToolCall) {} else throw new Error('Google API requires parallel tool calls.');
-            return {
-                parallelToolCall,
-            };
-        }
-    }
-
-    export interface Underhood<in out fdm extends Function.Declaration.Map> extends
-        Engine.Underhood<fdm>,
-        OwnProps
-    {
-        convertFromFunctionCall(fc: Function.Call.Distributive<Function.Declaration.From<fdm>>): Google.FunctionCall;
-        convertToFunctionCall(googlefc: Google.FunctionCall): Function.Call.Distributive<Function.Declaration.From<fdm>>;
-        convertFromFunctionDeclarationEntry(fdentry: Function.Declaration.Entry.From<fdm>): Google.FunctionDeclaration;
-    }
-
-    export function convertFromFunctionCall<fdm extends Function.Declaration.Map>(
-        this: GoogleEngine.Underhood<fdm>,
+    public convertFromFunctionCall(
         fc: Function.Call.Distributive<Function.Declaration.From<fdm>>,
     ): Google.FunctionCall {
         return {
@@ -43,8 +20,12 @@ export namespace GoogleEngine {
         };
     }
 
-    export function convertFromFunctionDeclarationEntry<fdm extends Function.Declaration.Map>(
-        this: GoogleEngine.Underhood<fdm>,
+    public convertFromFunctionDeclarationMap(fdm: fdm): Google.FunctionDeclaration[] {
+        const fdentries = Object.entries(fdm) as Function.Declaration.Entry.From<fdm>[];
+        return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
+    }
+
+    protected convertFromFunctionDeclarationEntry(
         fdentry: Function.Declaration.Entry.From<fdm>,
     ): Google.FunctionDeclaration {
         const json = JSON.stringify(fdentry[1].paraschema);
@@ -67,12 +48,11 @@ export namespace GoogleEngine {
         };
     }
 
-    export function convertToFunctionCall<fdm extends Function.Declaration.Map>(
-        this: GoogleEngine.Underhood<fdm>,
+    public convertToFunctionCall(
         googlefc: Google.FunctionCall,
     ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
         if (googlefc.name) {} else throw new Error();
-        const fditem = this.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
+        const fditem = this.ctx.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: googlefc });
         if (ajv.validate(fditem.paraschema, googlefc.args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: googlefc });
@@ -83,12 +63,20 @@ export namespace GoogleEngine {
         } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
     }
 
-    export interface RestfulRequest {
-        contents: Google.Content[];
-        tools?: Google.Tool[];
-        toolConfig?: Google.ToolConfig;
-        systemInstruction?: Google.Content;
-        generationConfig?: Google.GenerationConfig;
+    public convertFromToolChoice(
+        toolChoice: Function.ToolChoice<fdm>,
+    ): Google.FunctionCallingConfig {
+        if (toolChoice === Function.ToolChoice.NONE) return { mode: Google.FunctionCallingConfigMode.NONE };
+        else if (toolChoice === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
+        else if (toolChoice === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
+        else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...toolChoice] };
     }
+}
 
+
+export namespace GoogleToolCodec {
+    export interface Context<in out fdm extends Function.Declaration.Map> {
+        fdm: fdm;
+        parallelToolCall: boolean;
+    }
 }
