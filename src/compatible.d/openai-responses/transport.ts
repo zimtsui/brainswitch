@@ -1,4 +1,4 @@
-import { ResponseInvalid, type InferenceSpec, type ProviderSpec } from '../../engine.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { RoleMessage, type Session } from '../../session.ts';
 import { Function } from '../../function.ts';
 import OpenAI from 'openai';
@@ -105,7 +105,7 @@ export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Decl
 
 export namespace OpenAIResponsesCompatibleTransport {
     export interface Context<in out fdm extends Function.Declaration.Map> {
-        inferenceSpec: InferenceSpec;
+        inferenceSpec: InferenceParams;
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;

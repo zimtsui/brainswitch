@@ -1,4 +1,4 @@
-import { ResponseInvalid, type InferenceSpec, type ProviderSpec } from '../../engine.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { RoleMessage, type Session } from '../../session.ts';
 import { Function } from '../../function.ts';
 import Anthropic from '@anthropic-ai/sdk';
@@ -123,7 +123,7 @@ export class AnthropicCompatibleTransport<in out fdm extends Function.Declaratio
 export namespace AnthropicCompatibleTransport {
     export interface Context<in out fdm extends Function.Declaration.Map> {
         providerSpec: ProviderSpec;
-        inferenceSpec: InferenceSpec;
+        inferenceSpec: InferenceParams;
         fdm: fdm;
         throttle: Throttle;
         toolChoice: Function.ToolChoice<fdm>;

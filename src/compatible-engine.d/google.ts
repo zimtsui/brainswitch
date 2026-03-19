@@ -31,7 +31,7 @@ export class GoogleCompatibleEngine<in out fdm extends Function.Declaration.Map>
         this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
         this.transport = new GoogleCompatibleTransport({
             pricing: this.pricing,
-            inferenceParams: this.inferenceSpec,
+            inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
             throttle: this.throttle,

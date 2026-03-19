@@ -15,7 +15,7 @@ export interface ProviderSpec {
     apiKey: string;
     proxyAgent?: ProxyAgent;
 }
-export interface InferenceSpec {
+export interface InferenceParams {
     model: string;
     additionalOptions?: Record<string, unknown>;
     maxTokens?: number;
@@ -24,7 +24,7 @@ export interface InferenceSpec {
 
 export abstract class Engine<in out fdm extends Function.Declaration.Map> {
     protected providerSpec: ProviderSpec;
-    protected inferenceSpec: InferenceSpec;
+    protected inferenceParams: InferenceParams;
     public name: string;
     public pricing: Pricing;
     public fdm: fdm;
@@ -41,7 +41,7 @@ export abstract class Engine<in out fdm extends Function.Declaration.Map> {
         };
 
         this.name = options.name;
-        this.inferenceSpec = {
+        this.inferenceParams = {
             model: options.model,
             additionalOptions: options.additionalOptions,
             timeout: options.timeout,

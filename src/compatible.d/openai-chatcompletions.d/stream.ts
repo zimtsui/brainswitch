@@ -3,7 +3,7 @@ import { Function } from '../../function.ts';
 import OpenAI from 'openai';
 import { OpenAIChatCompletionsCompatibleTransport } from '../openai-chatcompletions/transport.ts';
 import { type InferenceContext } from '../../inference-context.ts';
-import { ResponseInvalid } from '../../engine.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { logger } from '../../telemetry.ts';
 import type { ToolCallValidator } from '../../compatible/tool-call-validator.ts';
 import type { OpenAIChatCompletionsBilling } from '../../api-types/openai-chatcompletion/billing.ts';
@@ -21,10 +21,10 @@ export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends F
     public constructor(protected ctx: OpenAIChatCompletionsCompatibleStream.Context<fdm>) {
         super();
         this.client = new OpenAI({
-            baseURL: this.ctx.baseUrl,
-            apiKey: this.ctx.apiKey,
+            baseURL: this.ctx.providerSpec.baseUrl,
+            apiKey: this.ctx.providerSpec.apiKey,
             fetchOptions: {
-                dispatcher: this.ctx.proxyAgent,
+                dispatcher: this.ctx.providerSpec.proxyAgent,
             },
         })
     }
@@ -34,7 +34,7 @@ export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends F
     ): OpenAI.ChatCompletionCreateParamsStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
-            model: this.ctx.model,
+            model: this.ctx.inferenceParams.model,
             messages: [
                 ...(session.developerMessage ? this.ctx.messageCodec.convertFromRoleMessage(session.developerMessage) : []),
                 ...session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.convertFromRoleMessage(chatMessage)),
@@ -46,8 +46,8 @@ export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends F
             stream_options: {
                 include_usage: true
             },
-            max_completion_tokens: this.ctx.maxTokens ?? undefined,
-            ...this.ctx.additionalOptions,
+            max_completion_tokens: this.ctx.inferenceParams.maxTokens ?? undefined,
+            ...this.ctx.inferenceParams.additionalOptions,
         };
     }
 
@@ -214,16 +214,12 @@ export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends F
 
 export namespace OpenAIChatCompletionsCompatibleStream {
     export interface Context<in out fdm extends Function.Declaration.Map> {
-        baseUrl: string;
-        apiKey: string;
-        model: string;
+        inferenceParams: InferenceParams;
+        providerSpec: ProviderSpec;
         fdm: fdm;
-        maxTokens?: number;
         throttle: Throttle;
-        additionalOptions?: Record<string, unknown>;
         toolChoice: Function.ToolChoice<fdm>;
         parallelToolCall: boolean;
-        proxyAgent?: Undici.ProxyAgent;
 
         messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm>;
         toolCodec: OpenAIChatCompletionsToolCodec<fdm>;

@@ -26,7 +26,7 @@ export class AnthropicCompatibleEngine<in out fdm extends Function.Declaration.M
         this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
         this.transport = new AnthropicCompatibleTransport({
             providerSpec: this.providerSpec,
-            inferenceSpec: this.inferenceSpec,
+            inferenceSpec: this.inferenceParams,
             fdm: this.fdm,
             throttle: this.throttle,
             toolChoice: this.toolChoice,

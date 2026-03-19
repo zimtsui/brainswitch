@@ -12,7 +12,7 @@ import { Throttle } from './throttle.ts';
 import { OpenAIResponsesCompatibleEngine } from './compatible-engine.d/openai-responses.ts';
 import { GoogleCompatibleEngine } from './compatible-engine.d/google.ts';
 import { AnthropicCompatibleEngine } from './compatible-engine.d/anthropic.ts';
-import { AliyunEngine } from './compatible.d/aliyun.ts';
+import { AliyunEngine } from './compatible-engine.d/aliyun.ts';
 
 
 const fdm = {

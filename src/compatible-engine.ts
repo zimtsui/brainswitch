@@ -31,7 +31,7 @@ export abstract class CompatibleEngine<in out fdm extends Function.Declaration.M
         session: Session<Function.Declaration.From<fdm>>,
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         for (let retry = 0;; retry++) {
-            const signalTimeout = this.inferenceSpec.timeout ? AbortSignal.timeout(this.inferenceSpec.timeout) : undefined;
+            const signalTimeout = this.inferenceParams.timeout ? AbortSignal.timeout(this.inferenceParams.timeout) : undefined;
             const signal = wfctx.signal && signalTimeout ? AbortSignal.any([
                 wfctx.signal,
                 signalTimeout,

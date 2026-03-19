@@ -25,7 +25,7 @@ export class OpenAIResponsesCompatibleEngine<in out fdm extends Function.Declara
         this.billing = new OpenAIResponsesBilling({ pricing: this.pricing });
         this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
         this.transport = new OpenAIResponsesCompatibleTransport({
-            inferenceSpec: this.inferenceSpec,
+            inferenceSpec: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
             throttle: this.throttle,

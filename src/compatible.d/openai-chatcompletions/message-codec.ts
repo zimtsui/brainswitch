@@ -6,7 +6,7 @@ import type { OpenAIChatCompletionsToolCodec } from '../../api-types/openai-chat
 
 
 
-export abstract class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Function.Declaration.Map> {
+export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Function.Declaration.Map> {
     public constructor(protected ctx: OpenAIChatCompletionsCompatibleMessageCodec.Context<fdm>) {}
 
     public convertToAiMessage(
