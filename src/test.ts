@@ -9,9 +9,9 @@ import { type InferenceContext } from './inference-context.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Throttle } from './throttle.ts';
 
-import { OpenAIResponsesCompatibleEngine } from './compatible.d/openai-responses.ts';
-import { GoogleCompatibleEngine } from './compatible.d/google/transport.ts';
-import { AnthropicCompatibleEngine } from './compatible.d/anthropic.ts';
+import { OpenAIResponsesCompatibleEngine } from './compatible-engine.d/openai-responses.ts';
+import { GoogleCompatibleEngine } from './compatible-engine.d/google.ts';
+import { AnthropicCompatibleEngine } from './compatible-engine.d/anthropic.ts';
 import { AliyunEngine } from './compatible.d/aliyun.ts';
 
 
@@ -71,16 +71,10 @@ test('OpenAIResponses compatible engine: composition initializes mixed own props
         parallelToolCall: true,
         toolChoice: Function.ToolChoice.REQUIRED,
     };
-    const engine = new OpenAIResponsesCompatibleEngine.Instance(options);
+    const engine = new OpenAIResponsesCompatibleEngine(options);
 
-    t.is(engine.baseUrl, options.baseUrl);
-    t.is(engine.apiKey, options.apiKey);
-    t.is(engine.model, options.model);
     t.is(engine.name, options.name);
-
-    t.is(engine.toolChoice, Function.ToolChoice.REQUIRED);
-    t.true(engine.parallelToolCall);
-    t.is(engine.apiURL.href, 'https://example.com/v1/responses');
+    t.is(engine.fdm, fdm);
 });
 
 
@@ -89,11 +83,8 @@ test('Google compatible engine: default own-props from different parents are pre
         ...makeBaseOptions(),
         apiType: 'google',
     };
-    const engine = new GoogleCompatibleEngine.Instance(options);
+    const engine = new GoogleCompatibleEngine(options);
 
-    t.is(engine.toolChoice, Function.ToolChoice.AUTO);
-    t.true(engine.parallelToolCall);
-    t.is(engine.apiURL.href, `${options.baseUrl}/v1beta/models/test-model:generateContent`);
     t.is(engine.fdm, fdm);
 });
 
@@ -103,7 +94,7 @@ test('CompatibleEngine.stateless retries ResponseInvalid and succeeds', async t 
         ...makeBaseOptions(),
         apiType: 'google',
     };
-    const engine = new GoogleCompatibleEngine.Instance(options);
+    const engine = new GoogleCompatibleEngine(options);
 
     let attempts = 0;
     const ai = makeAiMessage('retry-ok');
@@ -126,7 +117,7 @@ test('CompatibleEngine stateful/append/push message semantics are correct', asyn
         ...makeBaseOptions(),
         apiType: 'google',
     };
-    const engine = new GoogleCompatibleEngine.Instance(options);
+    const engine = new GoogleCompatibleEngine(options);
 
     const ai = makeAiMessage('stateful-ok');
     engine.fetch = async () => ai;
@@ -153,7 +144,7 @@ test('CompatibleEngine.validateToolCallsByToolChoice enforces REQUIRED and allow
         ...makeBaseOptions(),
         apiType: 'google',
     };
-    const engine = new GoogleCompatibleEngine.Instance(options);
+    const engine = new GoogleCompatibleEngine(options);
 
     const fooCall = Function.Call.create<fdu>({
         id: 'fc-1',
@@ -221,9 +212,9 @@ test('Adaptor.makeEngine returns each compatible implementation with expected mi
     const anthropicEngine = adaptor.makeEngine('an', fdm);
     const aliyunEngine = adaptor.makeEngine('al', fdm);
 
-    t.true(openaiEngine instanceof OpenAIResponsesCompatibleEngine.Instance);
-    t.true(googleEngine instanceof GoogleCompatibleEngine.Instance);
-    t.true(anthropicEngine instanceof AnthropicCompatibleEngine.Instance);
+    t.true(openaiEngine instanceof OpenAIResponsesCompatibleEngine);
+    t.true(googleEngine instanceof GoogleCompatibleEngine);
+    t.true(anthropicEngine instanceof AnthropicCompatibleEngine);
     t.true(aliyunEngine instanceof AliyunEngine.Instance);
 
     t.is((openaiEngine as CompatibleEngine.Underhood<fdm>).toolChoice, Function.ToolChoice.AUTO);

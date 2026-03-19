@@ -4,8 +4,8 @@ import { type CompatibleEngine } from './compatible-engine.ts';
 import { Throttle } from './throttle.ts';
 import { GoogleCompatibleEngine } from './compatible-engine.d/google.ts';
 import { OpenAIResponsesCompatibleEngine } from './compatible-engine.d/openai-responses.ts';
+import { AnthropicCompatibleEngine } from './compatible-engine.d/anthropic.ts';
 import { AliyunEngine } from './compatible.d/aliyun.ts';
-import { AnthropicCompatibleEngine } from './compatible.d/anthropic.ts';
 import { OpenAIResponsesNativeEngine } from './native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from './native-engines.d/google/engine.ts';
 
@@ -47,7 +47,7 @@ export class Adaptor {
         else if (endpointSpec.apiType === 'aliyun')
             return AliyunEngine.create<fdm>(options);
         else if (endpointSpec.apiType === 'anthropic')
-            return AnthropicCompatibleEngine.create<fdm>(options);
+            return new AnthropicCompatibleEngine<fdm>(options);
         else throw new Error();
     }
 
