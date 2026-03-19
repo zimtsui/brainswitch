@@ -45,7 +45,7 @@ export class Adaptor {
         else if (endpointSpec.apiType === 'google')
             return new GoogleCompatibleEngine<fdm>(options);
         else if (endpointSpec.apiType === 'aliyun')
-            return AliyunEngine.create<fdm>(options);
+            return new AliyunEngine<fdm>(options);
         else if (endpointSpec.apiType === 'anthropic')
             return new AnthropicCompatibleEngine<fdm>(options);
         else throw new Error();
@@ -70,7 +70,7 @@ export class Adaptor {
             throttle,
             applyPatch,
         };
-        return OpenAIResponsesNativeEngine.create<fdm>(options);
+        return new OpenAIResponsesNativeEngine<fdm>(options);
     }
 
     public makeGoogleNativeEngine<fdm extends Function.Declaration.Map>(

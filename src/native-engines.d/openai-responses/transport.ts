@@ -1,0 +1,137 @@
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../../function.ts';
+import { Tool } from './tool.ts';
+import OpenAI from 'openai';
+import * as Undici from 'undici';
+import { type InferenceContext } from '../../inference-context.ts';
+import { Throttle } from '../../throttle.ts';
+import { logger } from '../../telemetry.ts';
+import type { OpenAIResponsesNativeMessageCodec } from './message-codec.ts';
+import type { OpenAIResponsesToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
+import type { OpenAIResponsesBilling } from '../../api-types/openai-responses/billing.ts';
+import type { OpenAIResponsesNativeToolCallValidator } from './tool-call-validator.ts';
+
+
+
+export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map> {
+    protected apiURL: URL;
+
+    public constructor(protected ctx: OpenAIResponsesNativeTransport.Context<fdm>) {
+        this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/responses`);
+    }
+
+    protected makeParams(
+        session: Session<Function.Declaration.From<fdm>>,
+    ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
+        const tools: OpenAI.Responses.Tool[] = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
+        if (this.ctx.applyPatch) tools.push({ type: 'apply_patch' });
+        return {
+            model: this.ctx.inferenceParams.model,
+            include: ['reasoning.encrypted_content'],
+            store: false,
+            input: session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.convertFromChatMessage(chatMessage)),
+            instructions: session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage),
+            tools: tools.length ? tools : undefined,
+            tool_choice: tools.length ? this.convertFromToolChoice(this.ctx.toolChoice) : undefined,
+            parallel_tool_calls: tools.length ? this.ctx.parallelToolCall : undefined,
+            max_output_tokens: this.ctx.inferenceParams.maxTokens,
+            ...this.ctx.inferenceParams.additionalOptions,
+        };
+    }
+
+    protected convertFromToolChoice(
+        toolChoice: Tool.Choice<fdm>,
+    ): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed {
+        if (toolChoice === Function.ToolChoice.NONE) return 'none';
+        else if (toolChoice === Function.ToolChoice.REQUIRED) return 'required';
+        else if (toolChoice === Function.ToolChoice.AUTO) return 'auto';
+        else return {
+            type: 'allowed_tools',
+            mode: 'required',
+            tools: toolChoice.map(name => {
+                if (name === Tool.Choice.APPLY_PATCH)
+                    return { type: 'apply_patch' } satisfies OpenAI.Responses.ToolChoiceApplyPatch;
+                else
+                    return { type: 'function', name } satisfies OpenAI.Responses.ToolChoiceFunction;
+            }),
+        };
+    }
+
+    protected logAiMessage(output: OpenAI.Responses.ResponseOutputItem[]): void {
+        for (const item of output)
+            if (item.type === 'message') {
+                if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
+                logger.inference.debug(item.content.map(part => part.text).join(''));
+            } else if (item.type === 'function_call')
+                logger.message.debug(item);
+            else if (item.type === 'apply_patch_call')
+                logger.message.debug(item);
+    }
+
+    protected async fetchRaw(
+        wfctx: InferenceContext,
+        session: Session<Function.Declaration.From<fdm>>,
+        signal?: AbortSignal,
+    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        const params = this.makeParams(session);
+        logger.message.trace(params);
+
+        await this.ctx.throttle.requests(wfctx);
+        const res = await Undici.fetch(
+            this.apiURL,
+            {
+                method: 'POST',
+                headers: new Headers({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.ctx.providerSpec.apiKey}`,
+                }),
+                body: JSON.stringify(params),
+                dispatcher: this.ctx.providerSpec.proxyAgent,
+                signal,
+            },
+        );
+        if (res.ok) {} else throw new Error(undefined, { cause: res });
+        const response = await res.json() as OpenAI.Responses.Response;
+        logger.message.trace(response);
+        if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
+            throw new ResponseInvalid('Token limit exceeded.', { cause: response });
+        if (response.status === 'completed') {}
+        else throw new ResponseInvalid('Abnormal response status', { cause: response });
+
+        this.logAiMessage(response.output);
+
+        if (response.usage) {} else throw new Error();
+        wfctx.cost?.(this.ctx.billing.charge(response.usage));
+        logger.message.debug(response.usage);
+
+        const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.output);
+        this.ctx.toolCallValidator.validate(aiMessage.getToolCalls());
+        return aiMessage;
+    }
+
+    public async fetch(
+        wfctx: InferenceContext,
+        session: Session<Function.Declaration.From<fdm>>,
+        signal?: AbortSignal,
+    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        return await this.fetchRaw(wfctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
+    }
+}
+
+export namespace OpenAIResponsesNativeTransport {
+    export interface Context<fdm extends Function.Declaration.Map> {
+        inferenceParams: InferenceParams;
+        providerSpec: ProviderSpec;
+        fdm: fdm;
+        throttle: Throttle;
+        toolChoice: Tool.Choice<fdm>;
+        parallelToolCall: boolean;
+        applyPatch: boolean;
+
+        messageCodec: OpenAIResponsesNativeMessageCodec<fdm>;
+        toolCodec: OpenAIResponsesToolCodec<fdm>;
+        billing: OpenAIResponsesBilling;
+        toolCallValidator: OpenAIResponsesNativeToolCallValidator<fdm>;
+    }
+}
