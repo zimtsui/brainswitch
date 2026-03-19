@@ -29,7 +29,6 @@ export class AliyunEngine<in out fdm extends Function.Declaration.Map> extends C
         this.messageCodec = new OpenAIChatCompletionsCompatibleMessageCodec({ toolCodec: this.toolCodec });
         this.billing = new OpenAIChatCompletionsBilling({ pricing: this.pricing });
         this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
-        this.parallelToolCall = options.parallelToolCall ?? false;
         this.transport = new AliyunTransport({
             inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,

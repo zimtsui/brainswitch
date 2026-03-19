@@ -9,7 +9,7 @@ export class GoogleBilling {
     public charge(usageMetadata: Google.GenerateContentResponseUsageMetadata): number {
         logger.message.debug(usageMetadata);
 
-        if (usageMetadata?.promptTokenCount) {} else throw new Error('Prompt token count missing.', { cause: usageMetadata });
+        if (usageMetadata.promptTokenCount) {} else throw new Error('Prompt token count missing.', { cause: usageMetadata });
         const candidatesTokenCount = usageMetadata.candidatesTokenCount ?? 0;
         const cacheHitTokenCount = usageMetadata.cachedContentTokenCount ?? 0;
         const cacheMissTokenCount = usageMetadata.promptTokenCount - cacheHitTokenCount;
