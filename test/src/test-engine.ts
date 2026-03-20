@@ -36,6 +36,24 @@ class StubEngine extends Engine<
     ): Promise<string> {
         return this.responder(wfctx, session, signal);
     }
+
+    public override appendUserMessage(
+        session: StubSession,
+        message: RoleMessage.User<fdu>,
+    ): StubSession {
+        return {
+            ...session,
+            chatMessages: [...session.chatMessages, message],
+        };
+    }
+
+    public override pushUserMessage(
+        session: StubSession,
+        message: RoleMessage.User<fdu>,
+    ): StubSession {
+        session.chatMessages.push(message);
+        return session;
+    }
 }
 
 function makeStringSession(): StubSession {

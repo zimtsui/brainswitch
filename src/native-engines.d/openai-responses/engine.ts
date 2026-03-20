@@ -67,6 +67,24 @@ export class OpenAIResponsesNativeEngine<in out fdm extends Function.Declaration
     ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
         return this.transport.fetch(wfctx, session, signal);
     }
+
+    public override appendUserMessage(
+        session: Session<Function.Declaration.From<fdm>>,
+        message: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Session<Function.Declaration.From<fdm>> {
+        return {
+            developerMessage: session.developerMessage,
+            chatMessages: [...session.chatMessages, message],
+        };
+    }
+
+    public override pushUserMessage(
+        session: Session<Function.Declaration.From<fdm>>,
+        message: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Session<Function.Declaration.From<fdm>> {
+        session.chatMessages.push(message);
+        return session;
+    }
 }
 
 export namespace OpenAIResponsesNativeEngine {

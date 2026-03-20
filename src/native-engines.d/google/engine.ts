@@ -77,6 +77,23 @@ export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> ext
         return this.transport.fetch(wfctx, session, signal);
     }
 
+    public override appendUserMessage(
+        session: Session<Function.Declaration.From<fdm>>,
+        message: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Session<Function.Declaration.From<fdm>> {
+        return {
+            developerMessage: session.developerMessage,
+            chatMessages: [...session.chatMessages, message],
+        };
+    }
+
+    public override pushUserMessage(
+        session: Session<Function.Declaration.From<fdm>>,
+        message: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Session<Function.Declaration.From<fdm>> {
+        session.chatMessages.push(message);
+        return session;
+    }
 }
 
 export namespace GoogleNativeEngine {

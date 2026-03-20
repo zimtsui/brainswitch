@@ -20,6 +20,23 @@ export abstract class CompatibleEngine<in out fdm extends Function.Declaration.M
         this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
     }
 
+    public override appendUserMessage(
+        session: Session<Function.Declaration.From<fdm>>,
+        message: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Session<Function.Declaration.From<fdm>> {
+        return {
+            developerMessage: session.developerMessage,
+            chatMessages: [...session.chatMessages, message],
+        };
+    }
+
+    public override pushUserMessage(
+        session: Session<Function.Declaration.From<fdm>>,
+        message: RoleMessage.User<Function.Declaration.From<fdm>>,
+    ): Session<Function.Declaration.From<fdm>> {
+        session.chatMessages.push(message);
+        return session;
+    }
 }
 
 export namespace CompatibleEngine {

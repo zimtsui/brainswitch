@@ -112,26 +112,18 @@ export abstract class Engine<
         return response;
     }
 
-    public appendUserMessage(
+    public abstract appendUserMessage(
         session: session,
         message: userm,
-    ): session {
-        return {
-            ...session,
-            chatMessages: [...session.chatMessages, message],
-        };
-    }
+    ): session;
 
     /**
      * @param session mutable
      */
-    public pushUserMessage(
+    public abstract pushUserMessage(
         session: session,
         message: userm,
-    ): session {
-        session.chatMessages.push(message);
-        return session;
-    }
+    ): session;
 }
 
 export namespace Engine {
