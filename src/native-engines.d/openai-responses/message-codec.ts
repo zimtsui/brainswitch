@@ -1,9 +1,9 @@
-import { RoleMessage, type ChatMessage } from './session.ts';
-import { Function } from '../../function.ts';
-import { Tool } from './tool.ts';
+import { RoleMessage, type ChatMessage } from '#@/native-engines.d/openai-responses/session.ts';
+import { Function } from '#@/function.ts';
+import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import OpenAI from 'openai';
-import { OpenAIResponsesCompatibleMessageCodec } from '../../compatible.d/openai-responses/message-codec.ts';
-import type { OpenAIResponsesToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
+import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
+import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 
 
 

@@ -7,7 +7,7 @@
     "./google": "./build/native-engines.d/google/exports.js"
   },
   "imports": {
-    "#config": "./build/config.js"
+    "#@/*.ts": "./build/*.js"
   },
   "description": "",
   "engines": {

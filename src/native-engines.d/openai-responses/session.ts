@@ -1,6 +1,6 @@
-import * as Compatible from '../../compatible/session.ts';
-import { Function } from '../../function.ts';
-import { Tool } from './tool.ts';
+import * as Compatible from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
+import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import OpenAI from 'openai';
 
 

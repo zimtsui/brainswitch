@@ -1,5 +1,5 @@
-import { Function } from '../function.ts';
-import { type GenericSession } from '../session.ts';
+import { Function } from '#@/function.ts';
+import { type GenericSession } from '#@/session.ts';
 
 
 export type Session<fdu extends Function.Declaration> = GenericSession<

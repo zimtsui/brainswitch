@@ -1,7 +1,7 @@
-import { RoleMessage, type Session } from '../../compatible/session.ts';
-import { Function } from '../../function.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
 import Anthropic from '@anthropic-ai/sdk';
-import type { AnthropicToolCodec } from '../../api-types/anthropic/tool-codec.ts';
+import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
 
 
 export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declaration.Map> {

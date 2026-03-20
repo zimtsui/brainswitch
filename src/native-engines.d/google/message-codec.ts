@@ -1,9 +1,9 @@
-import { ResponseInvalid } from '../../engine.ts';
-import { RoleMessage, type Session } from './session.ts';
-import { Function } from '../../function.ts';
+import { ResponseInvalid } from '#@/engine.ts';
+import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
+import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
-import { GoogleCompatibleMessageCodec } from '../../compatible.d/google/message-codec.ts';
-import type { GoogleToolCodec } from '../../api-types/google/tool-codec.ts';
+import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
+import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 
 
 

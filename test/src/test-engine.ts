@@ -1,8 +1,8 @@
 import test from 'ava';
-import { Engine, InferenceTimeout, ResponseInvalid, UserAbortion } from '../../build/engine.js';
-import { type GenericSession } from '../../build/session.js';
-import { type InferenceContext } from '../../build/inference-context.js';
-import { type RoleMessage } from '../../build/compatible/session.js';
+import { Engine, InferenceTimeout, ResponseInvalid, UserAbortion } from '#@/engine.ts';
+import { type GenericSession } from '#@/session.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { type RoleMessage } from '#@/compatible/session.ts';
 import {
     fdm,
     type fdm as fdm_,

@@ -1,8 +1,8 @@
-import { type InferenceContext } from '../../inference-context.ts';
-import { RoleMessage, type Session } from './session.ts';
-import { Function } from '../../function.ts';
-import { type GoogleNativeEngine } from './engine.ts';
-import * as CompatibleAgentloopModule from '../../agentloop.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
+import { Function } from '#@/function.ts';
+import { type GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
+import * as CompatibleAgentloopModule from '#@/agentloop.ts';
 
 
 /**

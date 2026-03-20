@@ -1,6 +1,6 @@
-import { Function } from '../../function.ts';
-import { ResponseInvalid } from '../../engine.ts';
-import { Tool } from './tool.ts';
+import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '#@/engine.ts';
+import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 
 
 

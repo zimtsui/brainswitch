@@ -1,14 +1,14 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
-import { RoleMessage, type Session } from '../../compatible/session.ts';
-import { Function } from '../../function.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '#@/engine.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
 import Anthropic from '@anthropic-ai/sdk';
-import { type InferenceContext } from '../../inference-context.ts';
-import { Throttle } from '../../throttle.ts';
-import { logger } from '../../telemetry.ts';
-import type { AnthropicCompatibleMessageCodec } from './message-codec.ts';
-import type { AnthropicBilling } from '../../api-types/anthropic/billing.ts';
-import type { AnthropicToolCodec } from '../../api-types/anthropic/tool-codec.ts';
-import type { ToolCallValidator } from '../../compatible/tool-call-validator.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { Throttle } from '#@/throttle.ts';
+import { logger } from '#@/telemetry.ts';
+import type { AnthropicCompatibleMessageCodec } from '#@/compatible.d/anthropic/message-codec.ts';
+import type { AnthropicBilling } from '#@/api-types/anthropic/billing.ts';
+import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
+import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 
 
 export class AnthropicCompatibleTransport<in out fdm extends Function.Declaration.Map> {

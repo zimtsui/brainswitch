@@ -1,5 +1,5 @@
-import { Function } from '../function.ts';
-import { ResponseInvalid } from '../engine.ts';
+import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '#@/engine.ts';
 
 
 export class ToolCallValidator<in out fdm extends Function.Declaration.Map> {

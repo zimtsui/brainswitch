@@ -1,13 +1,13 @@
-import { Function } from '../../function.ts';
-import { RoleMessage, type Session } from './session.ts';
-import { Engine } from '../../engine.ts';
-import { type InferenceContext } from '../../inference-context.ts';
-import { GoogleToolCodec } from '../../api-types/google/tool-codec.ts';
-import { GoogleBilling } from '../../api-types/google/billing.ts';
-import { ToolCallValidator } from '../../compatible/tool-call-validator.ts';
-import { GoogleCompatibleMessageCodec } from '../../compatible.d/google/message-codec.ts';
-import { GoogleNativeMessageCodec } from './message-codec.ts';
-import { GoogleNativeTransport } from './transport.ts';
+import { Function } from '#@/function.ts';
+import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
+import { Engine } from '#@/engine.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
+import { GoogleBilling } from '#@/api-types/google/billing.ts';
+import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
+import { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
+import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
 
 
 export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> extends

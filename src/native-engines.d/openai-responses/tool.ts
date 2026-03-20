@@ -1,4 +1,4 @@
-import { Function } from '../../function.ts';
+import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
 
 

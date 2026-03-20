@@ -1,10 +1,10 @@
 import test from 'ava';
-import { Adaptor } from '../../build/adaptor.js';
-import { Function } from '../../build/function.js';
-import { OpenAIResponsesCompatibleEngine } from '../../build/compatible-engine.d/openai-responses.js';
-import { GoogleCompatibleEngine } from '../../build/compatible-engine.d/google.js';
-import { AnthropicCompatibleEngine } from '../../build/compatible-engine.d/anthropic.js';
-import { AliyunEngine } from '../../build/compatible-engine.d/aliyun.js';
+import { Adaptor } from '#@/adaptor.ts';
+import { Function } from '#@/function.ts';
+import { OpenAIResponsesCompatibleEngine } from '#@/compatible-engine.d/openai-responses.ts';
+import { GoogleCompatibleEngine } from '#@/compatible-engine.d/google.ts';
+import { AnthropicCompatibleEngine } from '#@/compatible-engine.d/anthropic.ts';
+import { AliyunEngine } from '#@/compatible-engine.d/aliyun.ts';
 import { fdm, type fdm as fdm_, makeBaseOptions } from './test-helpers.ts';
 
 

@@ -1,9 +1,9 @@
 import test from 'ava';
-import { Function } from '../../build/function.js';
-import { GoogleNativeEngine } from '../../build/native-engines.d/google/engine.js';
-import { OpenAIResponsesNativeEngine } from '../../build/native-engines.d/openai-responses/engine.js';
-import { Adaptor } from '../../build/adaptor.js';
-import { Tool } from '../../build/native-engines.d/openai-responses/tool.js';
+import { Function } from '#@/function.ts';
+import { GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
+import { OpenAIResponsesNativeEngine } from '#@/native-engines.d/openai-responses/engine.ts';
+import { Adaptor } from '#@/adaptor.ts';
+import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import { fdm, type fdm as fdm_, makeBaseOptions } from './test-helpers.ts';
 
 

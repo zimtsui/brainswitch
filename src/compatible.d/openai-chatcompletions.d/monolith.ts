@@ -1,16 +1,16 @@
-import { RoleMessage, type Session } from '../../compatible/session.ts';
-import { Function } from '../../function.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
 import type OpenAI from 'openai';
-import { OpenAIChatCompletionsCompatibleTransport } from '../openai-chatcompletions/transport.ts';
-import { type InferenceContext } from '../../inference-context.ts';
+import { OpenAIChatCompletionsCompatibleTransport } from '#@/compatible.d/openai-chatcompletions/transport.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
 import * as Undici from 'undici';
-import { ResponseInvalid } from '../../engine.ts';
-import { logger } from '../../telemetry.ts';
-import type { OpenAIChatCompletionsBilling } from '../../api-types/openai-chatcompletion/billing.ts';
-import type { OpenAIChatCompletionsToolCodec } from '../../api-types/openai-chatcompletion/tool-codec.ts';
-import type { OpenAIChatCompletionsCompatibleMessageCodec } from '../openai-chatcompletions/message-codec.ts';
-import type { Throttle } from '../../throttle.ts';
-import type { ToolCallValidator } from '../../compatible/tool-call-validator.ts';
+import { ResponseInvalid } from '#@/engine.ts';
+import { logger } from '#@/telemetry.ts';
+import type { OpenAIChatCompletionsBilling } from '#@/api-types/openai-chatcompletion/billing.ts';
+import type { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletion/tool-codec.ts';
+import type { OpenAIChatCompletionsCompatibleMessageCodec } from '#@/compatible.d/openai-chatcompletions/message-codec.ts';
+import type { Throttle } from '#@/throttle.ts';
+import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 
 
 

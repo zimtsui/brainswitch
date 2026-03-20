@@ -1,6 +1,6 @@
-import type { Pricing } from '../../engine.ts';
+import type { Pricing } from '#@/engine.ts';
 import OpenAI from 'openai';
-import { Function } from '../../function.ts';
+import { Function } from '#@/function.ts';
 
 
 export class OpenAIChatCompletionsBilling<in out fdm extends Function.Declaration.Map> {

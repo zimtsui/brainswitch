@@ -1,15 +1,15 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
-import { RoleMessage, type Session } from '../../compatible/session.ts';
-import { Function } from '../../function.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '#@/engine.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
 import * as Undici from 'undici';
-import { type InferenceContext } from '../../inference-context.ts';
-import { Throttle } from '../../throttle.ts';
-import { logger } from '../../telemetry.ts';
-import type { OpenAIResponsesCompatibleMessageCodec } from './message-codec.ts';
-import type { OpenAIResponsesToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
-import type { OpenAIResponsesBilling } from '../../api-types/openai-responses/billing.ts';
-import type { ToolCallValidator } from '../../compatible/tool-call-validator.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { Throttle } from '#@/throttle.ts';
+import { logger } from '#@/telemetry.ts';
+import type { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
+import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
+import type { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
+import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 
 
 export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Declaration.Map> {

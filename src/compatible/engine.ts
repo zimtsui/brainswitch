@@ -1,6 +1,6 @@
-import { RoleMessage } from './session.ts';
-import { Function } from '../function.ts';
-import { Engine } from '../engine.ts';
+import { RoleMessage } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
+import { Engine } from '#@/engine.ts';
 
 
 

@@ -1,4 +1,4 @@
-import type { InferenceContext } from './inference-context.ts';
+import type { InferenceContext } from '#@/inference-context.ts';
 import { Mutex } from '@zimtsui/coroutine-locks';
 
 

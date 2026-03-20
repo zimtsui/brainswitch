@@ -1,12 +1,12 @@
-import { CompatibleEngine } from '../compatible/engine.ts';
-import { RoleMessage, type Session } from '../compatible/session.ts';
-import { Function } from '../function.ts';
-import { type InferenceContext } from '../inference-context.ts';
-import { AnthropicToolCodec } from '../api-types/anthropic/tool-codec.ts';
-import { AnthropicBilling } from '../api-types/anthropic/billing.ts';
-import { ToolCallValidator } from '../compatible/tool-call-validator.ts';
-import { AnthropicCompatibleMessageCodec } from '../compatible.d/anthropic/message-codec.ts';
-import { AnthropicCompatibleTransport } from '../compatible.d/anthropic/transport.ts';
+import { CompatibleEngine } from '#@/compatible/engine.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
+import { AnthropicBilling } from '#@/api-types/anthropic/billing.ts';
+import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import { AnthropicCompatibleMessageCodec } from '#@/compatible.d/anthropic/message-codec.ts';
+import { AnthropicCompatibleTransport } from '#@/compatible.d/anthropic/transport.ts';
 
 
 export class AnthropicCompatibleEngine<in out fdm extends Function.Declaration.Map> extends CompatibleEngine<fdm> {

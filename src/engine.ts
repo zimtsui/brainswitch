@@ -1,11 +1,11 @@
-import { Function } from './function.ts';
-import { EndpointSpec } from './endpoint-spec.ts';
-import { Throttle } from './throttle.ts';
+import { Function } from '#@/function.ts';
+import { EndpointSpec } from '#@/endpoint-spec.ts';
+import { Throttle } from '#@/throttle.ts';
 import { ProxyAgent } from 'undici';
 import { env } from 'node:process';
-import { type InferenceContext } from './inference-context.ts';
-import { logger } from './telemetry.ts';
-import { type GenericSession } from './session.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { logger } from '#@/telemetry.ts';
+import { type GenericSession } from '#@/session.ts';
 
 
 export interface Pricing {

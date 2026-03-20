@@ -1,16 +1,16 @@
-import { ResponseInvalid, type InferenceParams as InferenceParams, type Pricing, type ProviderSpec } from '../../engine.ts';
-import { RoleMessage, type Session } from '../../compatible/session.ts';
-import { Function } from '../../function.ts';
+import { ResponseInvalid, type InferenceParams as InferenceParams, type Pricing, type ProviderSpec } from '#@/engine.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';
-import { type InferenceContext } from '../../inference-context.ts';
-import type { GoogleRestfulRequest } from '../../api-types/google/restful-request.ts';
-import { Throttle } from '../../throttle.ts';
-import { logger } from '../../telemetry.ts';
-import type { GoogleCompatibleMessageCodec } from './message-codec.ts';
-import type { GoogleToolCodec } from '../../api-types/google/tool-codec.ts';
-import type { GoogleBilling } from '../../api-types/google/billing.ts';
-import type { ToolCallValidator } from '../../compatible/tool-call-validator.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import type { GoogleRestfulRequest } from '#@/api-types/google/restful-request.ts';
+import { Throttle } from '#@/throttle.ts';
+import { logger } from '#@/telemetry.ts';
+import type { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
+import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
+import type { GoogleBilling } from '#@/api-types/google/billing.ts';
+import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 
 
 

@@ -1,7 +1,7 @@
-import * as Compatible from '../../compatible/session.ts';
-import { Function } from '../../function.ts';
+import * as Compatible from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
-import type { GenericSession } from '../../session.ts';
+import type { GenericSession } from '#@/session.ts';
 
 
 export type Session<fdu extends Function.Declaration = never> = GenericSession<

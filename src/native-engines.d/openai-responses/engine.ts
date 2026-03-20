@@ -1,14 +1,14 @@
-import { Function } from '../../function.ts';
-import { RoleMessage, type Session } from './session.ts';
-import { Tool } from './tool.ts';
-import { Engine } from '../../engine.ts';
-import { type InferenceContext } from '../../inference-context.ts';
-import { OpenAIResponsesToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
-import { OpenAIResponsesBilling } from '../../api-types/openai-responses/billing.ts';
-import { OpenAIResponsesCompatibleMessageCodec } from '../../compatible.d/openai-responses/message-codec.ts';
-import { OpenAIResponsesNativeMessageCodec } from './message-codec.ts';
-import { OpenAIResponsesNativeToolCallValidator } from './tool-call-validator.ts';
-import { OpenAIResponsesNativeTransport } from './transport.ts';
+import { Function } from '#@/function.ts';
+import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/session.ts';
+import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
+import { Engine } from '#@/engine.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
+import { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
+import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
+import { OpenAIResponsesNativeMessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
+import { OpenAIResponsesNativeToolCallValidator } from '#@/native-engines.d/openai-responses/tool-call-validator.ts';
+import { OpenAIResponsesNativeTransport } from '#@/native-engines.d/openai-responses/transport.ts';
 
 
 export class OpenAIResponsesNativeEngine<in out fdm extends Function.Declaration.Map> extends

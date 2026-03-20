@@ -1,7 +1,7 @@
-import { type InferenceContext } from './inference-context.ts';
-import { RoleMessage, type Session } from './compatible/session.ts';
-import { Function } from './function.ts';
-import { type CompatibleEngine } from './compatible/engine.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
+import { type CompatibleEngine } from '#@/compatible/engine.ts';
 
 
 /**

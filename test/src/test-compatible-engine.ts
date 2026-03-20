@@ -1,8 +1,8 @@
 import test from 'ava';
-import { CompatibleEngine } from '../../build/compatible/engine.js';
-import { RoleMessage, type Session } from '../../build/compatible/session.js';
-import { Function } from '../../build/function.js';
-import { type InferenceContext } from '../../build/inference-context.js';
+import { CompatibleEngine } from '#@/compatible/engine.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
 import {
     type fdm as fdm_,
     type fdu,

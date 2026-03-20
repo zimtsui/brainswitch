@@ -1,6 +1,6 @@
 import * as Google from '@google/genai';
-import type { Pricing } from '../../engine.ts';
-import { logger } from '../../telemetry.ts';
+import type { Pricing } from '#@/engine.ts';
+import { logger } from '#@/telemetry.ts';
 
 
 export class GoogleBilling {

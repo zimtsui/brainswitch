@@ -1,5 +1,5 @@
-import { Function } from '../../function.ts';
-import { ResponseInvalid } from '../../engine.ts';
+import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '#@/engine.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import Ajv from 'ajv';
 import { type TObject } from '@sinclair/typebox';

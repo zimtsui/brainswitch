@@ -1,12 +1,12 @@
-import { CompatibleEngine } from '../compatible/engine.ts';
-import { RoleMessage, type Session } from '../compatible/session.ts';
-import { Function } from '../function.ts';
-import { type InferenceContext } from '../inference-context.ts';
-import { GoogleCompatibleMessageCodec } from '../compatible.d/google/message-codec.ts';
-import { GoogleToolCodec } from '../api-types/google/tool-codec.ts';
-import { GoogleBilling } from '../api-types/google/billing.ts';
-import { ToolCallValidator } from '../compatible/tool-call-validator.ts';
-import { GoogleCompatibleTransport } from '../compatible.d/google/transport.ts';
+import { CompatibleEngine } from '#@/compatible/engine.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
+import { Function } from '#@/function.ts';
+import { type InferenceContext } from '#@/inference-context.ts';
+import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
+import { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
+import { GoogleBilling } from '#@/api-types/google/billing.ts';
+import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import { GoogleCompatibleTransport } from '#@/compatible.d/google/transport.ts';
 
 
 

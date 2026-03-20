@@ -1,5 +1,5 @@
-import { Function } from '../../function.ts';
-import { OpenAIChatCompletionsCompatibleStream } from '../openai-chatcompletions.d/stream.ts';
+import { Function } from '#@/function.ts';
+import { OpenAIChatCompletionsCompatibleStream } from '#@/compatible.d/openai-chatcompletions.d/stream.ts';
 import OpenAI from 'openai';
 
 

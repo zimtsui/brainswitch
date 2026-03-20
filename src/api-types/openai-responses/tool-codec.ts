@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import { Function } from '../../function.ts';
-import { ResponseInvalid } from '../../engine.ts';
+import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '#@/engine.ts';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
