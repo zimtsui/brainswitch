@@ -1,4 +1,4 @@
-import { RoleMessage, type Session } from './session.ts';
+import { RoleMessage } from './session.ts';
 import { Function } from '../function.ts';
 import { Engine } from '../engine.ts';
 

@@ -27,7 +27,8 @@ export interface InferenceParams {
 
 export abstract class Engine<
     in out fdm extends Function.Declaration.Map,
-    userm, aim, devm
+    userm, aim, devm,
+    session extends GenericSession<userm, aim, devm> = GenericSession<userm, aim, devm>,
 > {
     protected providerSpec: ProviderSpec;
     protected inferenceParams: InferenceParams;
