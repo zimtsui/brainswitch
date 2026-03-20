@@ -16,11 +16,11 @@ import { AnthropicBilling } from '#@/api-types/anthropic/billing.ts';
 import { RoleMessage } from '#@/compatible/session.ts';
 import * as Google from '@google/genai';
 import * as OpenAIResponsesNative from '#@/native-engines.d/openai-responses/session.ts';
-import { fdm, type fdm as fdm_, type fdu } from './test-helpers.ts';
+import { fdm } from './test-helpers.ts';
 
 
 function makeFooCall() {
-    return Function.Call.create<fdu>({
+    return Function.Call.create<fdm>({
         id: 'fc-1',
         name: 'foo',
         args: { x: 1 },
@@ -28,7 +28,7 @@ function makeFooCall() {
 }
 
 function makeBarCall() {
-    return Function.Call.create<fdu>({
+    return Function.Call.create<fdm>({
         id: 'fc-2',
         name: 'bar',
         args: { y: 'x' },
@@ -37,7 +37,7 @@ function makeBarCall() {
 
 
 test('ToolCallValidator enforces REQUIRED / allowlist / NONE', t => {
-    const validator = new ToolCallValidator<fdm_>({ toolChoice: Function.ToolChoice.REQUIRED });
+    const validator = new ToolCallValidator<fdm>({ toolChoice: Function.ToolChoice.REQUIRED });
     const fooCall = makeFooCall();
     const barCall = makeBarCall();
 
@@ -67,12 +67,12 @@ test('OpenAIResponsesNativeToolCallValidator enforces apply_patch allowlist', t 
         type: 'apply_patch_call',
     });
 
-    const validator = new OpenAIResponsesNativeToolCallValidator<fdm_>({
+    const validator = new OpenAIResponsesNativeToolCallValidator<fdm>({
         toolChoice: ['foo', Tool.Choice.APPLY_PATCH],
     });
     t.notThrows(() => validator.validate([fooCall, applyPatchCall]));
 
-    const validatorWithoutPatch = new OpenAIResponsesNativeToolCallValidator<fdm_>({
+    const validatorWithoutPatch = new OpenAIResponsesNativeToolCallValidator<fdm>({
         toolChoice: ['foo'],
     });
     t.throws(() => validatorWithoutPatch.validate([applyPatchCall]), { instanceOf: ResponseInvalid });
@@ -82,9 +82,9 @@ test('GoogleCompatibleMessageCodec converts user and ai messages', t => {
     const toolCodec = new GoogleToolCodec({ fdm, parallelToolCall: true });
     const codec = new GoogleCompatibleMessageCodec({ toolCodec });
 
-    const userMessage = RoleMessage.User.create<fdu>([
+    const userMessage = RoleMessage.User.create<fdm>([
         RoleMessage.Part.Text.create('hello'),
-        Function.Response.create<Function.Declaration.From<fdm_, 'foo'>>({
+        Function.Response.create<fdm>({
             id: 'fc-1',
             name: 'foo',
             text: '{"ok":true}',
@@ -116,7 +116,7 @@ test('GoogleNativeMessageCodec reuses compatible message codec and decodes code 
         codeExecution: true,
     });
 
-    const userContent = codec.convertFromUserMessage(RoleMessage.User.create<fdu>([
+    const userContent = codec.convertFromUserMessage(RoleMessage.User.create<fdm>([
         RoleMessage.Part.Text.create('hello'),
     ]));
     t.is(userContent.role, 'user');
@@ -139,9 +139,9 @@ test('OpenAIResponsesCompatibleMessageCodec converts user and ai messages', t =>
     const toolCodec = new OpenAIResponsesToolCodec({ fdm });
     const codec = new OpenAIResponsesCompatibleMessageCodec({ toolCodec });
 
-    const userMessage = RoleMessage.User.create<fdu>([
+    const userMessage = RoleMessage.User.create<fdm>([
         RoleMessage.Part.Text.create('hello'),
-        Function.Response.create<Function.Declaration.From<fdm_, 'foo'>>({
+        Function.Response.create<fdm>({
             id: 'fc-1',
             name: 'foo',
             text: '{"ok":true}',
@@ -181,10 +181,10 @@ test('OpenAIResponsesNativeMessageCodec converts apply_patch response', t => {
     });
 
     const input = codec.convertFromUserMessage(OpenAIResponsesNative.RoleMessage.User.create<
-        Function.Declaration.From<fdm_>
+        fdm
     >([
         OpenAIResponsesNative.RoleMessage.Part.Text.create('hello'),
-        Function.Response.create<Function.Declaration.From<fdm_, 'foo'>>({
+        Function.Response.create<fdm>({
             id: 'fc-1',
             name: 'foo',
             text: '{"ok":true}',

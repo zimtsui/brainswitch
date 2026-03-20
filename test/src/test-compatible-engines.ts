@@ -5,11 +5,11 @@ import { OpenAIResponsesCompatibleEngine } from '#@/compatible-engine.d/openai-r
 import { GoogleCompatibleEngine } from '#@/compatible-engine.d/google.ts';
 import { AnthropicCompatibleEngine } from '#@/compatible-engine.d/anthropic.ts';
 import { AliyunEngine } from '#@/compatible-engine.d/aliyun.ts';
-import { fdm, type fdm as fdm_, makeBaseOptions } from './test-helpers.ts';
+import { fdm, makeBaseOptions } from './test-helpers.ts';
 
 
-class OpenAIResponsesCompatibleEngineProbe extends OpenAIResponsesCompatibleEngine<fdm_> {
-    public getToolChoice(): Function.ToolChoice<fdm_> {
+class OpenAIResponsesCompatibleEngineProbe extends OpenAIResponsesCompatibleEngine<fdm> {
+    public getToolChoice(): Function.ToolChoice<fdm> {
         return this.toolChoice;
     }
 
@@ -18,8 +18,8 @@ class OpenAIResponsesCompatibleEngineProbe extends OpenAIResponsesCompatibleEngi
     }
 }
 
-class GoogleCompatibleEngineProbe extends GoogleCompatibleEngine<fdm_> {
-    public getToolChoice(): Function.ToolChoice<fdm_> {
+class GoogleCompatibleEngineProbe extends GoogleCompatibleEngine<fdm> {
+    public getToolChoice(): Function.ToolChoice<fdm> {
         return this.toolChoice;
     }
 
@@ -28,8 +28,8 @@ class GoogleCompatibleEngineProbe extends GoogleCompatibleEngine<fdm_> {
     }
 }
 
-class AnthropicCompatibleEngineProbe extends AnthropicCompatibleEngine<fdm_> {
-    public getToolChoice(): Function.ToolChoice<fdm_> {
+class AnthropicCompatibleEngineProbe extends AnthropicCompatibleEngine<fdm> {
+    public getToolChoice(): Function.ToolChoice<fdm> {
         return this.toolChoice;
     }
 
@@ -38,8 +38,8 @@ class AnthropicCompatibleEngineProbe extends AnthropicCompatibleEngine<fdm_> {
     }
 }
 
-class AliyunEngineProbe extends AliyunEngine<fdm_> {
-    public getToolChoice(): Function.ToolChoice<fdm_> {
+class AliyunEngineProbe extends AliyunEngine<fdm> {
+    public getToolChoice(): Function.ToolChoice<fdm> {
         return this.toolChoice;
     }
 

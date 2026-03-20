@@ -4,11 +4,11 @@ import { GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
 import { OpenAIResponsesNativeEngine } from '#@/native-engines.d/openai-responses/engine.ts';
 import { Adaptor } from '#@/adaptor.ts';
 import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
-import { fdm, type fdm as fdm_, makeBaseOptions } from './test-helpers.ts';
+import { fdm, makeBaseOptions } from './test-helpers.ts';
 
 
-class GoogleNativeEngineProbe extends GoogleNativeEngine<fdm_> {
-    public getToolChoice(): Function.ToolChoice<fdm_> {
+class GoogleNativeEngineProbe extends GoogleNativeEngine<fdm> {
+    public getToolChoice(): Function.ToolChoice<fdm> {
         return this.toolChoice;
     }
 
@@ -17,8 +17,8 @@ class GoogleNativeEngineProbe extends GoogleNativeEngine<fdm_> {
     }
 }
 
-class OpenAIResponsesNativeEngineProbe extends OpenAIResponsesNativeEngine<fdm_> {
-    public getToolChoice(): Tool.Choice<fdm_> {
+class OpenAIResponsesNativeEngineProbe extends OpenAIResponsesNativeEngine<fdm> {
+    public getToolChoice(): Tool.Choice<fdm> {
         return this.toolChoice;
     }
 

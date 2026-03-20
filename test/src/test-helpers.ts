@@ -17,7 +17,6 @@ export const fdm = {
 } satisfies Function.Declaration.Map;
 
 export type fdm = typeof fdm;
-export type fdu = Function.Declaration.From<fdm>;
 
 export function makeBaseOptions() {
     return {
@@ -33,16 +32,16 @@ export function makeBaseOptions() {
     };
 }
 
-export function makeSession(): Session<fdu> {
+export function makeSession(): Session<fdm> {
     return { chatMessages: [] };
 }
 
-export function makeUserMessage(): RoleMessage.User<fdu> {
-    return RoleMessage.User.create([RoleMessage.Part.Text.create('hello')]);
+export function makeUserMessage(): RoleMessage.User<fdm> {
+    return RoleMessage.User.create<fdm>([RoleMessage.Part.Text.create('hello')]);
 }
 
-export function makeAiMessage(text = 'ok'): RoleMessage.Ai<fdu> {
-    return RoleMessage.Ai.create([RoleMessage.Part.Text.create(text)]);
+export function makeAiMessage(text = 'ok'): RoleMessage.Ai<fdm> {
+    return RoleMessage.Ai.create<fdm>([RoleMessage.Part.Text.create(text)]);
 }
 
 export function makeInferenceContext(signal: AbortSignal | null = null): InferenceContext {

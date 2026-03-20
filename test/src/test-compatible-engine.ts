@@ -4,34 +4,33 @@ import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import {
-    type fdm as fdm_,
-    type fdu,
+    fdm,
     makeAiMessage,
     makeBaseOptions,
 } from './test-helpers.ts';
 
 
-class StubCompatibleEngine extends CompatibleEngine<fdm_> {
+class StubCompatibleEngine extends CompatibleEngine<fdm> {
     protected override parallelToolCall = false;
     public responder: (
         wfctx: InferenceContext,
-        session: Session<fdu>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ) => Promise<RoleMessage.Ai<fdu>> = async () => makeAiMessage();
+    ) => Promise<RoleMessage.Ai<fdm>> = async () => makeAiMessage();
 
-    public getToolChoice(): Function.ToolChoice<fdm_> {
+    public getToolChoice(): Function.ToolChoice<fdm> {
         return this.toolChoice;
     }
 
-    public setToolChoice(toolChoice: Function.ToolChoice<fdm_>): void {
+    public setToolChoice(toolChoice: Function.ToolChoice<fdm>): void {
         this.toolChoice = toolChoice;
     }
 
     public override infer(
         wfctx: InferenceContext,
-        session: Session<fdu>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdu>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         return this.responder(wfctx, session, signal);
     }
 }

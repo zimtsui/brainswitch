@@ -5,19 +5,16 @@ import { type InferenceContext } from '#@/inference-context.ts';
 import { type RoleMessage } from '#@/compatible/session.ts';
 import {
     fdm,
-    type fdm as fdm_,
-    type fdu,
     makeBaseOptions,
     makeInferenceContext,
     makeUserMessage,
 } from './test-helpers.ts';
 
-
-type StubSession = GenericSession<RoleMessage.User<fdu>, string, never>;
+type StubSession = GenericSession<RoleMessage.User<fdm>, string, never>;
 
 class StubEngine extends Engine<
-    fdm_,
-    RoleMessage.User<fdu>,
+    fdm,
+    RoleMessage.User<fdm>,
     string,
     never,
     StubSession
@@ -39,7 +36,7 @@ class StubEngine extends Engine<
 
     public override appendUserMessage(
         session: StubSession,
-        message: RoleMessage.User<fdu>,
+        message: RoleMessage.User<fdm>,
     ): StubSession {
         return {
             ...session,
@@ -49,7 +46,7 @@ class StubEngine extends Engine<
 
     public override pushUserMessage(
         session: StubSession,
-        message: RoleMessage.User<fdu>,
+        message: RoleMessage.User<fdm>,
     ): StubSession {
         session.chatMessages.push(message);
         return session;
