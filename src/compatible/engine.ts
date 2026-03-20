@@ -1,4 +1,4 @@
-import { RoleMessage } from '#@/compatible/session.ts';
+import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import { Engine } from '#@/engine.ts';
 
@@ -9,7 +9,8 @@ export abstract class CompatibleEngine<in out fdm extends Function.Declaration.M
         fdm,
         RoleMessage.User<Function.Declaration.From<fdm>>,
         RoleMessage.Ai<Function.Declaration.From<fdm>>,
-        RoleMessage.Developer
+        RoleMessage.Developer,
+        Session<Function.Declaration.From<fdm>>
     >
 {
     protected toolChoice: Function.ToolChoice<fdm>;

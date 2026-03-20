@@ -13,24 +13,32 @@ import {
 } from './test-helpers.ts';
 
 
-class StubEngine extends Engine<fdm_, RoleMessage.User<fdu>, string, never> {
+type StubSession = GenericSession<RoleMessage.User<fdu>, string, never>;
+
+class StubEngine extends Engine<
+    fdm_,
+    RoleMessage.User<fdu>,
+    string,
+    never,
+    StubSession
+> {
     protected override parallelToolCall = false;
     public responder: (
         wfctx: InferenceContext,
-        session: GenericSession<RoleMessage.User<fdu>, string, never>,
+        session: StubSession,
         signal?: AbortSignal,
     ) => Promise<string> = async () => 'ok';
 
     protected override infer(
         wfctx: InferenceContext,
-        session: GenericSession<RoleMessage.User<fdu>, string, never>,
+        session: StubSession,
         signal?: AbortSignal,
     ): Promise<string> {
         return this.responder(wfctx, session, signal);
     }
 }
 
-function makeStringSession(): GenericSession<RoleMessage.User<fdu>, string, never> {
+function makeStringSession(): StubSession {
     return { chatMessages: [] };
 }
 
@@ -74,7 +82,7 @@ test('Engine.stateless converts aborted workflow signal to UserAbortion', async 
         throw new TypeError('aborted');
     };
 
-    const e = await engine.stateless(makeInferenceContext(controller.signal), makeStringSession()).catch(e => e);
+    const e = await engine.stateless(makeInferenceContext(controller.signal), makeStringSession()).catch((e: unknown) => e);
     t.true(e instanceof UserAbortion);
 });
 
@@ -85,7 +93,7 @@ test('Engine.stateless converts timeout abort to InferenceTimeout', async t => {
         timeout: 1,
     });
 
-    engine.responder = async (_wfctx, _session, signal) => {
+    engine.responder = async (_wfctx: InferenceContext, _session: StubSession, signal?: AbortSignal) => {
         await new Promise(resolve => setTimeout(resolve, 10));
         if (signal?.aborted) throw new TypeError('timed out');
         return 'late';

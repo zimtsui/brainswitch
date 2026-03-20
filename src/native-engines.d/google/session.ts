@@ -4,11 +4,11 @@ import * as Google from '@google/genai';
 import type { GenericSession } from '#@/session.ts';
 
 
-export type Session<fdu extends Function.Declaration = never> = GenericSession<
+export interface Session<in out fdu extends Function.Declaration> extends GenericSession<
     RoleMessage.User<fdu>,
     RoleMessage.Ai<fdu>,
     RoleMessage.Developer
->;
+> {}
 export namespace Session {
     export type ChatMessage<fdu extends Function.Declaration> = GenericSession.ChatMessage<
         RoleMessage.User<fdu>,
@@ -30,16 +30,16 @@ export namespace RoleMessage {
         export import Text = Compatible.RoleMessage.Part.Text;
     }
 
-    export type Ai<fdu extends Function.Declaration = never> = Ai.Instance<fdu>;
+    export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
     export namespace Ai {
-        export function create<fdu extends Function.Declaration = never>(
+        export function create<fdu extends Function.Declaration>(
             parts: RoleMessage.Ai.Part<fdu>[],
             raw: Google.Content,
         ): Ai<fdu> {
             return new Instance(parts, raw);
         }
         export const NOMINAL = Symbol();
-        export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
+        export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Instance {
             public declare readonly [NOMINAL]: void;
             public constructor(
                 protected parts: RoleMessage.Ai.Part<fdu>[],
@@ -71,7 +71,7 @@ export namespace RoleMessage {
             }
         }
 
-        export type Part<fdu extends Function.Declaration = never> =
+        export type Part<fdu extends Function.Declaration> =
             |   RoleMessage.Part.Text
             |   Function.Call.Distributive<fdu>
             |   RoleMessage.Ai.Part.ExecutableCode

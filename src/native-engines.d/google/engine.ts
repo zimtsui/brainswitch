@@ -15,7 +15,8 @@ export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> ext
         fdm,
         RoleMessage.User<Function.Declaration.From<fdm>>,
         RoleMessage.Ai<Function.Declaration.From<fdm>>,
-        RoleMessage.Developer
+        RoleMessage.Developer,
+        Session<Function.Declaration.From<fdm>>
     >
 {
     protected toolChoice: Function.ToolChoice<fdm>;

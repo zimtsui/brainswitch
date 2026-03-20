@@ -2,11 +2,11 @@ import { Function } from '#@/function.ts';
 import { type GenericSession } from '#@/session.ts';
 
 
-export type Session<fdu extends Function.Declaration> = GenericSession<
+export interface Session<in out fdu extends Function.Declaration> extends GenericSession<
     RoleMessage.User<fdu>,
     RoleMessage.Ai<fdu>,
     RoleMessage.Developer
->;
+> {}
 export namespace Session {
     export type ChatMessage<fdu extends Function.Declaration> = GenericSession.ChatMessage<
         RoleMessage.User<fdu>,
@@ -44,13 +44,13 @@ export namespace RoleMessage {
         }
     }
 
-    export type Ai<fdu extends Function.Declaration = never> = Ai.Instance<fdu>;
+    export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
     export namespace Ai {
-        export function create<fdu extends Function.Declaration = never>(parts: RoleMessage.Ai.Part<fdu>[]): RoleMessage.Ai<fdu> {
+        export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[]): RoleMessage.Ai<fdu> {
             return new Instance(parts);
         }
         export const NOMINAL = Symbol();
-        export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
+        export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Instance {
             public declare readonly [NOMINAL]: void;
             public constructor(protected parts: RoleMessage.Ai.Part<fdu>[]) {
                 super();
@@ -74,16 +74,16 @@ export namespace RoleMessage {
                 return this.parts.filter(part => part instanceof Function.Call);
             }
         }
-        export type Part<fdu extends Function.Declaration = never> = RoleMessage.Part.Text | Function.Call.Distributive<fdu>;
+        export type Part<fdu extends Function.Declaration> = RoleMessage.Part.Text | Function.Call.Distributive<fdu>;
     }
 
-    export type User<fdu extends Function.Declaration = never> = User.Instance<fdu>;
+    export type User<fdu extends Function.Declaration> = User.Instance<fdu>;
     export namespace User {
-        export function create<fdu extends Function.Declaration = never>(parts: RoleMessage.User.Part<fdu>[]): RoleMessage.User<fdu> {
+        export function create<fdu extends Function.Declaration>(parts: RoleMessage.User.Part<fdu>[]): RoleMessage.User<fdu> {
             return new Instance(parts);
         }
         export const NOMINAL = Symbol();
-        export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
+        export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Instance {
             private declare readonly [NOMINAL]: void;
             public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {
                 super();
@@ -106,7 +106,7 @@ export namespace RoleMessage {
                 return this.parts[0]! as Function.Response.Distributive<fdu>;
             }
         }
-        export type Part<fdu extends Function.Declaration = never> = RoleMessage.Part.Text | Function.Response.Distributive<fdu>;
+        export type Part<fdu extends Function.Declaration> = RoleMessage.Part.Text | Function.Response.Distributive<fdu>;
     }
 
     export type Developer = Developer.Instance;

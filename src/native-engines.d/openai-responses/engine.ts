@@ -16,7 +16,8 @@ export class OpenAIResponsesNativeEngine<in out fdm extends Function.Declaration
         fdm,
         RoleMessage.User<Function.Declaration.From<fdm>>,
         RoleMessage.Ai<Function.Declaration.From<fdm>>,
-        RoleMessage.Developer
+        RoleMessage.Developer,
+        Session<Function.Declaration.From<fdm>>
     >
 {
     protected applyPatch: boolean;

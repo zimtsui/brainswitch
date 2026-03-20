@@ -1,16 +1,21 @@
 import * as Compatible from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
+import type { GenericSession } from '#@/session.ts';
 import OpenAI from 'openai';
 
 
-export interface Session<out fdu extends Function.Declaration = never> {
-    developerMessage?: RoleMessage.Developer;
-    chatMessages: ChatMessage<fdu>[];
+export interface Session<in out fdu extends Function.Declaration> extends GenericSession<
+    RoleMessage.User<fdu>,
+    RoleMessage.Ai<fdu>,
+    RoleMessage.Developer
+> {}
+export namespace Session {
+    export type ChatMessage<fdu extends Function.Declaration> = GenericSession.ChatMessage<
+        RoleMessage.User<fdu>,
+        RoleMessage.Ai<fdu>
+    >;
 }
-
-export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User<fdu> | RoleMessage.Ai<fdu>;
-
 
 export type RoleMessage = RoleMessage.Instance;
 export namespace RoleMessage {
@@ -24,16 +29,16 @@ export namespace RoleMessage {
         export import Text = Compatible.RoleMessage.Part.Text;
     }
 
-    export type Ai<fdu extends Function.Declaration = never> = Ai.Instance<fdu>;
+    export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
     export namespace Ai {
-        export function create<fdu extends Function.Declaration = never>(
+        export function create<fdu extends Function.Declaration>(
             parts: RoleMessage.Ai.Part<fdu>[],
             raw: OpenAI.Responses.ResponseOutputItem[],
         ): RoleMessage.Ai<fdu> {
             return new Instance(parts, raw);
         }
         export const NOMINAL = Symbol();
-        export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
+        export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Instance {
             public declare readonly [NOMINAL]: void;
             public constructor(
                 protected parts: RoleMessage.Ai.Part<fdu>[],
@@ -82,19 +87,19 @@ export namespace RoleMessage {
             }
         }
 
-        export type Part<fdu extends Function.Declaration = never> =
+        export type Part<fdu extends Function.Declaration> =
             |   RoleMessage.Part.Text
             |   Tool.Call<fdu>
         ;
     }
 
-    export type User<fdu extends Function.Declaration = never> = User.Instance<fdu>;
+    export type User<fdu extends Function.Declaration> = User.Instance<fdu>;
     export namespace User {
-        export function create<fdu extends Function.Declaration = never>(parts: User.Part<fdu>[]): User<fdu> {
+        export function create<fdu extends Function.Declaration>(parts: User.Part<fdu>[]): User<fdu> {
             return new Instance(parts);
         }
         export const NOMINAL = Symbol();
-        export class Instance<out fdu extends Function.Declaration = never> extends RoleMessage.Instance {
+        export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Instance {
             private declare readonly [NOMINAL]: void;
             public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {
                 super();
@@ -114,7 +119,7 @@ export namespace RoleMessage {
             }
         }
 
-        export type Part<fdu extends Function.Declaration = never> =
+        export type Part<fdu extends Function.Declaration> =
             |   RoleMessage.Part.Text
             |   Tool.Response<fdu>
         ;
