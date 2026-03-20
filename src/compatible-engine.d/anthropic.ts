@@ -1,5 +1,5 @@
-import { CompatibleEngine } from '../compatible-engine.ts';
-import { RoleMessage, type Session } from '../session.ts';
+import { CompatibleEngine } from '../compatible/engine.ts';
+import { RoleMessage, type Session } from '../compatible/session.ts';
 import { Function } from '../function.ts';
 import { type InferenceContext } from '../inference-context.ts';
 import { AnthropicToolCodec } from '../api-types/anthropic/tool-codec.ts';

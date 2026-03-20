@@ -1,14 +1,21 @@
-import * as Compatible from '../../session.ts';
+import * as Compatible from '../../compatible/session.ts';
 import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
+import type { GenericSession } from '../../session.ts';
 
 
-export interface Session<out fdu extends Function.Declaration = never> {
-    developerMessage?: RoleMessage.Developer;
-    chatMessages: ChatMessage<fdu>[];
+export type Session<fdu extends Function.Declaration = never> = GenericSession<
+    RoleMessage.User<fdu>,
+    RoleMessage.Ai<fdu>,
+    RoleMessage.Developer
+>;
+export namespace Session {
+    export type ChatMessage<fdu extends Function.Declaration> = GenericSession.ChatMessage<
+        RoleMessage.User<fdu>,
+        RoleMessage.Ai<fdu>
+    >;
 }
 
-export type ChatMessage<fdu extends Function.Declaration = never> = RoleMessage.User<fdu> | RoleMessage.Ai<fdu>;
 
 
 export type RoleMessage = RoleMessage.Instance;

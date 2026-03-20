@@ -1,6 +1,6 @@
 import { Config } from '#config';
 import { Function } from './function.ts';
-import { type CompatibleEngine } from './compatible-engine.ts';
+import { type CompatibleEngine } from './compatible/engine.ts';
 import { Throttle } from './throttle.ts';
 import { GoogleCompatibleEngine } from './compatible-engine.d/google.ts';
 import { OpenAIResponsesCompatibleEngine } from './compatible-engine.d/openai-responses.ts';

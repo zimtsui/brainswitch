@@ -1,5 +1,5 @@
 import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
-import { RoleMessage, type Session } from '../../session.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
 import { Function } from '../../function.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import { type InferenceContext } from '../../inference-context.ts';

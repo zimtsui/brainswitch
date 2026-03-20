@@ -1,4 +1,4 @@
-import { RoleMessage, type Session } from '../../session.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
 import { Function } from '../../function.ts';
 import type OpenAI from 'openai';
 import { OpenAIChatCompletionsCompatibleTransport } from '../openai-chatcompletions/transport.ts';
@@ -34,7 +34,7 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends
             stream: false,
             messages: [
                 ...(session.developerMessage ? this.ctx.messageCodec.convertFromRoleMessage(session.developerMessage) : []),
-                ...session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.convertFromRoleMessage(chatMessage)),
+                ...this.ctx.messageCodec.convertFromChatMessages(session.chatMessages),
             ],
             tools: tools.length ? tools : undefined,
             tool_choice: tools.length ? this.ctx.toolCodec.convertFromToolChoice(this.ctx.toolChoice) : undefined,

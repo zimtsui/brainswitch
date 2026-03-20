@@ -13,7 +13,7 @@ import { Tool } from './native-engines.d/openai-responses/tool.ts';
 import { GoogleBilling } from './api-types/google/billing.ts';
 import { OpenAIResponsesBilling } from './api-types/openai-responses/billing.ts';
 import { AnthropicBilling } from './api-types/anthropic/billing.ts';
-import { RoleMessage } from './session.ts';
+import { RoleMessage } from './compatible/session.ts';
 import * as Google from '@google/genai';
 import * as OpenAIResponsesNative from './native-engines.d/openai-responses/session.ts';
 import { fdm, type fdm as fdm_, type fdu } from './test-helpers.ts';

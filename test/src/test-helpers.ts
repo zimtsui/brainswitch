@@ -1,7 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import { Function } from './function.ts';
 import { type InferenceContext } from './inference-context.ts';
-import { RoleMessage, type Session } from './session.ts';
+import { RoleMessage, type Session } from './compatible/session.ts';
 import { Throttle } from './throttle.ts';
 
 

@@ -1,5 +1,5 @@
 import { ResponseInvalid } from '../../engine.ts';
-import { RoleMessage, type ChatMessage } from './session.ts';
+import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import { GoogleCompatibleMessageCodec } from '../../compatible.d/google/message-codec.ts';
@@ -30,7 +30,7 @@ export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
     }
 
     public convertFromChatMessages(
-        chatMessages: ChatMessage<Function.Declaration.From<fdm>>[],
+        chatMessages: Session.ChatMessage<Function.Declaration.From<fdm>>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
             if (chatMessage instanceof RoleMessage.User.Instance) return this.convertFromUserMessage(chatMessage);

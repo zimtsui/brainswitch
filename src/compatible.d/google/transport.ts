@@ -1,5 +1,5 @@
 import { ResponseInvalid, type InferenceParams as InferenceParams, type Pricing, type ProviderSpec } from '../../engine.ts';
-import { RoleMessage, type Session } from '../../session.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
 import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';

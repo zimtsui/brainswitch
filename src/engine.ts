@@ -3,6 +3,9 @@ import { EndpointSpec } from './endpoint-spec.ts';
 import { Throttle } from './throttle.ts';
 import { ProxyAgent } from 'undici';
 import { env } from 'node:process';
+import { type InferenceContext } from './inference-context.ts';
+import { logger } from './telemetry.ts';
+import { type GenericSession } from './session.ts';
 
 
 export interface Pricing {
@@ -22,7 +25,10 @@ export interface InferenceParams {
     timeout?: number;
 }
 
-export abstract class Engine<in out fdm extends Function.Declaration.Map> {
+export abstract class Engine<
+    in out fdm extends Function.Declaration.Map,
+    userm, aim, devm
+> {
     protected providerSpec: ProviderSpec;
     protected inferenceParams: InferenceParams;
     public name: string;
@@ -56,6 +62,74 @@ export abstract class Engine<in out fdm extends Function.Declaration.Map> {
         };
         this.fdm = options.functionDeclarationMap;
         this.throttle = options.throttle;
+    }
+
+    protected abstract infer(
+        wfctx: InferenceContext,
+        session: GenericSession<userm, aim, devm>,
+        signal?: AbortSignal,
+    ): Promise<aim>;
+
+    /**
+     * @throws {@link UserAbortion} 用户中止
+     * @throws {@link InferenceTimeout} 推理超时
+     * @throws {@link ResponseInvalid} 模型抽风
+     * @throws {TypeError} 网络故障
+     */
+    public async stateless(
+        wfctx: InferenceContext,
+        session: GenericSession<userm, aim, devm>,
+    ): Promise<aim> {
+        for (let retry = 0;; retry++) {
+            const signalTimeout = this.inferenceParams.timeout ? AbortSignal.timeout(this.inferenceParams.timeout) : undefined;
+            const signal = wfctx.signal && signalTimeout ? AbortSignal.any([
+                wfctx.signal,
+                signalTimeout,
+            ]) : wfctx.signal || signalTimeout;
+            try {
+                return await this.infer(wfctx, session, signal);
+            } catch (e) {
+                if (wfctx.signal?.aborted) throw new UserAbortion();                                // 用户中止
+                else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
+                else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
+                else if (e instanceof TypeError) {}         		                                // 网络故障
+                else throw e;
+                if (retry < 3) logger.message.warn(e); else throw e;
+            }
+        }
+    }
+
+    /**
+     * @param session mutable
+     */
+    public async stateful(
+        wfctx: InferenceContext,
+        session: GenericSession<userm, aim, devm>,
+    ): Promise<aim> {
+        const response = await this.stateless(wfctx, session);
+        session.chatMessages.push(response);
+        return response;
+    }
+
+    public appendUserMessage(
+        session: GenericSession<userm, aim, devm>,
+        message: userm,
+    ): GenericSession<userm, aim, devm> {
+        return {
+            ...session,
+            chatMessages: [...session.chatMessages, message],
+        };
+    }
+
+    /**
+     * @param session mutable
+     */
+    public pushUserMessage(
+        session: GenericSession<userm, aim, devm>,
+        message: userm,
+    ): GenericSession<userm, aim, devm> {
+        session.chatMessages.push(message);
+        return session;
     }
 }
 

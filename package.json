@@ -15,7 +15,7 @@
   },
   "type": "module",
   "scripts": {
-    "test": "ava ./build/test.js",
+    "test": "tsc -b ./test/src/tsconfig.json && ava ./test/build/test.js",
     "build": "tsc -b ./src/tsconfig.json",
     "clean": "rm -rf ./build && rm -rf ./docs",
     "docs": "rm -rf ./docs && typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts ./src/native-engines.d/*/exports.ts",

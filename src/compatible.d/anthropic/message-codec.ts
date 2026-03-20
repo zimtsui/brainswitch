@@ -1,4 +1,4 @@
-import { RoleMessage, type ChatMessage } from '../../session.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
 import { Function } from '../../function.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import type { AnthropicToolCodec } from '../../api-types/anthropic/tool-codec.ts';
@@ -48,7 +48,7 @@ export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declara
     }
 
     public convertFromChatMessage(
-        chatMessage: ChatMessage<Function.Declaration.From<fdm>>,
+        chatMessage: Session.ChatMessage<Function.Declaration.From<fdm>>,
     ): Anthropic.MessageParam {
         if (chatMessage instanceof RoleMessage.User.Instance)
             return { role: 'user', content: this.convertFromUserMessage(chatMessage) };

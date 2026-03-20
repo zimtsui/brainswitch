@@ -1,5 +1,5 @@
 import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
-import { RoleMessage, type Session } from '../../session.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
 import { Function } from '../../function.ts';
 import OpenAI from 'openai';
 import * as Undici from 'undici';

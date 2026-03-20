@@ -1,5 +1,5 @@
 import { ResponseInvalid } from '../../engine.ts';
-import { RoleMessage, type ChatMessage } from '../../session.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
 import { Function } from '../../function.ts';
 import OpenAI from 'openai';
 import type { OpenAIResponsesToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
@@ -76,7 +76,7 @@ export class OpenAIResponsesCompatibleMessageCodec<in out fdm extends Function.D
     }
 
     public convertFromChatMessage(
-        chatMessage: ChatMessage<Function.Declaration.From<fdm>>,
+        chatMessage: Session.ChatMessage<Function.Declaration.From<fdm>>,
     ): OpenAI.Responses.ResponseInput {
         if (chatMessage instanceof RoleMessage.User.Instance)
             return this.convertFromUserMessage(chatMessage);

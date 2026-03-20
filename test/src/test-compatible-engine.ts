@@ -1,7 +1,7 @@
 import test from 'ava';
-import { CompatibleEngine } from './compatible-engine.ts';
+import { CompatibleEngine } from './compatible/engine.ts';
 import { ResponseInvalid, InferenceTimeout, UserAbortion } from './engine.ts';
-import { RoleMessage, type Session } from './session.ts';
+import { RoleMessage, type Session } from './compatible/session.ts';
 import { Function } from './function.ts';
 import { type InferenceContext } from './inference-context.ts';
 import {
