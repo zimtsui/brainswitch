@@ -10,8 +10,8 @@ export class OpenAIResponsesCompatibleMessageCodec<in out fdm extends Function.D
 
     public convertToAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
-    ): OpenAIResponsesCompatibleMessageCodec.Message.Ai<Function.Declaration.From<fdm>> {
-        const parts = output.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
+    ): OpenAIResponsesCompatibleMessageCodec.Message.Ai<fdm> {
+        const parts = output.flatMap((item): RoleMessage.Ai.Part<fdm>[] => {
             if (item.type === 'message') {
                 if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
                 return [RoleMessage.Part.Text.create(item.content.map(part => part.text).join(''))];
@@ -25,7 +25,7 @@ export class OpenAIResponsesCompatibleMessageCodec<in out fdm extends Function.D
     }
 
     public convertFromFunctionCall(
-        fc: Function.Call.Distributive<Function.Declaration.From<fdm>>,
+        fc: Function.Call.From<fdm>,
     ): OpenAI.Responses.ResponseFunctionToolCall {
         if (fc.id) {} else throw new Error();
         return {
@@ -37,7 +37,7 @@ export class OpenAIResponsesCompatibleMessageCodec<in out fdm extends Function.D
     }
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
+        userMessage: RoleMessage.User<fdm>,
     ): OpenAI.Responses.ResponseInput {
         return userMessage.getParts().map(part => {
             if (part instanceof RoleMessage.Part.Text.Instance)
@@ -53,7 +53,7 @@ export class OpenAIResponsesCompatibleMessageCodec<in out fdm extends Function.D
     }
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
+        aiMessage: RoleMessage.Ai<fdm>,
     ): OpenAI.Responses.ResponseInput {
         if (aiMessage instanceof OpenAIResponsesCompatibleMessageCodec.Message.Ai.Instance)
             return aiMessage.getRaw();
@@ -76,7 +76,7 @@ export class OpenAIResponsesCompatibleMessageCodec<in out fdm extends Function.D
     }
 
     public convertFromChatMessage(
-        chatMessage: Session.ChatMessage<Function.Declaration.From<fdm>>,
+        chatMessage: Session.ChatMessage<fdm>,
     ): OpenAI.Responses.ResponseInput {
         if (chatMessage instanceof RoleMessage.User.Instance)
             return this.convertFromUserMessage(chatMessage);
@@ -92,19 +92,19 @@ export namespace OpenAIResponsesCompatibleMessageCodec {
     }
 
     export namespace Message {
-        export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
+        export type Ai<fdm extends Function.Declaration.Map> = Ai.Instance<fdm>;
         export namespace Ai {
-            export function create<fdu extends Function.Declaration>(
-                parts: RoleMessage.Ai.Part<fdu>[],
+            export function create<fdm extends Function.Declaration.Map>(
+                parts: RoleMessage.Ai.Part<fdm>[],
                 raw: OpenAI.Responses.ResponseOutputItem[],
-            ): Ai<fdu> {
+            ): Ai<fdm> {
                 return new Instance(parts, raw);
             }
             export const NOMINAL = Symbol();
-            export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Ai.Instance<fdu> {
+            export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Ai.Instance<fdm> {
                 public declare readonly [NOMINAL]: void;
                 public constructor(
-                    parts: RoleMessage.Ai.Part<fdu>[],
+                    parts: RoleMessage.Ai.Part<fdm>[],
                     protected raw: OpenAI.Responses.ResponseOutputItem[],
                 ) {
                     super(parts);

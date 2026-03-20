@@ -26,7 +26,7 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends
     }
 
     protected makeParams(
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
     ): OpenAI.ChatCompletionCreateParamsNonStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
@@ -46,9 +46,9 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends
 
     protected override async fetchRaw(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 

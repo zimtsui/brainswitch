@@ -13,10 +13,10 @@ import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
 export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> extends
     Engine<
         fdm,
-        RoleMessage.User<Function.Declaration.From<fdm>>,
-        RoleMessage.Ai<Function.Declaration.From<fdm>>,
+        RoleMessage.User<fdm>,
+        RoleMessage.Ai<fdm>,
         RoleMessage.Developer,
-        Session<Function.Declaration.From<fdm>>
+        Session<fdm>
     >
 {
     protected toolChoice: Function.ToolChoice<fdm>;
@@ -71,16 +71,16 @@ export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> ext
 
     protected override infer(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 
     public override appendUserMessage(
-        session: Session<Function.Declaration.From<fdm>>,
-        message: RoleMessage.User<Function.Declaration.From<fdm>>,
-    ): Session<Function.Declaration.From<fdm>> {
+        session: Session<fdm>,
+        message: RoleMessage.User<fdm>,
+    ): Session<fdm> {
         return {
             developerMessage: session.developerMessage,
             chatMessages: [...session.chatMessages, message],
@@ -88,9 +88,9 @@ export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> ext
     }
 
     public override pushUserMessage(
-        session: Session<Function.Declaration.From<fdm>>,
-        message: RoleMessage.User<Function.Declaration.From<fdm>>,
-    ): Session<Function.Declaration.From<fdm>> {
+        session: Session<fdm>,
+        message: RoleMessage.User<fdm>,
+    ): Session<fdm> {
         session.chatMessages.push(message);
         return session;
     }

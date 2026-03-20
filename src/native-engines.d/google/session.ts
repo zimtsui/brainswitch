@@ -4,15 +4,15 @@ import * as Google from '@google/genai';
 import type { GenericSession } from '#@/session.ts';
 
 
-export interface Session<in out fdu extends Function.Declaration> extends GenericSession<
-    RoleMessage.User<fdu>,
-    RoleMessage.Ai<fdu>,
+export interface Session<in out fdm extends Function.Declaration.Map> extends GenericSession<
+    RoleMessage.User<fdm>,
+    RoleMessage.Ai<fdm>,
     RoleMessage.Developer
 > {}
 export namespace Session {
-    export type ChatMessage<fdu extends Function.Declaration> = GenericSession.ChatMessage<
-        RoleMessage.User<fdu>,
-        RoleMessage.Ai<fdu>
+    export type ChatMessage<fdm extends Function.Declaration.Map> = GenericSession.ChatMessage<
+        RoleMessage.User<fdm>,
+        RoleMessage.Ai<fdm>
     >;
 }
 
@@ -30,25 +30,25 @@ export namespace RoleMessage {
         export import Text = Compatible.RoleMessage.Part.Text;
     }
 
-    export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
+    export type Ai<fdm extends Function.Declaration.Map> = Ai.Instance<fdm>;
     export namespace Ai {
-        export function create<fdu extends Function.Declaration>(
-            parts: RoleMessage.Ai.Part<fdu>[],
+        export function create<fdm extends Function.Declaration.Map>(
+            parts: RoleMessage.Ai.Part<fdm>[],
             raw: Google.Content,
-        ): Ai<fdu> {
+        ): Ai<fdm> {
             return new Instance(parts, raw);
         }
         export const NOMINAL = Symbol();
-        export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Instance {
+        export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Instance {
             public declare readonly [NOMINAL]: void;
             public constructor(
-                protected parts: RoleMessage.Ai.Part<fdu>[],
+                protected parts: RoleMessage.Ai.Part<fdm>[],
                 protected raw: Google.Content,
             ) {
                 super();
             }
 
-            public getParts(): RoleMessage.Ai.Part<fdu>[] {
+            public getParts(): RoleMessage.Ai.Part<fdm>[] {
                 return this.parts;
             }
             public getRaw(): Google.Content {
@@ -61,19 +61,19 @@ export namespace RoleMessage {
                 if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
                 return this.getText();
             }
-            public getOnlyFunctionCall(): Function.Call.Distributive<fdu> {
+            public getOnlyFunctionCall(): Function.Call.From<fdm> {
                 const fcs = this.getFunctionCalls();
                 if (fcs.length === 1) {} else throw new Error();
                 return fcs[0]!;
             }
-            public getFunctionCalls(): Function.Call.Distributive<fdu>[] {
+            public getFunctionCalls(): Function.Call.From<fdm>[] {
                 return this.parts.filter(part => part instanceof Function.Call);
             }
         }
 
-        export type Part<fdu extends Function.Declaration> =
+        export type Part<fdm extends Function.Declaration.Map> =
             |   RoleMessage.Part.Text
-            |   Function.Call.Distributive<fdu>
+            |   Function.Call.From<fdm>
             |   RoleMessage.Ai.Part.ExecutableCode
             |   RoleMessage.Ai.Part.CodeExecutionResult
         ;

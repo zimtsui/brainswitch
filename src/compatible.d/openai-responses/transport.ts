@@ -20,7 +20,7 @@ export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Decl
     }
 
     protected makeParams(
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
     ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
@@ -48,9 +48,9 @@ export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Decl
 
     protected async fetchRaw(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<OpenAIResponsesCompatibleMessageCodec.Message.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<OpenAIResponsesCompatibleMessageCodec.Message.Ai<fdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
@@ -90,9 +90,9 @@ export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Decl
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         try {
             return await this.fetchRaw(wfctx, session, signal);
         } catch (e) {

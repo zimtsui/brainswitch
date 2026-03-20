@@ -11,7 +11,7 @@ export class OpenAIResponsesToolCodec<in out fdm extends Function.Declaration.Ma
     public constructor(protected ctx: OpenAIResponsesToolCodec.Context<fdm>) {}
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<Function.Declaration.From<fdm>>,
+        fr: Function.Response.Distributive<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
         if (fr.id) {} else throw new Error();
         return {
@@ -55,7 +55,7 @@ export class OpenAIResponsesToolCodec<in out fdm extends Function.Declaration.Ma
 
     public convertToFunctionCall(
         apifc: OpenAI.Responses.ResponseFunctionToolCall,
-    ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+    ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
         const args = (() => {
@@ -71,7 +71,7 @@ export class OpenAIResponsesToolCodec<in out fdm extends Function.Declaration.Ma
             id: apifc.call_id,
             name: apifc.name,
             args,
-        } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
+        } as Function.Call.create.Options<fdm>);
     }
 }
 

@@ -7,7 +7,7 @@ export class ToolCallValidator<in out fdm extends Function.Declaration.Map> {
 
 
     public validate(
-        toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+        toolCalls: Function.Call.From<fdm>[],
     ): void {
         Function.Call.validate<fdm>(
             toolCalls,

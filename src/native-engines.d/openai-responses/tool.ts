@@ -26,13 +26,13 @@ export namespace Tool {
         export const APPLY_PATCH = Symbol();
     }
 
-    export type Call<fdu extends Function.Declaration> =
-        |   Function.Call.Distributive<fdu>
+    export type Call<fdm extends Function.Declaration.Map> =
+        |   Function.Call.From<fdm>
         |   ApplyPatch.Call
     ;
 
-    export type Response<fdu extends Function.Declaration> =
-        |   Function.Response.Distributive<fdu>
+    export type Response<fdm extends Function.Declaration.Map> =
+        |   Function.Response.Distributive<fdm>
         |   ApplyPatch.Response
     ;
 

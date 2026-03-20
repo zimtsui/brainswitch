@@ -40,9 +40,9 @@ export class AnthropicCompatibleEngine<in out fdm extends Function.Declaration.M
 
     public override infer(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 }

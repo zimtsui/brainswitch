@@ -11,7 +11,7 @@ export class GoogleCompatibleMessageCodec<fdm extends Function.Declaration.Map> 
 
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
+        aiMessage: RoleMessage.Ai<fdm>,
     ): Google.Content {
         if (aiMessage instanceof GoogleCompatibleMessageCodec.Message.Ai.Instance)
             return aiMessage.getRaw();
@@ -29,7 +29,7 @@ export class GoogleCompatibleMessageCodec<fdm extends Function.Declaration.Map> 
     }
 
     public convertFromChatMessages(
-        chatMessages: Session.ChatMessage<Function.Declaration.From<fdm>>[],
+        chatMessages: Session.ChatMessage<fdm>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
             if (chatMessage instanceof RoleMessage.User.Instance) return this.convertFromUserMessage(chatMessage);
@@ -39,7 +39,7 @@ export class GoogleCompatibleMessageCodec<fdm extends Function.Declaration.Map> 
     }
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
+        userMessage: RoleMessage.User<fdm>,
     ): Google.Content {
         const parts = userMessage.getParts().map(part => {
             if (part instanceof RoleMessage.Part.Text.Instance)
@@ -62,10 +62,10 @@ export class GoogleCompatibleMessageCodec<fdm extends Function.Declaration.Map> 
 
     public convertToAiMessage(
         content: Google.Content,
-    ): GoogleCompatibleMessageCodec.Message.Ai<Function.Declaration.From<fdm>> {
+    ): GoogleCompatibleMessageCodec.Message.Ai<fdm> {
         if (content.parts) {} else throw new Error();
         return GoogleCompatibleMessageCodec.Message.Ai.create(content.parts.flatMap(part => {
-            const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
+            const parts: RoleMessage.Ai.Part<fdm>[] = [];
             if (part.functionCall || part.text) {} else throw new ResponseInvalid('Unknown content part', { cause: content });
             if (part.text) parts.push(RoleMessage.Part.Text.create(part.text));
             if (part.functionCall) parts.push(this.ctx.toolCodec.convertToFunctionCall(part.functionCall));
@@ -81,15 +81,15 @@ export namespace GoogleCompatibleMessageCodec {
     }
 
     export namespace Message {
-        export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
+        export type Ai<fdm extends Function.Declaration.Map> = Ai.Instance<fdm>;
         export namespace Ai {
-            export function create<fdu extends Function.Declaration>(parts: RoleMessage.Ai.Part<fdu>[], raw: Google.Content): Ai<fdu> {
+            export function create<fdm extends Function.Declaration.Map>(parts: RoleMessage.Ai.Part<fdm>[], raw: Google.Content): Ai<fdm> {
                 return new Instance(parts, raw);
             }
             export const NOMINAL = Symbol();
-            export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Ai.Instance<fdu> {
+            export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Ai.Instance<fdm> {
                 public declare readonly [NOMINAL]: void;
-                public constructor(parts: RoleMessage.Ai.Part<fdu>[], protected raw: Google.Content) {
+                public constructor(parts: RoleMessage.Ai.Part<fdm>[], protected raw: Google.Content) {
                     super(parts);
                 }
                 public getRaw(): Google.Content {

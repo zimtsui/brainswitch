@@ -8,7 +8,7 @@ export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declara
     public constructor(protected ctx: AnthropicCompatibleMessageCodec.Context<fdm>) {}
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
+        userMessage: RoleMessage.User<fdm>,
     ): Anthropic.ContentBlockParam[] {
         return userMessage.getParts().map(part => {
             if (part instanceof RoleMessage.Part.Text.Instance)
@@ -23,7 +23,7 @@ export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declara
     }
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
+        aiMessage: RoleMessage.Ai<fdm>,
     ): Anthropic.ContentBlockParam[] {
         if (aiMessage instanceof AnthropicCompatibleMessageCodec.Message.Ai.Instance)
             return aiMessage.getRaw();
@@ -48,7 +48,7 @@ export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declara
     }
 
     public convertFromChatMessage(
-        chatMessage: Session.ChatMessage<Function.Declaration.From<fdm>>,
+        chatMessage: Session.ChatMessage<fdm>,
     ): Anthropic.MessageParam {
         if (chatMessage instanceof RoleMessage.User.Instance)
             return { role: 'user', content: this.convertFromUserMessage(chatMessage) };
@@ -59,8 +59,8 @@ export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declara
 
     public convertToAiMessage(
         raw: Anthropic.ContentBlock[],
-    ): AnthropicCompatibleMessageCodec.Message.Ai<Function.Declaration.From<fdm>> {
-        const parts = raw.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
+    ): AnthropicCompatibleMessageCodec.Message.Ai<fdm> {
+        const parts = raw.flatMap((item): RoleMessage.Ai.Part<fdm>[] => {
             if (item.type === 'text') return [RoleMessage.Part.Text.create(item.text)];
             else if (item.type === 'tool_use') return [this.ctx.toolCodec.convertToFunctionCall(item)];
             else if (item.type === 'thinking') return [];
@@ -76,20 +76,20 @@ export namespace AnthropicCompatibleMessageCodec {
     }
 
     export namespace Message {
-        export type Ai<fdu extends Function.Declaration> = Ai.Instance<fdu>;
+        export type Ai<fdm extends Function.Declaration.Map> = Ai.Instance<fdm>;
         export namespace Ai {
-            export function create<fdu extends Function.Declaration>(
-                parts: RoleMessage.Ai.Part<fdu>[],
+            export function create<fdm extends Function.Declaration.Map>(
+                parts: RoleMessage.Ai.Part<fdm>[],
                 raw: Anthropic.ContentBlock[],
-            ): Ai<fdu> {
+            ): Ai<fdm> {
                 return new Instance(parts, raw);
             }
             export const NOMINAL = Symbol();
-            export class Instance<out fdu extends Function.Declaration> extends RoleMessage.Ai.Instance<fdu> {
+            export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Ai.Instance<fdm> {
                 public declare readonly [NOMINAL]: void;
 
                 public constructor(
-                    parts: RoleMessage.Ai.Part<fdu>[],
+                    parts: RoleMessage.Ai.Part<fdm>[],
                     protected raw: Anthropic.ContentBlock[],
                 ) {
                     super(parts);

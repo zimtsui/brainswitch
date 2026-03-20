@@ -12,13 +12,13 @@ export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
 
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
+        aiMessage: RoleMessage.Ai<fdm>,
     ): Google.Content {
         return aiMessage.getRaw();
     }
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
+        userMessage: RoleMessage.User<fdm>,
     ): Google.Content {
         return this.ctx.compatibleMessageCodec.convertFromUserMessage(userMessage);
     }
@@ -30,7 +30,7 @@ export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
     }
 
     public convertFromChatMessages(
-        chatMessages: Session.ChatMessage<Function.Declaration.From<fdm>>[],
+        chatMessages: Session.ChatMessage<fdm>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
             if (chatMessage instanceof RoleMessage.User.Instance) return this.convertFromUserMessage(chatMessage);
@@ -41,10 +41,10 @@ export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
 
     public convertToAiMessage(
         content: Google.Content,
-    ): RoleMessage.Ai<Function.Declaration.From<fdm>> {
+    ): RoleMessage.Ai<fdm> {
         if (content.parts) {} else throw new Error();
         return RoleMessage.Ai.create(content.parts.flatMap(part => {
-            const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
+            const parts: RoleMessage.Ai.Part<fdm>[] = [];
             let payload = false;
             if (part.text) {
                 payload = true;

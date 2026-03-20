@@ -11,15 +11,15 @@ export class OpenAIResponsesNativeMessageCodec<fdm extends Function.Declaration.
     public constructor(protected ctx: OpenAIResponsesNativeMessageCodec.Context<fdm>) {}
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<Function.Declaration.From<fdm>>,
+        fr: Function.Response.Distributive<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
         return this.ctx.toolCodec.convertFromFunctionResponse(fr);
     }
 
     public convertToAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
-    ): RoleMessage.Ai<Function.Declaration.From<fdm>> {
-        const parts = output.flatMap((item): RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] => {
+    ): RoleMessage.Ai<fdm> {
+        const parts = output.flatMap((item): RoleMessage.Ai.Part<fdm>[] => {
             if (item.type === 'message') {
                 if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
                 return [RoleMessage.Part.Text.create(item.content.map(part => part.text).join(''))];
@@ -35,7 +35,7 @@ export class OpenAIResponsesNativeMessageCodec<fdm extends Function.Declaration.
     }
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
+        userMessage: RoleMessage.User<fdm>,
     ): OpenAI.Responses.ResponseInput {
         return userMessage.getParts().map(part => {
             if (part instanceof RoleMessage.Part.Text.Instance)
@@ -58,7 +58,7 @@ export class OpenAIResponsesNativeMessageCodec<fdm extends Function.Declaration.
     }
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
+        aiMessage: RoleMessage.Ai<fdm>,
     ): OpenAI.Responses.ResponseInput {
         return aiMessage.getRaw();
     }
@@ -70,7 +70,7 @@ export class OpenAIResponsesNativeMessageCodec<fdm extends Function.Declaration.
     }
 
     public convertFromChatMessage(
-        chatMessage: Session.ChatMessage<Function.Declaration.From<fdm>>,
+        chatMessage: Session.ChatMessage<fdm>,
     ): OpenAI.Responses.ResponseInput {
         if (chatMessage instanceof RoleMessage.User.Instance)
             return this.convertFromUserMessage(chatMessage);

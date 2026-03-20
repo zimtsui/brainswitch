@@ -22,9 +22,9 @@ export class GoogleCompatibleTransport<in out fdm extends Function.Declaration.M
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         const systemInstruction = session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage);
         const contents = this.ctx.messageCodec.convertFromChatMessages(session.chatMessages);
 

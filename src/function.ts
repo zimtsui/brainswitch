@@ -44,36 +44,43 @@ export namespace Function {
             this.name = fc.name;
             this.args = fc.args;
         }
-        public static create<fdu extends Declaration>(fc: Call.create.Options<fdu>): Call.Distributive<fdu> {
-            return new Call(fc) as Call.Distributive<fdu>;
+        public static create<fdm extends Declaration.Map>(fc: Call.create.Options<fdm>): Call.From<fdm> {
+            return new Call(fc) as Call.From<fdm>;
         }
-        public static restore<fdu extends Declaration>(snapshot: Call.Snapshot.Distributive<fdu>): Call.Distributive<fdu> {
-            return new Call(snapshot) as Call.Distributive<fdu>;
+        public static restore<fdm extends Declaration.Map>(snapshot: Call.Snapshot.Distributive<fdm>): Call.From<fdm> {
+            return new Call(snapshot) as Call.From<fdm>;
         }
-        public static capture<fdu extends Declaration>(fc: Call.Distributive<fdu>): Call.Snapshot.Distributive<fdu> {
-            return fc as Call.Snapshot.Distributive<fdu>;
+        public static capture<fdm extends Declaration.Map>(fc: Call.From<fdm>): Call.Snapshot.Distributive<fdm> {
+            return fc as Call.Snapshot.Distributive<fdm>;
         }
     }
     export namespace Call {
+        export type From<fdm extends Declaration.Map> = {
+            [name in Declaration.Map.NameOf<fdm>]: Call<Declaration.From<fdm, name>>;
+        }[Declaration.Map.NameOf<fdm>];
+
         export type Snapshot<fd extends Declaration> = Omit<Call<fd>, never>;
         export namespace Snapshot {
-            export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Snapshot<fd> : never;
+            export type Distributive<fdm extends Declaration.Map> = {
+                [name in Declaration.Map.NameOf<fdm>]: Snapshot<Declaration.From<fdm, name>>;
+            }[Declaration.Map.NameOf<fdm>];
         }
-        export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Call<fd> : never;
         export namespace create {
-            export type Options<fdu extends Declaration> = fdu extends infer fd extends Function.Declaration ? Omit<Call<fd>, never> : never;
+            export type Options<fdm extends Declaration.Map> = {
+                [name in Declaration.Map.NameOf<fdm>]: Omit<Call<Declaration.From<fdm, name>>, never>;
+            }[Declaration.Map.NameOf<fdm>];
         }
 
         export function validate<fdm extends Function.Declaration.Map>(
-            toolCalls: Function.Call.Distributive<Function.Declaration.From<fdm>>[],
+            toolCalls: Function.Call.From<fdm>[],
             toolChoice: Function.ToolChoice<fdm>,
             e: Error,
         ): void {
             if (toolChoice === Function.ToolChoice.REQUIRED)
                 if (toolCalls.length) {} else throw e;
-            else if (toolChoice instanceof Array) for (const fc of toolCalls)
+            else if (toolChoice instanceof Array) for (const fc of toolCalls) {
                 if (toolChoice.includes(fc.name)) {} else throw e;
-            else if (toolChoice === Function.ToolChoice.NONE)
+            } else if (toolChoice === Function.ToolChoice.NONE)
                 if (!toolCalls.length) {} else throw e;
         }
     }
@@ -89,24 +96,30 @@ export namespace Function {
             this.name = fr.name;
             this.text = fr.text;
         }
-        public static create<fdu extends Declaration>(fr: Response.create.Options<fdu>): Response.Distributive<fdu> {
-            return new Response(fr) as Response.Distributive<fdu>;
+        public static create<fdm extends Declaration.Map>(fr: Response.create.Options<fdm>): Response.Distributive<fdm> {
+            return new Response(fr) as Response.Distributive<fdm>;
         }
-        public static capture<fdu extends Declaration>(response: Response.Distributive<fdu>): Response.Snapshot.Distributive<fdu> {
-            return response as Response.Snapshot.Distributive<fdu>;
+        public static capture<fdm extends Declaration.Map>(response: Response.Distributive<fdm>): Response.Snapshot.Distributive<fdm> {
+            return response as Response.Snapshot.Distributive<fdm>;
         }
-        public static restore<fdu extends Declaration>(snapshot: Response.Snapshot.Distributive<fdu>): Response.Distributive<fdu> {
-            return new Response(snapshot) as Response.Distributive<fdu>;
+        public static restore<fdm extends Declaration.Map>(snapshot: Response.Snapshot.Distributive<fdm>): Response.Distributive<fdm> {
+            return new Response(snapshot) as Response.Distributive<fdm>;
         }
     }
     export namespace Response {
         export type Snapshot<fd extends Declaration> = Omit<Response<fd>, never>;
         export namespace Snapshot {
-            export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Snapshot<fd> : never;
+            export type Distributive<fdm extends Declaration.Map> = {
+                [name in Declaration.Map.NameOf<fdm>]: Snapshot<Declaration.From<fdm, name>>;
+            }[Declaration.Map.NameOf<fdm>];
         }
-        export type Distributive<fdu extends Declaration> = fdu extends infer fd extends Declaration ? Response<fd> : never;
+        export type Distributive<fdm extends Declaration.Map> = {
+            [name in Declaration.Map.NameOf<fdm>]: Response<Declaration.From<fdm, name>>;
+        }[Declaration.Map.NameOf<fdm>];
         export namespace create {
-            export type Options<fdu extends Declaration> = fdu extends infer fd extends Function.Declaration ? Omit<Response<fd>, never> : never;
+            export type Options<fdm extends Declaration.Map> = {
+                [name in Declaration.Map.NameOf<fdm>]: Omit<Response<Declaration.From<fdm, name>>, never>;
+            }[Declaration.Map.NameOf<fdm>];
         }
     }
 

@@ -10,9 +10,9 @@ export abstract class OpenAIChatCompletionsCompatibleTransport<in out fdm extend
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         try {
             return await this.fetchRaw(wfctx, session, signal);
         } catch (e) {
@@ -31,7 +31,7 @@ export abstract class OpenAIChatCompletionsCompatibleTransport<in out fdm extend
 
     protected abstract fetchRaw(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>>;
+    ): Promise<RoleMessage.Ai<fdm>>;
 }

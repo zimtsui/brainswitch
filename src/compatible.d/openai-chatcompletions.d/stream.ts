@@ -30,7 +30,7 @@ export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends F
     }
 
     protected makeParams(
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
     ): OpenAI.ChatCompletionCreateParamsStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
@@ -53,7 +53,7 @@ export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends F
 
     public convertToFunctionCallFromDelta(
         apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall,
-    ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+    ): Function.Call.From<fdm> {
         if (apifc.id) {} else throw new Error();
         if (apifc.function?.name) {} else throw new Error();
         if (apifc.function?.arguments) {} else throw new Error();
@@ -102,8 +102,8 @@ export abstract class OpenAIChatCompletionsCompatibleStream<in out fdm extends F
     }
 
     public async fetchRaw(
-        wfctx: InferenceContext, session: Session<Function.Declaration.From<fdm>>, signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+        wfctx: InferenceContext, session: Session<fdm>, signal?: AbortSignal,
+    ): Promise<RoleMessage.Ai<fdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 

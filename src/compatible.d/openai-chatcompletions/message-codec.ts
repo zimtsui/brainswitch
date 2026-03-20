@@ -11,8 +11,8 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
 
     public convertToAiMessage(
         message: OpenAI.ChatCompletionMessage,
-    ): RoleMessage.Ai<Function.Declaration.From<fdm>> {
-        const parts: RoleMessage.Ai.Part<Function.Declaration.From<fdm>>[] = [];
+    ): RoleMessage.Ai<fdm> {
+        const parts: RoleMessage.Ai.Part<fdm>[] = [];
         if (message.content)
             parts.push(RoleMessage.Part.Text.create(message.content));
         if (message.tool_calls)
@@ -32,7 +32,7 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
     }
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<Function.Declaration.From<fdm>>,
+        userMessage: RoleMessage.User<fdm>,
     ): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
         const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text.Instance);
         const frs = userMessage.getFunctionResponses();
@@ -44,7 +44,7 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
     }
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<Function.Declaration.From<fdm>>,
+        aiMessage: RoleMessage.Ai<fdm>,
     ): OpenAI.ChatCompletionAssistantMessageParam {
         const parts = aiMessage.getParts();
         const textParts = parts.filter(part => part instanceof RoleMessage.Part.Text.Instance);
@@ -69,7 +69,7 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
     }
 
     public convertFromChatMessages(
-        chatMessages: Session.ChatMessage<Function.Declaration.From<fdm>>[],
+        chatMessages: Session.ChatMessage<fdm>[],
     ): OpenAI.ChatCompletionMessageParam[] {
         return chatMessages.map(chatMessage => this.convertFromRoleMessage(chatMessage)).flat();
     }

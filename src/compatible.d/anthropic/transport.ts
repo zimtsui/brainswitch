@@ -23,7 +23,7 @@ export class AnthropicCompatibleTransport<in out fdm extends Function.Declaratio
     }
 
     protected makeParams(
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
     ): Anthropic.MessageCreateParamsStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
@@ -40,9 +40,9 @@ export class AnthropicCompatibleTransport<in out fdm extends Function.Declaratio
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 

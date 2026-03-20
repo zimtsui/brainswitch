@@ -11,7 +11,7 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
     public constructor(protected ctx: GoogleToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
-        fc: Function.Call.Distributive<Function.Declaration.From<fdm>>,
+        fc: Function.Call.From<fdm>,
     ): Google.FunctionCall {
         return {
             id: fc.id,
@@ -50,7 +50,7 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
 
     public convertToFunctionCall(
         googlefc: Google.FunctionCall,
-    ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+    ): Function.Call.From<fdm> {
         if (googlefc.name) {} else throw new Error();
         const fditem = this.ctx.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: googlefc });
@@ -60,7 +60,7 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
             id: googlefc.id,
             name: googlefc.name,
             args: googlefc.args,
-        } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
+        } as Function.Call.create.Options<fdm>);
     }
 
     public convertFromToolChoice(

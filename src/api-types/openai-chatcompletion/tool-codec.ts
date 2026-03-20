@@ -11,7 +11,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
 
 
     public convertFromFunctionCall(
-        fc: Function.Call.Distributive<Function.Declaration.From<fdm>>,
+        fc: Function.Call.From<fdm>,
     ): OpenAI.ChatCompletionMessageToolCall {
         if (fc.id) {} else throw new Error();
         return {
@@ -26,7 +26,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
 
     public convertToFunctionCall(
         apifc: OpenAI.ChatCompletionMessageFunctionToolCall,
-    ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+    ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.function.name] as Function.Declaration.Item.From<fdm>;
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
         const args = (() => {
@@ -42,12 +42,12 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
             id: apifc.id,
             name: apifc.function.name,
             args,
-        } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
+        } as Function.Call.create.Options<fdm>);
     }
 
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<Function.Declaration.From<fdm>>,
+        fr: Function.Response.Distributive<fdm>,
     ): OpenAI.ChatCompletionToolMessageParam {
         if (fr.id) {} else throw new Error();
         return {

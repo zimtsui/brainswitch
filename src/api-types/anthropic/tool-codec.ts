@@ -11,14 +11,14 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
     public constructor(protected ctx: AnthropicToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
-        fc: Function.Call.Distributive<Function.Declaration.From<fdm>>,
+        fc: Function.Call.From<fdm>,
     ): Anthropic.ToolUseBlock {
         throw new Error('Anthropic compatible engine requires native function calls.');
     }
 
     public convertToFunctionCall(
         apifc: Anthropic.ToolUseBlock,
-    ): Function.Call.Distributive<Function.Declaration.From<fdm>> {
+    ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
         const args = (() => {
@@ -34,11 +34,11 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
             id: apifc.id,
             name: apifc.name,
             args,
-        } as Function.Call.create.Options<Function.Declaration.From<fdm>>);
+        } as Function.Call.create.Options<fdm>);
     }
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<Function.Declaration.From<fdm>>,
+        fr: Function.Response.Distributive<fdm>,
     ): Anthropic.ToolResultBlockParam {
         if (fr.id) {} else throw new Error();
         return {

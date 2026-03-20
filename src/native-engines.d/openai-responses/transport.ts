@@ -22,7 +22,7 @@ export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map
     }
 
     protected makeParams(
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
     ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
         const tools: OpenAI.Responses.Tool[] = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         if (this.ctx.applyPatch) tools.push({ type: 'apply_patch' });
@@ -71,9 +71,9 @@ export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map
 
     protected async fetchRaw(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
@@ -112,9 +112,9 @@ export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>>,
+        session: Session<fdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>>> {
+    ): Promise<RoleMessage.Ai<fdm>> {
         return await this.fetchRaw(wfctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
     }
 }

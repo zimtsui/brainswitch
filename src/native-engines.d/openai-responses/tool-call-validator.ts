@@ -8,7 +8,7 @@ export class OpenAIResponsesNativeToolCallValidator<fdm extends Function.Declara
     public constructor(protected ctx: OpenAIResponsesNativeToolCallValidator.Context<fdm>) {}
 
     public validate(
-        toolCalls: Tool.Call<Function.Declaration.From<fdm>>[],
+        toolCalls: Tool.Call<fdm>[],
     ): void {
         if (this.ctx.toolChoice === Function.ToolChoice.REQUIRED)
             if (toolCalls.length) {} else throw new ResponseInvalid('Invalid function call', { cause: toolCalls });
