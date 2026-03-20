@@ -43,7 +43,6 @@ export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> ext
 
         this.toolCodec = new GoogleToolCodec({
             fdm: this.fdm,
-            parallelToolCall: this.parallelToolCall,
         });
         this.compatibleMessageCodec = new GoogleCompatibleMessageCodec({ toolCodec: this.toolCodec });
         this.messageCodec = new GoogleNativeMessageCodec({

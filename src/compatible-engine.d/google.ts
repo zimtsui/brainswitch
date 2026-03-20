@@ -24,13 +24,11 @@ export class GoogleCompatibleEngine<in out fdm extends Function.Declaration.Map>
         if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
         this.toolCodec = new GoogleToolCodec({
             fdm: this.fdm,
-            parallelToolCall: this.parallelToolCall,
         });
         this.messageCodec = new GoogleCompatibleMessageCodec({ toolCodec: this.toolCodec });
         this.billing = new GoogleBilling({ pricing: this.pricing });
         this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
         this.transport = new GoogleCompatibleTransport({
-            pricing: this.pricing,
             inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,

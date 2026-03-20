@@ -77,6 +77,5 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
 export namespace GoogleToolCodec {
     export interface Context<in out fdm extends Function.Declaration.Map> {
         fdm: fdm;
-        parallelToolCall: boolean;
     }
 }

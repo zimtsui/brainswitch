@@ -87,7 +87,6 @@ export class GoogleCompatibleTransport<in out fdm extends Function.Declaration.M
 
 export namespace GoogleCompatibleTransport {
     export interface Context<in out fdm extends Function.Declaration.Map> {
-        pricing: Pricing;
         inferenceParams: InferenceParams;
         providerSpec: ProviderSpec;
         fdm: fdm;
