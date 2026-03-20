@@ -1,3 +1,4 @@
+import './test-engine.ts';
 import './test-compatible-engine.ts';
 import './test-compatible-engines.ts';
 import './test-codecs.ts';

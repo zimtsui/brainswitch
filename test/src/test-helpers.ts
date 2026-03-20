@@ -1,8 +1,8 @@
 import { Type } from '@sinclair/typebox';
-import { Function } from './function.ts';
-import { type InferenceContext } from './inference-context.ts';
-import { RoleMessage, type Session } from './compatible/session.ts';
-import { Throttle } from './throttle.ts';
+import { Function } from '../../build/function.js';
+import { type InferenceContext } from '../../build/inference-context.js';
+import { RoleMessage, type Session } from '../../build/compatible/session.js';
+import { Throttle } from '../../build/throttle.js';
 
 
 export const fdm = {

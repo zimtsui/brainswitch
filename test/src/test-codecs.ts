@@ -1,21 +1,21 @@
 import test from 'ava';
-import { Function } from './function.ts';
-import { ResponseInvalid } from './engine.ts';
-import { ToolCallValidator } from './compatible/tool-call-validator.ts';
-import { GoogleToolCodec } from './api-types/google/tool-codec.ts';
-import { GoogleCompatibleMessageCodec } from './compatible.d/google/message-codec.ts';
-import { GoogleNativeMessageCodec } from './native-engines.d/google/message-codec.ts';
-import { OpenAIResponsesToolCodec } from './api-types/openai-responses/tool-codec.ts';
-import { OpenAIResponsesCompatibleMessageCodec } from './compatible.d/openai-responses/message-codec.ts';
-import { OpenAIResponsesNativeMessageCodec } from './native-engines.d/openai-responses/message-codec.ts';
-import { OpenAIResponsesNativeToolCallValidator } from './native-engines.d/openai-responses/tool-call-validator.ts';
-import { Tool } from './native-engines.d/openai-responses/tool.ts';
-import { GoogleBilling } from './api-types/google/billing.ts';
-import { OpenAIResponsesBilling } from './api-types/openai-responses/billing.ts';
-import { AnthropicBilling } from './api-types/anthropic/billing.ts';
-import { RoleMessage } from './compatible/session.ts';
+import { Function } from '../../build/function.js';
+import { ResponseInvalid } from '../../build/engine.js';
+import { ToolCallValidator } from '../../build/compatible/tool-call-validator.js';
+import { GoogleToolCodec } from '../../build/api-types/google/tool-codec.js';
+import { GoogleCompatibleMessageCodec } from '../../build/compatible.d/google/message-codec.js';
+import { GoogleNativeMessageCodec } from '../../build/native-engines.d/google/message-codec.js';
+import { OpenAIResponsesToolCodec } from '../../build/api-types/openai-responses/tool-codec.js';
+import { OpenAIResponsesCompatibleMessageCodec } from '../../build/compatible.d/openai-responses/message-codec.js';
+import { OpenAIResponsesNativeMessageCodec } from '../../build/native-engines.d/openai-responses/message-codec.js';
+import { OpenAIResponsesNativeToolCallValidator } from '../../build/native-engines.d/openai-responses/tool-call-validator.js';
+import { Tool } from '../../build/native-engines.d/openai-responses/tool.js';
+import { GoogleBilling } from '../../build/api-types/google/billing.js';
+import { OpenAIResponsesBilling } from '../../build/api-types/openai-responses/billing.js';
+import { AnthropicBilling } from '../../build/api-types/anthropic/billing.js';
+import { RoleMessage } from '../../build/compatible/session.js';
 import * as Google from '@google/genai';
-import * as OpenAIResponsesNative from './native-engines.d/openai-responses/session.ts';
+import * as OpenAIResponsesNative from '../../build/native-engines.d/openai-responses/session.js';
 import { fdm, type fdm as fdm_, type fdu } from './test-helpers.ts';
 
 
