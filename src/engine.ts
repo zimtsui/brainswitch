@@ -67,7 +67,7 @@ export abstract class Engine<
 
     protected abstract infer(
         wfctx: InferenceContext,
-        session: GenericSession<userm, aim, devm>,
+        session: session,
         signal?: AbortSignal,
     ): Promise<aim>;
 
@@ -79,7 +79,7 @@ export abstract class Engine<
      */
     public async stateless(
         wfctx: InferenceContext,
-        session: GenericSession<userm, aim, devm>,
+        session: session,
     ): Promise<aim> {
         for (let retry = 0;; retry++) {
             const signalTimeout = this.inferenceParams.timeout ? AbortSignal.timeout(this.inferenceParams.timeout) : undefined;
@@ -105,7 +105,7 @@ export abstract class Engine<
      */
     public async stateful(
         wfctx: InferenceContext,
-        session: GenericSession<userm, aim, devm>,
+        session: session,
     ): Promise<aim> {
         const response = await this.stateless(wfctx, session);
         session.chatMessages.push(response);
@@ -113,9 +113,9 @@ export abstract class Engine<
     }
 
     public appendUserMessage(
-        session: GenericSession<userm, aim, devm>,
+        session: session,
         message: userm,
-    ): GenericSession<userm, aim, devm> {
+    ): session {
         return {
             ...session,
             chatMessages: [...session.chatMessages, message],
@@ -126,9 +126,9 @@ export abstract class Engine<
      * @param session mutable
      */
     public pushUserMessage(
-        session: GenericSession<userm, aim, devm>,
+        session: session,
         message: userm,
-    ): GenericSession<userm, aim, devm> {
+    ): session {
         session.chatMessages.push(message);
         return session;
     }
