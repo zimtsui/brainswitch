@@ -3,21 +3,17 @@
 ```mermaid
 classDiagram
 
-OpenAIResponsesEngine <|.. OpenAIResponsesNativeEngine
+Engine <|.. OpenAIResponsesNativeEngine
+OpenAIResponsesNativeEngine o--> OpenAIResponsesHelpers
 
 CompatibleEngine <|.. OpenAIResponsesCompatibleEngine
-OpenAIResponsesEngine <|.. OpenAIResponsesCompatibleEngine
-Engine <|.. OpenAIResponsesEngine
+OpenAIResponsesCompatibleEngine o--> OpenAIResponsesHelpers
 
 Engine <|.. CompatibleEngine
 
-Engine <|.. OpenAIChatCompletionsEngine
-OpenAIChatCompletionsEngine <|.. OpenAIChatCompletionsCompatibleEngine
 CompatibleEngine <|.. OpenAIChatCompletionsCompatibleEngine
+OpenAIChatCompletionsCompatibleEngine o--> OpenAIChatCompletionsHelpers
 OpenAIChatCompletionsCompatibleEngine <|.. OpenAIChatCompletionsCompatibleMonolithEngine
 OpenAIChatCompletionsCompatibleEngine <|.. OpenAIChatCompletionsCompatibleStreamEngine
+OpenAIChatCompletionsCompatibleStreamEngine <|.. AliyunEngine
 ```
-
-## 继承
-
-用组合代替继承以实现多重继承的效果。
