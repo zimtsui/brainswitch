@@ -79,7 +79,7 @@ test('OpenAIResponsesNativeToolCallValidator enforces apply_patch allowlist', t 
 });
 
 test('GoogleCompatibleMessageCodec converts user and ai messages', t => {
-    const toolCodec = new GoogleToolCodec({ fdm, parallelToolCall: true });
+    const toolCodec = new GoogleToolCodec({ fdm });
     const codec = new GoogleCompatibleMessageCodec({ toolCodec });
 
     const userMessage = RoleMessage.User.create<fdm>([
@@ -108,7 +108,7 @@ test('GoogleCompatibleMessageCodec converts user and ai messages', t => {
 });
 
 test('GoogleNativeMessageCodec reuses compatible message codec and decodes code execution parts', t => {
-    const toolCodec = new GoogleToolCodec({ fdm, parallelToolCall: true });
+    const toolCodec = new GoogleToolCodec({ fdm });
     const compatibleMessageCodec = new GoogleCompatibleMessageCodec({ toolCodec });
     const codec = new GoogleNativeMessageCodec({
         toolCodec,
