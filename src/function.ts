@@ -12,9 +12,10 @@ export namespace Function {
     }
 
     export namespace Declaration {
-        export type From<fdm extends Map, nameu extends Map.NameOf<fdm> = Map.NameOf<fdm>> = {
+        export type ExtractFrom<fdm extends Map, nameu extends Map.NameOf<fdm>> = {
             [name in Map.NameOf<fdm>]: Declaration<name, fdm[name]['paraschema']>;
         }[nameu];
+        export type From<fdm extends Map> = Function.Declaration.ExtractFrom<fdm, Map.NameOf<fdm>>;
 
         export type Map = Record<string, Item<TSchema>>;
         export namespace Map {
@@ -56,18 +57,18 @@ export namespace Function {
     }
     export namespace Call {
         export type From<fdm extends Declaration.Map> = {
-            [name in Declaration.Map.NameOf<fdm>]: Call<Declaration.From<fdm, name>>;
+            [name in Declaration.Map.NameOf<fdm>]: Call<Declaration.ExtractFrom<fdm, name>>;
         }[Declaration.Map.NameOf<fdm>];
 
         export type Snapshot<fd extends Declaration> = Omit<Call<fd>, never>;
         export namespace Snapshot {
             export type Distributive<fdm extends Declaration.Map> = {
-                [name in Declaration.Map.NameOf<fdm>]: Snapshot<Declaration.From<fdm, name>>;
+                [name in Declaration.Map.NameOf<fdm>]: Snapshot<Declaration.ExtractFrom<fdm, name>>;
             }[Declaration.Map.NameOf<fdm>];
         }
         export namespace create {
             export type Options<fdm extends Declaration.Map> = {
-                [name in Declaration.Map.NameOf<fdm>]: Omit<Call<Declaration.From<fdm, name>>, never>;
+                [name in Declaration.Map.NameOf<fdm>]: Omit<Call<Declaration.ExtractFrom<fdm, name>>, never>;
             }[Declaration.Map.NameOf<fdm>];
         }
 
@@ -110,15 +111,15 @@ export namespace Function {
         export type Snapshot<fd extends Declaration> = Omit<Response<fd>, never>;
         export namespace Snapshot {
             export type Distributive<fdm extends Declaration.Map> = {
-                [name in Declaration.Map.NameOf<fdm>]: Snapshot<Declaration.From<fdm, name>>;
+                [name in Declaration.Map.NameOf<fdm>]: Snapshot<Declaration.ExtractFrom<fdm, name>>;
             }[Declaration.Map.NameOf<fdm>];
         }
         export type Distributive<fdm extends Declaration.Map> = {
-            [name in Declaration.Map.NameOf<fdm>]: Response<Declaration.From<fdm, name>>;
+            [name in Declaration.Map.NameOf<fdm>]: Response<Declaration.ExtractFrom<fdm, name>>;
         }[Declaration.Map.NameOf<fdm>];
         export namespace create {
             export type Options<fdm extends Declaration.Map> = {
-                [name in Declaration.Map.NameOf<fdm>]: Omit<Response<Declaration.From<fdm, name>>, never>;
+                [name in Declaration.Map.NameOf<fdm>]: Omit<Response<Declaration.ExtractFrom<fdm, name>>, never>;
             }[Declaration.Map.NameOf<fdm>];
         }
     }
@@ -135,6 +136,6 @@ export namespace Function {
     }
 
     export type Map<fdm extends Function.Declaration.Map> = {
-        [name in Function.Declaration.Map.NameOf<fdm>]: Function<Function.Declaration.From<fdm, name>>;
+        [name in Function.Declaration.Map.NameOf<fdm>]: Function<Function.Declaration.ExtractFrom<fdm, name>>;
     };
 }

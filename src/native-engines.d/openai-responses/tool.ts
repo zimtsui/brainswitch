@@ -10,7 +10,7 @@ export namespace Tool {
     export type Map<fdm extends Function.Declaration.Map> = {
         [name in Name<fdm>]:
             name extends Function.Declaration.Map.NameOf<fdm>
-                ? Function<Function.Declaration.From<fdm, name>>
+                ? Function<Function.Declaration.ExtractFrom<fdm, name>>
             : name extends typeof Tool.Choice.APPLY_PATCH
                 ? Tool.ApplyPatch
             : never;
