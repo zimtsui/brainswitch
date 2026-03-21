@@ -3,17 +3,20 @@
 ```mermaid
 classDiagram
 
-Engine <|.. OpenAIResponsesNativeEngine
-OpenAIResponsesNativeEngine o--> OpenAIResponsesHelpers
-
-CompatibleEngine <|.. OpenAIResponsesCompatibleEngine
-OpenAIResponsesCompatibleEngine o--> OpenAIResponsesHelpers
-
 Engine <|.. CompatibleEngine
 
-CompatibleEngine <|.. OpenAIChatCompletionsCompatibleEngine
-OpenAIChatCompletionsCompatibleEngine o--> OpenAIChatCompletionsHelpers
-OpenAIChatCompletionsCompatibleEngine <|.. OpenAIChatCompletionsCompatibleMonolithEngine
-OpenAIChatCompletionsCompatibleEngine <|.. OpenAIChatCompletionsCompatibleStreamEngine
-OpenAIChatCompletionsCompatibleStreamEngine <|.. AliyunEngine
+Engine <|.. OpenAIResponsesNativeEngine
+OpenAIResponsesNativeEngine o--> OpenAIResponsesNativeHelpers
+OpenAIResponsesNativeHelpers o--> OpenAIResponsesHelpers
+
+CompatibleEngine <|.. AliyunEngine
+OpenAIChatCompletionsCompatibleHelpers o--> OpenAIChatCompletionsHelpers
+OpenAIChatCompletionsCompatibleMonolithHelpers o--> OpenAIChatCompletionsCompatibleHelpers
+OpenAIChatCompletionsCompatibleStreamHelpers o--> OpenAIChatCompletionsCompatibleHelpers
+AliyunEngine o--> OpenAIChatCompletionsCompatibleStreamHelpers
+
+CompatibleEngine <|.. OpenAICompatibleEngine
+OpenAICompatibleEngine o--> OpenAIResponsesCompatibleHelpers
+OpenAIResponsesCompatibleHelpers o--> OpenAIResponsesHelpers
+
 ```

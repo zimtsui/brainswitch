@@ -1,6 +1,5 @@
 import { Function } from '#@/function.ts';
 import { CompatibleEngine } from '#@/compatible/engine.ts';
-import { OpenAIChatCompletionsCompatibleStream } from '#@/compatible.d/openai-chatcompletions.d/stream.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { type Session, RoleMessage } from '#@/compatible/session.ts';
 import { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletion/tool-codec.ts';
