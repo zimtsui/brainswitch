@@ -1,26 +1,29 @@
 import { Function } from '#@/function.ts';
 import { type GenericSession } from '#@/session.ts';
+import { Verbatim } from '#@/verbatim.ts';
 
 
-export interface Session<in out fdm extends Function.Declaration.Map> extends GenericSession<
-    RoleMessage.User<fdm>,
-    RoleMessage.Ai<fdm>,
+export interface Session<
+    in out fdu extends Function.Declaration.Prototype,
+    in out vdu extends Verbatim.Declaration.Prototype,
+> extends GenericSession<
+    RoleMessage.User<fdu>,
+    RoleMessage.Ai<fdu, vdu>,
     RoleMessage.Developer
 > {}
 export namespace Session {
-    export type ChatMessage<fdm extends Function.Declaration.Map> = GenericSession.ChatMessage<
-        RoleMessage.User<fdm>,
-        RoleMessage.Ai<fdm>
+    export type ChatMessage<
+        fdu extends Function.Declaration.Prototype,
+        vdu extends Verbatim.Declaration.Prototype,
+    > = GenericSession.ChatMessage<
+        RoleMessage.User<fdu>,
+        RoleMessage.Ai<fdu, vdu>
     >;
 }
 
 export type RoleMessage = RoleMessage.Instance;
 export namespace RoleMessage {
-    export class SpecificMessageError extends Error {
-        public constructor() {
-            super('This message is specific to a certain type of engines.');
-        }
-    }
+
     export const NOMINAL = Symbol();
     export abstract class Instance {
         private declare readonly [NOMINAL]: void;
@@ -44,18 +47,27 @@ export namespace RoleMessage {
         }
     }
 
-    export type Ai<fdm extends Function.Declaration.Map> = Ai.Instance<fdm>;
+    export type Ai<
+        fdu extends Function.Declaration.Prototype,
+        vdu extends Verbatim.Declaration.Prototype,
+    > = Ai.Instance<fdu, vdu>;
     export namespace Ai {
-        export function create<fdm extends Function.Declaration.Map>(parts: RoleMessage.Ai.Part<fdm>[]): RoleMessage.Ai<fdm> {
+        export function create<
+            fdu extends Function.Declaration.Prototype,
+            vdu extends Verbatim.Declaration.Prototype,
+        >(parts: RoleMessage.Ai.Part<fdu, vdu>[]): RoleMessage.Ai<fdu, vdu> {
             return new Instance(parts);
         }
         export const NOMINAL = Symbol();
-        export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Instance {
+        export class Instance<
+            in out fdu extends Function.Declaration.Prototype,
+            in out vdu extends Verbatim.Declaration.Prototype,
+        > extends RoleMessage.Instance {
             public declare readonly [NOMINAL]: void;
-            public constructor(protected parts: RoleMessage.Ai.Part<fdm>[]) {
+            public constructor(protected parts: RoleMessage.Ai.Part<fdu, vdu>[]) {
                 super();
             }
-            public getParts(): RoleMessage.Ai.Part<fdm>[] {
+            public getParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
                 return this.parts;
             }
             public getText(): string {
@@ -65,32 +77,47 @@ export namespace RoleMessage {
                 if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
                 return this.getText();
             }
-            public getOnlyFunctionCall(): Function.Call.From<fdm> {
+            public getOnlyFunctionCall(): Function.Call<fdu> {
                 const fcs = this.getFunctionCalls();
                 if (fcs.length === 1) {} else throw new Error();
                 return fcs[0]!;
             }
-            public getFunctionCalls(): Function.Call.From<fdm>[] {
+            public getFunctionCalls(): Function.Call<fdu>[] {
                 return this.parts.filter(part => part instanceof Function.Call);
             }
+            public getOnlyVerbatimMessage(): Verbatim.Message<vdu> {
+                const vms = this.getVerbatimMessages();
+                if (vms.length === 1) {} else throw new Error();
+                return vms[0]!;
+            }
+            public getVerbatimMessages(): Verbatim.Message<vdu>[] {
+                return this.parts.filter(part => part instanceof Verbatim.Message);
+            }
         }
-        export type Part<fdm extends Function.Declaration.Map> =
+        export type Part<
+            fdu extends Function.Declaration.Prototype,
+            vdu extends Verbatim.Declaration.Prototype,
+        > =
             |   RoleMessage.Part.Text
-            |   Function.Call.From<fdm>;
+            |   Function.Call<fdu>
+            |   Verbatim.Message<vdu>
+        ;
     }
 
-    export type User<fdm extends Function.Declaration.Map> = User.Instance<fdm>;
+    export type User<fdu extends Function.Declaration.Prototype> = User.Instance<fdu>;
     export namespace User {
-        export function create<fdm extends Function.Declaration.Map>(parts: RoleMessage.User.Part<fdm>[]): RoleMessage.User<fdm> {
+        export function create<fdu extends Function.Declaration.Prototype>(parts: RoleMessage.User.Part<fdu>[]): RoleMessage.User<fdu> {
             return new Instance(parts);
         }
         export const NOMINAL = Symbol();
-        export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Instance {
+        export class Instance<
+            in out fdu extends Function.Declaration.Prototype,
+        > extends RoleMessage.Instance {
             private declare readonly [NOMINAL]: void;
-            public constructor(protected parts: RoleMessage.User.Part<fdm>[]) {
+            public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {
                 super();
             }
-            public getParts(): RoleMessage.User.Part<fdm>[] {
+            public getParts(): RoleMessage.User.Part<fdu>[] {
                 return this.parts;
             }
             public getText(): string {
@@ -100,15 +127,22 @@ export namespace RoleMessage {
                 if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
                 return this.getText();
             }
-            public getFunctionResponses(): Function.Response.From<fdm>[] {
+            public getFunctionResponses(): Function.Response<fdu>[] {
                 return this.parts.filter(part => part instanceof Function.Response);
             }
-            public getOnlyFunctionResponse(): Function.Response.From<fdm> {
+            public getOnlyFunctionResponse(): Function.Response<fdu> {
                 if (this.parts.length === 1 && this.parts[0] instanceof Function.Response) {} else throw new Error();
-                return this.parts[0]! as Function.Response.From<fdm>;
+                return this.parts[0]! as Function.Response<fdu>;
+            }
+            public getVerbatimMessages(): Verbatim.Message<Verbatim.Declaration.Prototype>[] {
+                return this.parts.filter(part => part instanceof Verbatim.Message);
             }
         }
-        export type Part<fdm extends Function.Declaration.Map> = RoleMessage.Part.Text | Function.Response.From<fdm>;
+        export type Part<fdu extends Function.Declaration.Prototype> =
+            |   RoleMessage.Part.Text
+            |   Function.Response<fdu>
+            |   Verbatim.Message<Verbatim.Declaration.Prototype>
+        ;
     }
 
     export type Developer = Developer.Instance;

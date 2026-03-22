@@ -60,33 +60,33 @@ export namespace Verbatim {
         }
     }
 
-    export class Send<in out vd extends Verbatim.Declaration.Prototype> {
+    export class Message<in out vd extends Verbatim.Declaration.Prototype> {
         public static readonly NOMINAL = Symbol();
-        private declare readonly [Send.NOMINAL]: void;
+        private declare readonly [Message.NOMINAL]: void;
         public id?: string;
         public name: vd['name'];
         public args: Static<vd['paraschema']>;
-        private constructor(fc: Omit<Send<vd>, never>) {
+        private constructor(fc: Omit<Message<vd>, never>) {
             this.id = fc.id;
             this.name = fc.name;
             this.args = fc.args;
         }
-        public static create<vdm extends Declaration.Map.Prototype>(fc: Send.create.Options<vdm>): Send.From<vdm> {
-            return new Send(fc) as Send.From<vdm>;
+        public static create<vdm extends Declaration.Map.Prototype>(fc: Message.create.Options<vdm>): Message.From<vdm> {
+            return new Message(fc) as Message.From<vdm>;
         }
-        public static restore<vdm extends Declaration.Map.Prototype>(snapshot: Send.Snapshot.Distributive<vdm>): Send.From<vdm> {
-            return new Send(snapshot) as Send.From<vdm>;
+        public static restore<vdm extends Declaration.Map.Prototype>(snapshot: Message.Snapshot.Distributive<vdm>): Message.From<vdm> {
+            return new Message(snapshot) as Message.From<vdm>;
         }
-        public static capture<vdm extends Declaration.Map.Prototype>(fc: Send.From<vdm>): Send.Snapshot.Distributive<vdm> {
-            return fc as Send.Snapshot.Distributive<vdm>;
+        public static capture<vdm extends Declaration.Map.Prototype>(fc: Message.From<vdm>): Message.Snapshot.Distributive<vdm> {
+            return fc as Message.Snapshot.Distributive<vdm>;
         }
     }
-    export namespace Send {
+    export namespace Message {
         export type From<vdm extends Verbatim.Declaration.Map.Prototype> = {
-            [name in Verbatim.Declaration.Map.NameOf<vdm>]: Send<Verbatim.Declaration.Extract<vdm, name>>;
+            [name in Verbatim.Declaration.Map.NameOf<vdm>]: Message<Verbatim.Declaration.Extract<vdm, name>>;
         }[Verbatim.Declaration.Map.NameOf<vdm>];
 
-        export type Snapshot<fd extends Verbatim.Declaration.Prototype> = Omit<Send<fd>, never>;
+        export type Snapshot<fd extends Verbatim.Declaration.Prototype> = Omit<Message<fd>, never>;
         export namespace Snapshot {
             export type Distributive<vdm extends Verbatim.Declaration.Map.Prototype> = {
                 [name in Verbatim.Declaration.Map.NameOf<vdm>]: Snapshot<Verbatim.Declaration.Extract<vdm, name>>;
@@ -94,7 +94,7 @@ export namespace Verbatim {
         }
         export namespace create {
             export type Options<vdm extends Verbatim.Declaration.Map.Prototype> = {
-                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Omit<Send<Verbatim.Declaration.Extract<vdm, name>>, never>;
+                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Omit<Message<Verbatim.Declaration.Extract<vdm, name>>, never>;
             }[Verbatim.Declaration.Map.NameOf<vdm>];
         }
     }
