@@ -100,15 +100,15 @@ export namespace RoleMessage {
                 if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
                 return this.getText();
             }
-            public getFunctionResponses(): Function.Response.Distributive<fdm>[] {
+            public getFunctionResponses(): Function.Response.From<fdm>[] {
                 return this.parts.filter(part => part instanceof Function.Response);
             }
-            public getOnlyFunctionResponse(): Function.Response.Distributive<fdm> {
+            public getOnlyFunctionResponse(): Function.Response.From<fdm> {
                 if (this.parts.length === 1 && this.parts[0] instanceof Function.Response) {} else throw new Error();
-                return this.parts[0]! as Function.Response.Distributive<fdm>;
+                return this.parts[0]! as Function.Response.From<fdm>;
             }
         }
-        export type Part<fdm extends Function.Declaration.Map> = RoleMessage.Part.Text | Function.Response.Distributive<fdm>;
+        export type Part<fdm extends Function.Declaration.Map> = RoleMessage.Part.Text | Function.Response.From<fdm>;
     }
 
     export type Developer = Developer.Instance;

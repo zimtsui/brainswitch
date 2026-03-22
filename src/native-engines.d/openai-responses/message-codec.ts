@@ -11,7 +11,7 @@ export class OpenAIResponsesNativeMessageCodec<fdm extends Function.Declaration.
     public constructor(protected ctx: OpenAIResponsesNativeMessageCodec.Context<fdm>) {}
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<fdm>,
+        fr: Function.Response.From<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
         return this.ctx.toolCodec.convertFromFunctionResponse(fr);
     }

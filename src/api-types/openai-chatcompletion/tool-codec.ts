@@ -47,7 +47,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
 
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<fdm>,
+        fr: Function.Response.From<fdm>,
     ): OpenAI.ChatCompletionToolMessageParam {
         if (fr.id) {} else throw new Error();
         return {

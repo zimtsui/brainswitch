@@ -32,7 +32,7 @@ export namespace Tool {
     ;
 
     export type Response<fdm extends Function.Declaration.Map> =
-        |   Function.Response.Distributive<fdm>
+        |   Function.Response.From<fdm>
         |   ApplyPatch.Response
     ;
 

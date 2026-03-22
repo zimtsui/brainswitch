@@ -18,7 +18,7 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
         const response = await engine.stateful(wfctx, session);
         const fcs = response.getFunctionCalls();
         if (!fcs.length) return response.getOnlyText();
-        const pfrs: Promise<Function.Response.Distributive<fdm>>[] = [];
+        const pfrs: Promise<Function.Response.From<fdm>>[] = [];
         for (const part of response.getParts()) {
             if (part instanceof RoleMessage.Part.Text.Instance) {
                 yield part.text;

@@ -38,7 +38,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
     }
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<fdm>,
+        fr: Function.Response.From<fdm>,
     ): Anthropic.ToolResultBlockParam {
         if (fr.id) {} else throw new Error();
         return {

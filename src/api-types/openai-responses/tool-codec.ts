@@ -11,7 +11,7 @@ export class OpenAIResponsesToolCodec<in out fdm extends Function.Declaration.Ma
     public constructor(protected ctx: OpenAIResponsesToolCodec.Context<fdm>) {}
 
     public convertFromFunctionResponse(
-        fr: Function.Response.Distributive<fdm>,
+        fr: Function.Response.From<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
         if (fr.id) {} else throw new Error();
         return {
