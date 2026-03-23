@@ -26,7 +26,7 @@ export interface InferenceParams {
 }
 
 export abstract class Engine<
-    in out fdm extends Function.Declaration.Map,
+    in out fdm extends Function.Declaration.Map.Prototype,
     userm, aim, devm,
     session extends GenericSession<userm, aim, devm>,
 > {
@@ -127,11 +127,11 @@ export abstract class Engine<
 }
 
 export namespace Engine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends EndpointSpec, Options.Tools<fdm> {
+    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends EndpointSpec, Options.Tools<fdm> {
         throttle: Throttle;
     }
     export namespace Options {
-        export interface Tools<in out fdm extends Function.Declaration.Map> {
+        export interface Tools<in out fdm extends Function.Declaration.Map.Prototype> {
             functionDeclarationMap: fdm;
             parallelToolCall?: boolean;
         }

@@ -11,20 +11,24 @@ import type { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/messag
 import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 import type { GoogleBilling } from '#@/api-types/google/billing.ts';
 import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class GoogleCompatibleTransport<in out fdm extends Function.Declaration.Map> {
+export class GoogleCompatibleTransport<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
     protected apiURL: URL;
-    public constructor(protected ctx: GoogleCompatibleTransport.Context<fdm>) {
+    public constructor(protected ctx: GoogleCompatibleTransport.Context<fdm, vdm>) {
         this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/v1beta/models/${this.ctx.inferenceParams.model}:generateContent`)
     }
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>> {
         const systemInstruction = session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage);
         const contents = this.ctx.messageCodec.convertFromChatMessages(session.chatMessages);
 
@@ -86,16 +90,19 @@ export class GoogleCompatibleTransport<in out fdm extends Function.Declaration.M
 }
 
 export namespace GoogleCompatibleTransport {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         inferenceParams: InferenceParams;
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice<fdm>;
+        toolChoice: Function.ToolChoice.From<fdm>;
 
-        messageCodec: GoogleCompatibleMessageCodec<fdm>;
+        messageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
         toolCodec: GoogleToolCodec<fdm>;
         billing: GoogleBilling;
-        toolCallValidator: ToolCallValidator<fdm>;
+        toolCallValidator: ToolCallValidator.From<fdm>;
     }
 }

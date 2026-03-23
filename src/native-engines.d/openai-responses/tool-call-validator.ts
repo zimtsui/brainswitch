@@ -4,11 +4,11 @@ import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 
 
 
-export class OpenAIResponsesNativeToolCallValidator<fdm extends Function.Declaration.Map> {
-    public constructor(protected ctx: OpenAIResponsesNativeToolCallValidator.Context<fdm>) {}
+export class OpenAIResponsesNativeToolCallValidator<in out fdu extends Function.Declaration.Prototype> {
+    public constructor(protected ctx: OpenAIResponsesNativeToolCallValidator.Context<fdu>) {}
 
     public validate(
-        toolCalls: Tool.Call<fdm>[],
+        toolCalls: Tool.Call.Of<fdu>[],
     ): void {
         if (this.ctx.toolChoice === Function.ToolChoice.REQUIRED)
             if (toolCalls.length) {} else throw new ResponseInvalid('Invalid function call', { cause: toolCalls });
@@ -24,7 +24,10 @@ export class OpenAIResponsesNativeToolCallValidator<fdm extends Function.Declara
 }
 
 export namespace OpenAIResponsesNativeToolCallValidator {
-    export interface Context<fdm extends Function.Declaration.Map> {
-        toolChoice: Tool.Choice<fdm>;
+    export type From<
+        fdm extends Function.Declaration.Map.Prototype,
+    > = OpenAIResponsesNativeToolCallValidator<Function.Declaration.From<fdm>>;
+    export interface Context<fdu extends Function.Declaration.Prototype> {
+        toolChoice: Tool.Choice<fdu>;
     }
 }

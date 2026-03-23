@@ -7,7 +7,7 @@ const ajv = new Ajv();
 
 
 
-export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
+export class GoogleToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
     public constructor(protected ctx: GoogleToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
@@ -52,7 +52,7 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
         googlefc: Google.FunctionCall,
     ): Function.Call.From<fdm> {
         if (googlefc.name) {} else throw new Error();
-        const fditem = this.ctx.fdm[googlefc.name] as Function.Declaration.Item.From<fdm> | undefined;
+        const fditem = this.ctx.fdm[googlefc.name];
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: googlefc });
         if (ajv.validate(fditem.paraschema, googlefc.args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: googlefc });
@@ -60,11 +60,11 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
             id: googlefc.id,
             name: googlefc.name,
             args: googlefc.args,
-        } as Function.Call.create.Options<fdm>);
+        } as Function.Call.Options.From<fdm>);
     }
 
     public convertFromToolChoice(
-        toolChoice: Function.ToolChoice<fdm>,
+        toolChoice: Function.ToolChoice.From<fdm>,
     ): Google.FunctionCallingConfig {
         if (toolChoice === Function.ToolChoice.NONE) return { mode: Google.FunctionCallingConfigMode.NONE };
         else if (toolChoice === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
@@ -75,7 +75,7 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map> {
 
 
 export namespace GoogleToolCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         fdm: fdm;
     }
 }

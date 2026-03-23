@@ -3,38 +3,52 @@ import OpenAI from 'openai';
 
 
 export namespace Tool {
-    export type Name<fdm extends Function.Declaration.Map> =
-        |   Function.Declaration.Map.NameOf<fdm>
-        |   typeof Tool.Choice.APPLY_PATCH
-    ;
-    export type Map<fdm extends Function.Declaration.Map> = {
-        [name in Name<fdm>]:
+    export type Map<fdm extends Function.Declaration.Map.Prototype> = {
+        [name in Tool.Map.NameOf<fdm>]:
             name extends Function.Declaration.Map.NameOf<fdm>
-                ? Function<Function.Declaration.ExtractFrom<fdm, name>>
+                ? Function<Function.Declaration.Extract<fdm, name>>
             : name extends typeof Tool.Choice.APPLY_PATCH
                 ? Tool.ApplyPatch
             : never;
     };
+    export namespace Map {
+        export type NameOf<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Function.Declaration.Map.NameOf<fdm> | typeof Tool.Choice.APPLY_PATCH;
+    }
 
-    export type Choice<fdm extends Function.Declaration.Map> =
+    export type Choice<fdu extends Function.Declaration.Prototype> =
+        |   (fdu['name'] | typeof Tool.Choice.APPLY_PATCH)[]
         |   typeof Function.ToolChoice.NONE
         |   typeof Function.ToolChoice.REQUIRED
         |   typeof Function.ToolChoice.AUTO
-        |   Tool.Name<fdm>[]
     ;
     export namespace Choice {
         export const APPLY_PATCH = Symbol();
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Choice<Function.Declaration.From<fdm>>;
     }
 
-    export type Call<fdm extends Function.Declaration.Map> =
-        |   Function.Call.From<fdm>
-        |   ApplyPatch.Call
-    ;
+    export namespace Call {
+        export type Of<fdu extends Function.Declaration.Prototype> =
+            |   Function.Call.Of<fdu>
+            |   ApplyPatch.Call
+        ;
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Call.Of<Function.Declaration.From<fdm>>;
+    }
 
-    export type Response<fdm extends Function.Declaration.Map> =
-        |   Function.Response.From<fdm>
-        |   ApplyPatch.Response
-    ;
+    export namespace Response {
+        export type Of<fdu extends Function.Declaration.Prototype> =
+            |   Function.Response.Of<fdu>
+            |   ApplyPatch.Response
+        ;
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Response.Of<Function.Declaration.From<fdm>>;
+    }
 
     export interface ApplyPatch {
         /**

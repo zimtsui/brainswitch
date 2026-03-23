@@ -1,9 +1,8 @@
 import type { Pricing } from '#@/engine.ts';
 import OpenAI from 'openai';
-import { Function } from '#@/function.ts';
 
 
-export class OpenAIChatCompletionsBilling<in out fdm extends Function.Declaration.Map> {
+export class OpenAIChatCompletionsBilling {
     public constructor(protected ctx: OpenAIChatCompletionsBilling.Context) {}
 
     public charge(usage: OpenAI.CompletionUsage): number {

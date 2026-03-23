@@ -10,17 +10,21 @@ import type { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/open
 import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
 import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
-export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Declaration.Map> {
+export class OpenAIResponsesCompatibleTransport<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
     protected apiURL: URL;
 
-    public constructor(protected ctx: OpenAIResponsesCompatibleTransport.Context<fdm>) {
+    public constructor(protected ctx: OpenAIResponsesCompatibleTransport.Context<fdm, vdm>) {
         this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/responses`);
     }
 
     protected makeParams(
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
@@ -48,9 +52,9 @@ export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Decl
 
     protected async fetchRaw(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<OpenAIResponsesCompatibleMessageCodec.Message.Ai<fdm>> {
+    ): Promise<OpenAIResponsesCompatibleMessageCodec.Message.Ai.From<fdm, vdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
@@ -90,9 +94,9 @@ export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Decl
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         try {
             return await this.fetchRaw(wfctx, session, signal);
         } catch (e) {
@@ -104,17 +108,20 @@ export class OpenAIResponsesCompatibleTransport<in out fdm extends Function.Decl
 }
 
 export namespace OpenAIResponsesCompatibleTransport {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         inferenceSpec: InferenceParams;
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice<fdm>;
+        toolChoice: Function.ToolChoice.From<fdm>;
         parallelToolCall: boolean;
 
-        messageCodec: OpenAIResponsesCompatibleMessageCodec<fdm>;
+        messageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
         toolCodec: OpenAIResponsesToolCodec<fdm>;
         billing: OpenAIResponsesBilling;
-        toolCallValidator: ToolCallValidator<fdm>;
+        toolCallValidator: ToolCallValidator.From<fdm>;
     }
 }

@@ -7,15 +7,19 @@ import { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 import { GoogleBilling } from '#@/api-types/google/billing.ts';
 import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 import { GoogleCompatibleTransport } from '#@/compatible.d/google/transport.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class GoogleCompatibleEngine<in out fdm extends Function.Declaration.Map> extends CompatibleEngine<fdm> {
+export class GoogleCompatibleEngine<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> extends CompatibleEngine<fdm, vdm> {
     protected toolCodec: GoogleToolCodec<fdm>;
-    protected messageCodec: GoogleCompatibleMessageCodec<fdm>;
+    protected messageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
     protected billing: GoogleBilling;
-    protected toolCallValidator: ToolCallValidator<fdm>;
-    protected transport: GoogleCompatibleTransport<fdm>;
+    protected toolCallValidator: ToolCallValidator.From<fdm>;
+    protected transport: GoogleCompatibleTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: GoogleCompatibleEngine.Options<fdm>) {
@@ -43,15 +47,15 @@ export class GoogleCompatibleEngine<in out fdm extends Function.Declaration.Map>
 
     public override infer(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 }
 
 export namespace GoogleCompatibleEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends
         CompatibleEngine.Options<fdm>
     {}
 }

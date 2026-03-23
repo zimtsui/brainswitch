@@ -3,16 +3,20 @@ import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
 import type { InferenceContext } from '#@/inference-context.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export abstract class OpenAIChatCompletionsCompatibleTransport<in out fdm extends Function.Declaration.Map> {
+export abstract class OpenAIChatCompletionsCompatibleTransport<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         try {
             return await this.fetchRaw(wfctx, session, signal);
         } catch (e) {
@@ -31,7 +35,7 @@ export abstract class OpenAIChatCompletionsCompatibleTransport<in out fdm extend
 
     protected abstract fetchRaw(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>>;
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>>;
 }

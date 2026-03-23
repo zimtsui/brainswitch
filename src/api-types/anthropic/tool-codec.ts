@@ -7,7 +7,7 @@ import { type TObject } from '@sinclair/typebox';
 const ajv = new Ajv();
 
 
-export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
+export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
     public constructor(protected ctx: AnthropicToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
@@ -19,7 +19,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
     public convertToFunctionCall(
         apifc: Anthropic.ToolUseBlock,
     ): Function.Call.From<fdm> {
-        const fditem = this.ctx.fdm[apifc.name] as Function.Declaration.Item.From<fdm> | undefined;
+        const fditem = this.ctx.fdm[apifc.name];
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
         const args = (() => {
             try {
@@ -34,7 +34,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
             id: apifc.id,
             name: apifc.name,
             args,
-        } as Function.Call.create.Options<fdm>);
+        } as Function.Call.Options.From<fdm>);
     }
 
     public convertFromFunctionResponse(
@@ -67,7 +67,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
     }
 
     public convertFromToolChoice(
-        toolChoice: Function.ToolChoice<fdm>,
+        toolChoice: Function.ToolChoice.From<fdm>,
         parallelToolCall: boolean,
     ): Anthropic.ToolChoice {
         if (toolChoice === Function.ToolChoice.NONE) return { type: 'none' };
@@ -81,7 +81,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
 }
 
 export namespace AnthropicToolCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         fdm: fdm;
     }
 }

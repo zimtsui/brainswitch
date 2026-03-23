@@ -11,13 +11,15 @@ import type { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcom
 import type { OpenAIChatCompletionsCompatibleMessageCodec } from '#@/compatible.d/openai-chatcompletions/message-codec.ts';
 import type { Throttle } from '#@/throttle.ts';
 import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends Function.Declaration.Map> extends
-    OpenAIChatCompletionsCompatibleTransport<fdm>
-{
-    public constructor(protected ctx: OpenAIChatCompletionsCompatibleMonolith.Context<fdm>) {
+export abstract class OpenAIChatCompletionsCompatibleMonolith<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> extends OpenAIChatCompletionsCompatibleTransport<fdm, vdm> {
+    public constructor(protected ctx: OpenAIChatCompletionsCompatibleMonolith.Context<fdm, vdm>) {
         super();
     }
 
@@ -26,7 +28,7 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends
     }
 
     protected makeParams(
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
     ): OpenAI.ChatCompletionCreateParamsNonStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
@@ -34,7 +36,7 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends
             stream: false,
             messages: [
                 ...(session.developerMessage ? this.ctx.messageCodec.convertFromRoleMessage(session.developerMessage) : []),
-                ...this.ctx.messageCodec.convertFromChatMessages(session.chatMessages),
+                ...this.ctx.messageCodec.convertFromRoleMessages(session.chatMessages),
             ],
             tools: tools.length ? tools : undefined,
             tool_choice: tools.length ? this.ctx.toolCodec.convertFromToolChoice(this.ctx.toolChoice) : undefined,
@@ -46,9 +48,9 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends
 
     protected override async fetchRaw(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
@@ -91,7 +93,10 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<in out fdm extends
 }
 
 export namespace OpenAIChatCompletionsCompatibleMonolith {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         proxyAgent?: Undici.ProxyAgent;
         apiURL: URL;
         apiKey: string;
@@ -100,12 +105,12 @@ export namespace OpenAIChatCompletionsCompatibleMonolith {
         maxTokens?: number;
         throttle: Throttle;
         additionalOptions?: Record<string, unknown>;
-        toolChoice: Function.ToolChoice<fdm>;
+        toolChoice: Function.ToolChoice.From<fdm>;
         parallelToolCall: boolean;
 
-        messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm>;
+        messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm, vdm>;
         toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
-        billing: OpenAIChatCompletionsBilling<fdm>;
-        toolCallValidator: ToolCallValidator<fdm>;
+        billing: OpenAIChatCompletionsBilling;
+        toolCallValidator: ToolCallValidator.From<fdm>;
     }
 }

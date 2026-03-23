@@ -7,15 +7,19 @@ import { OpenAIChatCompletionsCompatibleMessageCodec } from '#@/compatible.d/ope
 import { OpenAIChatCompletionsBilling } from '#@/api-types/openai-chatcompletion/billing.ts';
 import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 import { AliyunTransport } from '#@/compatible.d/aliyun/transport.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class AliyunEngine<in out fdm extends Function.Declaration.Map> extends CompatibleEngine<fdm> {
+export class AliyunEngine<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> extends CompatibleEngine<fdm, vdm> {
     protected toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
-    protected messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm>;
-    protected billing: OpenAIChatCompletionsBilling<fdm>;
-    protected toolCallValidator: ToolCallValidator<fdm>;
-    protected transport: AliyunTransport<fdm>;
+    protected messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm, vdm>;
+    protected billing: OpenAIChatCompletionsBilling;
+    protected toolCallValidator: ToolCallValidator.From<fdm>;
+    protected transport: AliyunTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: AliyunEngine.Options<fdm>) {
@@ -44,15 +48,15 @@ export class AliyunEngine<in out fdm extends Function.Declaration.Map> extends C
 
     public override infer(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 }
 
 export namespace AliyunEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends
         CompatibleEngine.Options<fdm>
     {}
 }

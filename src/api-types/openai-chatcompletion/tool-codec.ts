@@ -6,7 +6,7 @@ import Ajv from 'ajv';
 const ajv = new Ajv();
 
 
-export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declaration.Map> {
+export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
     public constructor(protected ctx: OpenAIChatCompletionsToolCodec.Context<fdm>) {}
 
 
@@ -27,7 +27,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
     public convertToFunctionCall(
         apifc: OpenAI.ChatCompletionMessageFunctionToolCall,
     ): Function.Call.From<fdm> {
-        const fditem = this.ctx.fdm[apifc.function.name] as Function.Declaration.Item.From<fdm>;
+        const fditem = this.ctx.fdm[apifc.function.name];
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
         const args = (() => {
             try {
@@ -42,7 +42,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
             id: apifc.id,
             name: apifc.function.name,
             args,
-        } as Function.Call.create.Options<fdm>);
+        } as Function.Call.Options.From<fdm>);
     }
 
 
@@ -77,7 +77,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
     }
 
     public convertFromToolChoice(
-        toolChoice: Function.ToolChoice<fdm>,
+        toolChoice: Function.ToolChoice.From<fdm>,
     ): OpenAI.ChatCompletionToolChoiceOption {
         if (toolChoice === Function.ToolChoice.NONE) return 'none';
         else if (toolChoice === Function.ToolChoice.REQUIRED) return 'required';
@@ -91,7 +91,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
 }
 
 export namespace OpenAIChatCompletionsToolCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         parallelToolCall: boolean;
         fdm: fdm;
     }

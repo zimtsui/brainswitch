@@ -8,6 +8,7 @@ import { AnthropicCompatibleEngine } from '#@/compatible/engine.d/anthropic.ts';
 import { AliyunEngine } from '#@/compatible/engine.d/aliyun.ts';
 import { OpenAIResponsesNativeEngine } from '#@/native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
+import type { Verbatim } from './verbatim';
 
 
 export class Adaptor {
@@ -23,12 +24,15 @@ export class Adaptor {
         }
     }
 
-    public makeEngine<fdm extends Function.Declaration.Map>(
+    public makeEngine<
+        fdm extends Function.Declaration.Map.Prototype,
+        vdm extends Verbatim.Declaration.Map.Prototype,
+    >(
         endpoint: string,
         functionDeclarationMap: fdm,
-        toolChoice?: Function.ToolChoice<fdm>,
+        toolChoice?: Function.ToolChoice.From<fdm>,
         parallelToolCall?: boolean,
-    ): CompatibleEngine<fdm> {
+    ): CompatibleEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         if (endpointSpec) {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
@@ -41,21 +45,24 @@ export class Adaptor {
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')
-            return new OpenAIResponsesCompatibleEngine<fdm>(options);
+            return new OpenAIResponsesCompatibleEngine<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'google')
-            return new GoogleCompatibleEngine<fdm>(options);
+            return new GoogleCompatibleEngine<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'aliyun')
-            return new AliyunEngine<fdm>(options);
+            return new AliyunEngine<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'anthropic')
-            return new AnthropicCompatibleEngine<fdm>(options);
+            return new AnthropicCompatibleEngine<fdm, vdm>(options);
         else throw new Error();
     }
 
-    public makeOpenAIResponsesNativeEngine<fdm extends Function.Declaration.Map>(
+    public makeOpenAIResponsesNativeEngine<
+        fdm extends Function.Declaration.Map.Prototype,
+        vdm extends Verbatim.Declaration.Map.Prototype,
+    >(
         endpoint: string,
         functionDeclarationMap: fdm,
         applyPatch?: boolean,
-        toolChoice?: Function.ToolChoice<fdm>,
+        toolChoice?: Function.ToolChoice.From<fdm>,
         parallelToolCall?: boolean,
     ): OpenAIResponsesNativeEngine<fdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
@@ -73,10 +80,13 @@ export class Adaptor {
         return new OpenAIResponsesNativeEngine<fdm>(options);
     }
 
-    public makeGoogleNativeEngine<fdm extends Function.Declaration.Map>(
+    public makeGoogleNativeEngine<
+        fdm extends Function.Declaration.Map.Prototype,
+        vdm extends Verbatim.Declaration.Map.Prototype,
+    >(
         endpoint: string,
         functionDeclarationMap: fdm,
-        toolChoice?: Function.ToolChoice<fdm>,
+        toolChoice?: Function.ToolChoice.From<fdm>,
         codeExecution?: boolean,
         urlContext?: boolean,
         googleSearch?: boolean,

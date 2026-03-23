@@ -9,26 +9,30 @@ import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-re
 import { OpenAIResponsesNativeMessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
 import { OpenAIResponsesNativeToolCallValidator } from '#@/native-engines.d/openai-responses/tool-call-validator.ts';
 import { OpenAIResponsesNativeTransport } from '#@/native-engines.d/openai-responses/transport.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
-export class OpenAIResponsesNativeEngine<in out fdm extends Function.Declaration.Map> extends
+export class OpenAIResponsesNativeEngine<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> extends
     Engine<
         fdm,
-        RoleMessage.User<fdm>,
-        RoleMessage.Ai<fdm>,
+        RoleMessage.User.From<fdm>,
+        RoleMessage.Ai.From<fdm, vdm>,
         RoleMessage.Developer,
-        Session<fdm>
+        Session.From<fdm, vdm>
     >
 {
     protected applyPatch: boolean;
-    protected toolChoice: Tool.Choice<fdm>;
+    protected toolChoice: Tool.Choice.From<fdm>;
 
     protected toolCodec: OpenAIResponsesToolCodec<fdm>;
-    protected compatibleMessageCodec: OpenAIResponsesCompatibleMessageCodec<fdm>;
-    protected messageCodec: OpenAIResponsesNativeMessageCodec<fdm>;
+    protected compatibleMessageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
+    protected messageCodec: OpenAIResponsesNativeMessageCodec<fdm, vdm>;
     protected billing: OpenAIResponsesBilling;
-    protected toolCallValidator: OpenAIResponsesNativeToolCallValidator<fdm>;
-    protected transport: OpenAIResponsesNativeTransport<fdm>;
+    protected toolCallValidator: OpenAIResponsesNativeToolCallValidator.From<fdm>;
+    protected transport: OpenAIResponsesNativeTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: OpenAIResponsesNativeEngine.Options<fdm>) {
@@ -62,16 +66,16 @@ export class OpenAIResponsesNativeEngine<in out fdm extends Function.Declaration
 
     protected override infer(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 
     public override appendUserMessage(
-        session: Session<fdm>,
-        message: RoleMessage.User<fdm>,
-    ): Session<fdm> {
+        session: Session.From<fdm, vdm>,
+        message: RoleMessage.User.From<fdm>,
+    ): Session.From<fdm, vdm> {
         return {
             developerMessage: session.developerMessage,
             chatMessages: [...session.chatMessages, message],
@@ -79,17 +83,17 @@ export class OpenAIResponsesNativeEngine<in out fdm extends Function.Declaration
     }
 
     public override pushUserMessage(
-        session: Session<fdm>,
-        message: RoleMessage.User<fdm>,
-    ): Session<fdm> {
+        session: Session.From<fdm, vdm>,
+        message: RoleMessage.User.From<fdm>,
+    ): Session.From<fdm, vdm> {
         session.chatMessages.push(message);
         return session;
     }
 }
 
 export namespace OpenAIResponsesNativeEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {
+    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends Engine.Options<fdm> {
         applyPatch?: boolean;
-        toolChoice?: Tool.Choice<fdm>;
+        toolChoice?: Tool.Choice.From<fdm>;
     }
 }

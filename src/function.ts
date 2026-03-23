@@ -1,5 +1,6 @@
 import { type Static, type TObject, type TSchema } from '@sinclair/typebox';
 
+const NOMINAL = Symbol();
 
 export interface Function<in out fd extends Function.Declaration.Prototype> {
     (params: Static<fd['paraschema']>): Promise<string>;
@@ -60,8 +61,7 @@ export namespace Function {
     }
 
     export class Call<in out fd extends Function.Declaration.Prototype> {
-        private static readonly NOMINAL = Symbol();
-        private declare readonly [Call.NOMINAL]: void;
+        protected declare [NOMINAL]: void;
         public id?: string;
         public name: fd['name'];
         public args: Static<fd['paraschema']>;
@@ -73,28 +73,10 @@ export namespace Function {
         public static create<fdu extends Function.Declaration.Prototype>(fc: Call.Options.Of<fdu>): Call.Of<fdu> {
             return new Call(fc) as Call.Of<fdu>;
         }
-    }
-    export namespace Call {
-        export type Of<
-            fdu extends Function.Declaration.Prototype,
-        > = fdu extends infer fd extends Function.Declaration.Prototype ? Call<fd> : never;
-        export type From<fdm extends Function.Declaration.Map.Prototype> = {
-            [name in Function.Declaration.Map.NameOf<fdm>]: Call<Function.Declaration.Extract<fdm, name>>;
-        }[Function.Declaration.Map.NameOf<fdm>];
 
-        export type Options<fd extends Function.Declaration.Prototype> = Omit<Call<fd>, never>;
-        export namespace Options {
-            export type Of<
-                fdu extends Function.Declaration.Prototype,
-            > = fdu extends infer fd extends Function.Declaration.Prototype ? Options<fd> : never;
-            export type From<fdm extends Function.Declaration.Map.Prototype> = {
-                [name in Function.Declaration.Map.NameOf<fdm>]: Omit<Call<Function.Declaration.Extract<fdm, name>>, never>;
-            }[Function.Declaration.Map.NameOf<fdm>];
-        }
-
-        export function validate<fdm extends Function.Declaration.Map.Prototype>(
-            toolCalls: Function.Call.From<fdm>[],
-            toolChoice: Function.ToolChoice<fdm>,
+        public static validate<fdu extends Function.Declaration.Prototype>(
+            toolCalls: Function.Call.Of<fdu>[],
+            toolChoice: Function.ToolChoice<fdu>,
             e: Error,
         ): void {
             if (toolChoice === Function.ToolChoice.REQUIRED)
@@ -105,10 +87,28 @@ export namespace Function {
                 if (!toolCalls.length) {} else throw e;
         }
     }
+    export namespace Call {
+        export type Of<
+            fdu extends Function.Declaration.Prototype,
+        > = fdu extends infer fd extends Function.Declaration.Prototype ? Call<fd> : never;
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Function.Call.Of<Function.Declaration.From<fdm>>;
+
+        export type Options<fd extends Function.Declaration.Prototype> = Omit<Call<fd>, never>;
+        export namespace Options {
+            export type Of<
+                fdu extends Function.Declaration.Prototype,
+            > = fdu extends infer fd extends Function.Declaration.Prototype ? Options<fd> : never;
+            export type From<
+                fdm extends Function.Declaration.Map.Prototype,
+            > = Function.Call.Options.Of<Function.Declaration.From<fdm>>;
+        }
+
+    }
 
     export class Response<in out fd extends Function.Declaration.Prototype> {
-        private static readonly NOMINAL = Symbol();
-        private declare readonly [Response.NOMINAL]: void;
+        protected declare [NOMINAL]: void;
         public id?: string;
         public name: fd['name'];
         public text: string;
@@ -125,23 +125,23 @@ export namespace Function {
         export type Of<
             fdu extends Function.Declaration.Prototype,
         > = fdu extends infer fd extends Function.Declaration.Prototype ? Response<fd> : never;
-        export type From<fdm extends Function.Declaration.Map.Prototype> = {
-            [name in Function.Declaration.Map.NameOf<fdm>]: Response<Function.Declaration.Extract<fdm, name>>;
-        }[Function.Declaration.Map.NameOf<fdm>];
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Function.Response.Of<Function.Declaration.From<fdm>>;
 
         export type Options<fd extends Function.Declaration.Prototype> = Omit<Response<fd>, never>;
         export namespace Options {
             export type Of<
                 fdu extends Function.Declaration.Prototype,
             > = fdu extends infer fd extends Function.Declaration.Prototype ? Options<fd> : never;
-            export type From<fdm extends Function.Declaration.Map.Prototype> = {
-                [name in Function.Declaration.Map.NameOf<fdm>]: Omit<Response<Function.Declaration.Extract<fdm, name>>, never>;
-            }[Function.Declaration.Map.NameOf<fdm>];
+            export type From<
+                fdm extends Function.Declaration.Map.Prototype,
+            > = Function.Response.Options.Of<Function.Declaration.From<fdm>>;
         }
     }
 
-    export type ToolChoice<fdm extends Function.Declaration.Map.Prototype> =
-        | Function.Declaration.Map.NameOf<fdm>[]
+    export type ToolChoice<fdu extends Function.Declaration.Prototype> =
+        | fdu['name'][]
         | typeof ToolChoice.NONE
         | typeof ToolChoice.REQUIRED
         | typeof ToolChoice.AUTO;
@@ -149,6 +149,10 @@ export namespace Function {
         export const NONE = Symbol();
         export const REQUIRED = Symbol();
         export const AUTO = Symbol();
+
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Function.ToolChoice<Function.Declaration.From<fdm>>;
     }
 
     export type Map<fdm extends Function.Declaration.Map.Prototype> = {

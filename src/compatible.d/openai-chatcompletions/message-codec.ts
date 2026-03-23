@@ -3,25 +3,29 @@ import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
 import type { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletion/tool-codec.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Function.Declaration.Map> {
+export class OpenAIChatCompletionsCompatibleMessageCodec<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
     public constructor(protected ctx: OpenAIChatCompletionsCompatibleMessageCodec.Context<fdm>) {}
 
     public convertToAiMessage(
         message: OpenAI.ChatCompletionMessage,
-    ): RoleMessage.Ai<fdm> {
-        const parts: RoleMessage.Ai.Part<fdm>[] = [];
+    ): RoleMessage.Ai.From<fdm, vdm> {
+        const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
         if (message.content)
-            parts.push(RoleMessage.Part.Text.create(message.content));
+            parts.push(new RoleMessage.Part.Text(message.content));
         if (message.tool_calls)
             parts.push(...message.tool_calls.map(apifc => {
                 if (apifc.type === 'function') {} else throw new Error();
                 return this.ctx.toolCodec.convertToFunctionCall(apifc);
             }));
         if (parts.length) {} else throw new ResponseInvalid('Content or tool calls not found in Response', { cause: message });
-        return RoleMessage.Ai.create(parts);
+        return new RoleMessage.Ai(parts);
     }
 
     public convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): OpenAI.ChatCompletionSystemMessageParam {
@@ -32,9 +36,9 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
     }
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<fdm>,
+        userMessage: RoleMessage.User.From<fdm>,
     ): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
-        const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text.Instance);
+        const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text);
         const frs = userMessage.getFunctionResponses();
         if (textParts.length && !frs.length)
             return [{ role: 'user', content: textParts.map(part => ({ type: 'text', text: part.text })) }];
@@ -44,10 +48,10 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
     }
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<fdm>,
+        aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): OpenAI.ChatCompletionAssistantMessageParam {
         const parts = aiMessage.getParts();
-        const textParts = parts.filter(part => part instanceof RoleMessage.Part.Text.Instance);
+        const textParts = parts.filter(part => part instanceof RoleMessage.Part.Text);
         const fcParts = parts.filter(part => part instanceof Function.Call);
         return {
             role: 'assistant',
@@ -57,19 +61,19 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
     }
 
     public convertFromRoleMessage(
-        roleMessage: RoleMessage,
+        roleMessage: Session.ChatMessage.From<fdm, vdm> | RoleMessage.Developer,
     ): OpenAI.ChatCompletionMessageParam[] {
-        if (roleMessage instanceof RoleMessage.Developer.Instance)
+        if (roleMessage instanceof RoleMessage.Developer)
             return [this.convertFromDeveloperMessage(roleMessage)];
-        else if (roleMessage instanceof RoleMessage.User.Instance)
+        else if (roleMessage instanceof RoleMessage.User)
             return this.convertFromUserMessage(roleMessage);
-        else if (roleMessage instanceof RoleMessage.Ai.Instance)
+        else if (roleMessage instanceof RoleMessage.Ai)
             return [this.convertFromAiMessage(roleMessage)];
         else throw new Error();
     }
 
-    public convertFromChatMessages(
-        chatMessages: Session.ChatMessage<fdm>[],
+    public convertFromRoleMessages(
+        chatMessages: (Session.ChatMessage.From<fdm, vdm> | RoleMessage.Developer)[],
     ): OpenAI.ChatCompletionMessageParam[] {
         return chatMessages.map(chatMessage => this.convertFromRoleMessage(chatMessage)).flat();
     }
@@ -77,7 +81,7 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<in out fdm extends Func
 }
 
 export namespace OpenAIChatCompletionsCompatibleMessageCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
     }
 }

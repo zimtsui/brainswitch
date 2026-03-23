@@ -2,16 +2,22 @@ import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
+import type { Verbatim } from '#@/verbatim.ts';
+
+const NOMINAL = Symbol();
 
 
-export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declaration.Map> {
+export class AnthropicCompatibleMessageCodec<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
     public constructor(protected ctx: AnthropicCompatibleMessageCodec.Context<fdm>) {}
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<fdm>,
+        userMessage: RoleMessage.User.From<fdm>,
     ): Anthropic.ContentBlockParam[] {
         return userMessage.getParts().map(part => {
-            if (part instanceof RoleMessage.Part.Text.Instance)
+            if (part instanceof RoleMessage.Part.Text)
                 return {
                     type: 'text',
                     text: part.text,
@@ -23,13 +29,13 @@ export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declara
     }
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<fdm>,
+        aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): Anthropic.ContentBlockParam[] {
-        if (aiMessage instanceof AnthropicCompatibleMessageCodec.Message.Ai.Instance)
+        if (aiMessage instanceof AnthropicCompatibleMessageCodec.Message.Ai)
             return aiMessage.getRaw();
         else {
             return aiMessage.getParts().map(part => {
-                if (part instanceof RoleMessage.Part.Text.Instance)
+                if (part instanceof RoleMessage.Part.Text)
                     return {
                         type: 'text',
                         text: part.text,
@@ -48,57 +54,56 @@ export class AnthropicCompatibleMessageCodec<in out fdm extends Function.Declara
     }
 
     public convertFromChatMessage(
-        chatMessage: Session.ChatMessage<fdm>,
+        chatMessage: Session.ChatMessage.From<fdm, vdm>,
     ): Anthropic.MessageParam {
-        if (chatMessage instanceof RoleMessage.User.Instance)
+        if (chatMessage instanceof RoleMessage.User)
             return { role: 'user', content: this.convertFromUserMessage(chatMessage) };
-        else if (chatMessage instanceof RoleMessage.Ai.Instance)
+        else if (chatMessage instanceof RoleMessage.Ai)
             return { role: 'assistant', content: this.convertFromAiMessage(chatMessage) };
         else throw new Error();
     }
 
     public convertToAiMessage(
         raw: Anthropic.ContentBlock[],
-    ): AnthropicCompatibleMessageCodec.Message.Ai<fdm> {
-        const parts = raw.flatMap((item): RoleMessage.Ai.Part<fdm>[] => {
-            if (item.type === 'text') return [RoleMessage.Part.Text.create(item.text)];
+    ): AnthropicCompatibleMessageCodec.Message.Ai.From<fdm, vdm> {
+        const parts = raw.flatMap((item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
+            if (item.type === 'text') return [new RoleMessage.Part.Text(item.text)];
             else if (item.type === 'tool_use') return [this.ctx.toolCodec.convertToFunctionCall(item)];
             else if (item.type === 'thinking') return [];
             else throw new Error();
         });
-        return AnthropicCompatibleMessageCodec.Message.Ai.create(parts, raw);
+        return new AnthropicCompatibleMessageCodec.Message.Ai(parts, raw);
     }
 }
 
 export namespace AnthropicCompatibleMessageCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         toolCodec: AnthropicToolCodec<fdm>;
     }
 
     export namespace Message {
-        export type Ai<fdm extends Function.Declaration.Map> = Ai.Instance<fdm>;
+        export class Ai<
+            in out fdu extends Function.Declaration.Prototype,
+            in out vdu extends Verbatim.Declaration.Prototype,
+        > extends RoleMessage.Ai<fdu, vdu> {
+            protected declare [NOMINAL]: void;
+
+            public constructor(
+                parts: RoleMessage.Ai.Part<fdu, vdu>[],
+                protected raw: Anthropic.ContentBlock[],
+            ) {
+                super(parts);
+            }
+
+            public getRaw(): Anthropic.ContentBlock[] {
+                return this.raw;
+            }
+        }
         export namespace Ai {
-            export function create<fdm extends Function.Declaration.Map>(
-                parts: RoleMessage.Ai.Part<fdm>[],
-                raw: Anthropic.ContentBlock[],
-            ): Ai<fdm> {
-                return new Instance(parts, raw);
-            }
-            export const NOMINAL = Symbol();
-            export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Ai.Instance<fdm> {
-                public declare readonly [NOMINAL]: void;
-
-                public constructor(
-                    parts: RoleMessage.Ai.Part<fdm>[],
-                    protected raw: Anthropic.ContentBlock[],
-                ) {
-                    super(parts);
-                }
-
-                public getRaw(): Anthropic.ContentBlock[] {
-                    return this.raw;
-                }
-            }
+            export type From<
+                fdm extends Function.Declaration.Map.Prototype,
+                vdm extends Verbatim.Declaration.Map.Prototype,
+            > = Ai<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
         }
     }
 }

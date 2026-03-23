@@ -29,7 +29,7 @@ export function decode<vdm extends Verbatim.Declaration.Map.Prototype>(
         if (vditem) {} else throw Error();
         if (ajv.validate(vditem.paraschema, args)) {}
         else throw new ResponseInvalid('Verbatim message not conforming to schema', { cause: str });
-        messages.push(Verbatim.Message.create<vdu>({
+        messages.push(Verbatim.Message.create({
             name,
             args,
         } as Verbatim.Message.Options.Of<vdu>));

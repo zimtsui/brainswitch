@@ -11,18 +11,22 @@ import type { OpenAIResponsesNativeMessageCodec } from '#@/native-engines.d/open
 import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
 import type { OpenAIResponsesNativeToolCallValidator } from '#@/native-engines.d/openai-responses/tool-call-validator.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map> {
+export class OpenAIResponsesNativeTransport<
+    fdm extends Function.Declaration.Map.Prototype,
+    vdm extends Verbatim.Declaration.Map.Prototype,
+> {
     protected apiURL: URL;
 
-    public constructor(protected ctx: OpenAIResponsesNativeTransport.Context<fdm>) {
+    public constructor(protected ctx: OpenAIResponsesNativeTransport.Context<fdm, vdm>) {
         this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/responses`);
     }
 
     protected makeParams(
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
         const tools: OpenAI.Responses.Tool[] = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         if (this.ctx.applyPatch) tools.push({ type: 'apply_patch' });
@@ -41,7 +45,7 @@ export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map
     }
 
     protected convertFromToolChoice(
-        toolChoice: Tool.Choice<fdm>,
+        toolChoice: Tool.Choice.From<fdm>,
     ): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed {
         if (toolChoice === Function.ToolChoice.NONE) return 'none';
         else if (toolChoice === Function.ToolChoice.REQUIRED) return 'required';
@@ -71,9 +75,9 @@ export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map
 
     protected async fetchRaw(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
@@ -112,26 +116,29 @@ export class OpenAIResponsesNativeTransport<fdm extends Function.Declaration.Map
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         return await this.fetchRaw(wfctx, session, signal).catch(e => Promise.reject(e instanceof OpenAI.APIError ? new ResponseInvalid(undefined, { cause: e }) : e));
     }
 }
 
 export namespace OpenAIResponsesNativeTransport {
-    export interface Context<fdm extends Function.Declaration.Map> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         inferenceParams: InferenceParams;
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Tool.Choice<fdm>;
+        toolChoice: Tool.Choice.From<fdm>;
         parallelToolCall: boolean;
         applyPatch: boolean;
 
-        messageCodec: OpenAIResponsesNativeMessageCodec<fdm>;
+        messageCodec: OpenAIResponsesNativeMessageCodec<fdm, vdm>;
         toolCodec: OpenAIResponsesToolCodec<fdm>;
         billing: OpenAIResponsesBilling;
-        toolCallValidator: OpenAIResponsesNativeToolCallValidator<fdm>;
+        toolCallValidator: OpenAIResponsesNativeToolCallValidator.From<fdm>;
     }
 }

@@ -9,12 +9,16 @@ import type { AnthropicCompatibleMessageCodec } from '#@/compatible.d/anthropic/
 import type { AnthropicBilling } from '#@/api-types/anthropic/billing.ts';
 import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
 import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
-export class AnthropicCompatibleTransport<in out fdm extends Function.Declaration.Map> {
+export class AnthropicCompatibleTransport<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
     protected client: Anthropic;
 
-    public constructor(protected ctx: AnthropicCompatibleTransport.Context<fdm>) {
+    public constructor(protected ctx: AnthropicCompatibleTransport.Context<fdm, vdm>) {
         this.client = new Anthropic({
             baseURL: this.ctx.providerSpec.baseUrl,
             apiKey: this.ctx.providerSpec.apiKey,
@@ -23,7 +27,7 @@ export class AnthropicCompatibleTransport<in out fdm extends Function.Declaratio
     }
 
     protected makeParams(
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
     ): Anthropic.MessageCreateParamsStreaming {
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
         return {
@@ -40,9 +44,9 @@ export class AnthropicCompatibleTransport<in out fdm extends Function.Declaratio
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
@@ -121,17 +125,20 @@ export class AnthropicCompatibleTransport<in out fdm extends Function.Declaratio
 }
 
 export namespace AnthropicCompatibleTransport {
-    export interface Context<in out fdm extends Function.Declaration.Map> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         providerSpec: ProviderSpec;
         inferenceSpec: InferenceParams;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice<fdm>;
+        toolChoice: Function.ToolChoice.From<fdm>;
         parallelToolCall: boolean;
 
-        messageCodec: AnthropicCompatibleMessageCodec<fdm>;
+        messageCodec: AnthropicCompatibleMessageCodec<fdm, vdm>;
         toolCodec: AnthropicToolCodec<fdm>;
         billing: AnthropicBilling;
-        toolCallValidator: ToolCallValidator<fdm>;
+        toolCallValidator: ToolCallValidator.From<fdm>;
     }
 }

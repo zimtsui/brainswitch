@@ -7,14 +7,18 @@ import { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts
 import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
 import { OpenAIResponsesCompatibleTransport } from '#@/compatible.d/openai-responses/transport.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
-export class OpenAIResponsesCompatibleEngine<in out fdm extends Function.Declaration.Map> extends CompatibleEngine<fdm> {
+export class OpenAIResponsesCompatibleEngine<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> extends CompatibleEngine<fdm, vdm> {
     protected toolCodec: OpenAIResponsesToolCodec<fdm>;
-    protected messageCodec: OpenAIResponsesCompatibleMessageCodec<fdm>;
+    protected messageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
     protected billing: OpenAIResponsesBilling;
-    protected toolCallValidator: ToolCallValidator<fdm>;
-    protected transport: OpenAIResponsesCompatibleTransport<fdm>;
+    protected toolCallValidator: ToolCallValidator.From<fdm>;
+    protected transport: OpenAIResponsesCompatibleTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: OpenAIResponsesCompatibleEngine.Options<fdm>) {
@@ -40,15 +44,15 @@ export class OpenAIResponsesCompatibleEngine<in out fdm extends Function.Declara
 
     public override infer(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 }
 
 export namespace OpenAIResponsesCompatibleEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends
+    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends
         CompatibleEngine.Options<fdm>
     {}
 }

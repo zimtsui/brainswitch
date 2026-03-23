@@ -2,127 +2,145 @@ import * as Compatible from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import type { GenericSession } from '#@/session.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 import OpenAI from 'openai';
 
+const NOMINAL = Symbol();
 
-export interface Session<in out fdm extends Function.Declaration.Map> extends GenericSession<
-    RoleMessage.User<fdm>,
-    RoleMessage.Ai<fdm>,
+
+export interface Session<
+    in out fdu extends Function.Declaration.Prototype,
+    in out vdu extends Verbatim.Declaration.Prototype,
+> extends GenericSession<
+    RoleMessage.User<fdu>,
+    RoleMessage.Ai<fdu, vdu>,
     RoleMessage.Developer
 > {}
 export namespace Session {
-    export type ChatMessage<fdm extends Function.Declaration.Map> = GenericSession.ChatMessage<
-        RoleMessage.User<fdm>,
-        RoleMessage.Ai<fdm>
+    export type From<
+        fdm extends Function.Declaration.Map.Prototype,
+        vdm extends Verbatim.Declaration.Map.Prototype,
+    > = Session<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+
+    export type ChatMessage<
+        fdu extends Function.Declaration.Prototype,
+        vdu extends Verbatim.Declaration.Prototype,
+    > = GenericSession.ChatMessage<
+        RoleMessage.User<fdu>,
+        RoleMessage.Ai<fdu, vdu>
     >;
+    export namespace ChatMessage {
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+            vdm extends Verbatim.Declaration.Map.Prototype,
+        > = Session.ChatMessage<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+    }
 }
 
-export type RoleMessage = RoleMessage.Instance;
 export namespace RoleMessage {
-    export const NOMINAL = Symbol();
-    export abstract class Instance {
-        private declare readonly [NOMINAL]: void;
-        public abstract getText(): string;
-        public abstract getOnlyText(): string;
-    }
     export namespace Part {
         export import Text = Compatible.RoleMessage.Part.Text;
     }
 
-    export type Ai<fdm extends Function.Declaration.Map> = Ai.Instance<fdm>;
+    export class Ai<
+        in out fdu extends Function.Declaration.Prototype,
+        in out vdu extends Verbatim.Declaration.Prototype,
+    > {
+        protected declare [NOMINAL]: void;
+        public constructor(
+            protected parts: RoleMessage.Ai.Part<fdu>[],
+            protected raw: OpenAI.Responses.ResponseOutputItem[],
+        ) {}
+
+        public getParts(): RoleMessage.Ai.Part<fdu>[] {
+            return this.parts;
+        }
+        public getRaw(): OpenAI.Responses.ResponseOutputItem[] {
+            return this.raw;
+        }
+        public getText(): string {
+            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
+        }
+        public getOnlyText(): string {
+            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
+            return this.getText();
+        }
+        public getOnlyFunctionCall(): Function.Call.Of<fdu> {
+            const tcs = this.getToolCalls();
+            if (tcs.length === 1) {} else throw new Error();
+            const tc = tcs[0]!;
+            if (tc instanceof Function.Call) {} else throw new Error();
+            return tc;
+        }
+        public getOnlyApplyPatchCall(): Tool.ApplyPatch.Call {
+            const tcs = this.getToolCalls();
+            if (tcs.length === 1) {} else throw new Error();
+            const tc = tcs[0]!;
+            if (tc instanceof Tool.ApplyPatch.Call) {} else throw new Error();
+            return tc;
+        }
+        public getToolCalls(): Tool.Call.Of<fdu>[] {
+            return this.parts.filter(part => part instanceof Function.Call || part instanceof Tool.ApplyPatch.Call);
+        }
+        public getFunctionCalls(): Function.Call.Of<fdu>[] {
+            return this.parts.filter(part => part instanceof Function.Call);
+        }
+        public getOnlyFunctionCalls(): Function.Call.Of<fdu>[] {
+            const tcs = this.getToolCalls();
+            if (tcs.every(tc => tc instanceof Function.Call)) {} else throw new Error();
+            return tcs;
+        }
+    }
     export namespace Ai {
-        export function create<fdm extends Function.Declaration.Map>(
-            parts: RoleMessage.Ai.Part<fdm>[],
-            raw: OpenAI.Responses.ResponseOutputItem[],
-        ): RoleMessage.Ai<fdm> {
-            return new Instance(parts, raw);
-        }
-        export const NOMINAL = Symbol();
-        export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Instance {
-            public declare readonly [NOMINAL]: void;
-            public constructor(
-                protected parts: RoleMessage.Ai.Part<fdm>[],
-                protected raw: OpenAI.Responses.ResponseOutputItem[],
-            ) {
-                super();
-            }
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+            vdm extends Verbatim.Declaration.Map.Prototype,
+        > = RoleMessage.Ai<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
 
-            public getParts(): RoleMessage.Ai.Part<fdm>[] {
-                return this.parts;
-            }
-            public getRaw(): OpenAI.Responses.ResponseOutputItem[] {
-                return this.raw;
-            }
-            public getText(): string {
-                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
-            }
-            public getOnlyText(): string {
-                if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
-                return this.getText();
-            }
-            public getOnlyFunctionCall(): Function.Call.From<fdm> {
-                const tcs = this.getToolCalls();
-                if (tcs.length === 1) {} else throw new Error();
-                const tc = tcs[0]!;
-                if (tc instanceof Function.Call) {} else throw new Error();
-                return tc;
-            }
-            public getOnlyApplyPatchCall(): Tool.ApplyPatch.Call {
-                const tcs = this.getToolCalls();
-                if (tcs.length === 1) {} else throw new Error();
-                const tc = tcs[0]!;
-                if (tc instanceof Tool.ApplyPatch.Call) {} else throw new Error();
-                return tc;
-            }
-            public getToolCalls(): Tool.Call<fdm>[] {
-                return this.parts.filter(part => part instanceof Function.Call || part instanceof Tool.ApplyPatch.Call);
-            }
-            public getFunctionCalls(): Function.Call.From<fdm>[] {
-                return this.parts.filter(part => part instanceof Function.Call);
-            }
-            public getOnlyFunctionCalls(): Function.Call.From<fdm>[] {
-                const tcs = this.getToolCalls();
-                if (tcs.every(tc => tc instanceof Function.Call)) {} else throw new Error();
-                return tcs;
-            }
-        }
-
-        export type Part<fdm extends Function.Declaration.Map> =
+        export type Part<fdu extends Function.Declaration.Prototype> =
             |   RoleMessage.Part.Text
-            |   Tool.Call<fdm>
+            |   Tool.Call.Of<fdu>
         ;
+        export namespace Part {
+            export type From<
+                fdm extends Function.Declaration.Map.Prototype,
+            > = RoleMessage.Ai.Part<Function.Declaration.From<fdm>>;
+        }
     }
 
-    export type User<fdm extends Function.Declaration.Map> = User.Instance<fdm>;
+    export class User<
+        in out fdu extends Function.Declaration.Prototype,
+    > {
+        protected declare [NOMINAL]: void;
+        public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {}
+        public getParts(): RoleMessage.User.Part<fdu>[] {
+            return this.parts;
+        }
+        public getText(): string {
+            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
+        }
+        public getOnlyText(): string {
+            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
+            return this.getText();
+        }
+        public getToolResponses(): Tool.Response.Of<fdu>[] {
+            return this.parts.filter(part => part instanceof Function.Response || part instanceof Tool.ApplyPatch.Response);
+        }
+    }
     export namespace User {
-        export function create<fdm extends Function.Declaration.Map>(parts: User.Part<fdm>[]): User<fdm> {
-            return new Instance(parts);
-        }
-        export const NOMINAL = Symbol();
-        export class Instance<in out fdm extends Function.Declaration.Map> extends RoleMessage.Instance {
-            private declare readonly [NOMINAL]: void;
-            public constructor(protected parts: RoleMessage.User.Part<fdm>[]) {
-                super();
-            }
-            public getParts(): RoleMessage.User.Part<fdm>[] {
-                return this.parts;
-            }
-            public getText(): string {
-                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
-            }
-            public getOnlyText(): string {
-                if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
-                return this.getText();
-            }
-            public getToolResponses(): Tool.Response<fdm>[] {
-                return this.parts.filter(part => part instanceof Function.Response || part instanceof Tool.ApplyPatch.Response);
-            }
-        }
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = RoleMessage.User<Function.Declaration.From<fdm>>;
 
-        export type Part<fdm extends Function.Declaration.Map> =
+        export type Part<fdu extends Function.Declaration.Prototype> =
             |   RoleMessage.Part.Text
-            |   Tool.Response<fdm>
+            |   Tool.Response.Of<fdu>
         ;
+        export namespace Part {
+            export type From<
+                fdm extends Function.Declaration.Map.Prototype,
+            > = RoleMessage.User.Part<Function.Declaration.From<fdm>>;
+        }
     }
 
     export import Developer = Compatible.RoleMessage.Developer;
