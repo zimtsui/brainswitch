@@ -62,6 +62,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map> {
         fdm: fdm,
     ): Anthropic.Tool[] {
         const fdentries = Object.entries(fdm) as Function.Declaration.Entry.From<fdm>[];
+
         return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
     }
 

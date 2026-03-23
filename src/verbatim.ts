@@ -30,7 +30,7 @@ export namespace Verbatim {
 
         export namespace Map {
             export type Prototype = Record<string, Item<Verbatim.Declaration.Paraschema.Prototype>>;
-            export type NameOf<fdm extends Map.Prototype> = globalThis.Extract<keyof fdm, string>;
+            export type NameOf<vdm extends Verbatim.Declaration.Map.Prototype> = globalThis.Extract<keyof vdm, string>;
         }
         export interface Item<in out ps extends Verbatim.Declaration.Paraschema.Prototype> {
             description?: string;
@@ -40,99 +40,51 @@ export namespace Verbatim {
             export type Extract<
                 vdm extends Verbatim.Declaration.Map.Prototype,
                 name extends Verbatim.Declaration.Map.NameOf<vdm>,
-            > = Item<vdm[name]['paraschema']>;
-            export type From<
-                vdm extends Verbatim.Declaration.Map.Prototype,
-            > = Item<vdm[Verbatim.Declaration.Map.NameOf<vdm>]['paraschema']>;
+            > = Verbatim.Declaration.Item<vdm[name]['paraschema']>;
         }
-        export type Entry<name extends string, ps extends Verbatim.Declaration.Paraschema.Prototype> = [name, Item<ps>];
+        export type Entry<
+            name extends string,
+            ps extends Verbatim.Declaration.Paraschema.Prototype,
+        > = [name, Verbatim.Declaration.Item<ps>];
         export namespace Entry {
             export type Extract<
                 vdm extends Verbatim.Declaration.Map.Prototype,
                 name extends Verbatim.Declaration.Map.NameOf<vdm>,
-            > = Entry<name, vdm[name]['paraschema']>;
-            export type From<
-                vdm extends Verbatim.Declaration.Map.Prototype,
-            > = Entry<
-                Verbatim.Declaration.Map.NameOf<vdm>,
-                vdm[Verbatim.Declaration.Map.NameOf<vdm>]['paraschema']
-            >;
+            > = Verbatim.Declaration.Entry<name, vdm[name]['paraschema']>;
+            export type From<vdm extends Verbatim.Declaration.Map.Prototype> = {
+                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Verbatim.Declaration.Entry<name, vdm[name]['paraschema']>;
+            }[Verbatim.Declaration.Map.NameOf<vdm>];
         }
     }
 
     export class Message<in out vd extends Verbatim.Declaration.Prototype> {
         public static readonly NOMINAL = Symbol();
         private declare readonly [Message.NOMINAL]: void;
-        public id?: string;
         public name: vd['name'];
         public args: Static<vd['paraschema']>;
-        private constructor(fc: Omit<Message<vd>, never>) {
-            this.id = fc.id;
-            this.name = fc.name;
-            this.args = fc.args;
+        protected constructor(vm: Message.Options<vd>) {
+            this.name = vm.name;
+            this.args = vm.args;
         }
-        public static create<vdm extends Declaration.Map.Prototype>(fc: Message.create.Options<vdm>): Message.From<vdm> {
-            return new Message(fc) as Message.From<vdm>;
-        }
-        public static restore<vdm extends Declaration.Map.Prototype>(snapshot: Message.Snapshot.Distributive<vdm>): Message.From<vdm> {
-            return new Message(snapshot) as Message.From<vdm>;
-        }
-        public static capture<vdm extends Declaration.Map.Prototype>(fc: Message.From<vdm>): Message.Snapshot.Distributive<vdm> {
-            return fc as Message.Snapshot.Distributive<vdm>;
+        public static create<vdu extends Verbatim.Declaration.Prototype>(vm: Message.Options.Of<vdu>): Message.Of<vdu> {
+            return new Message(vm) as Message.Of<vdu>;
         }
     }
     export namespace Message {
+        export type Of<
+            vdu extends Verbatim.Declaration.Prototype,
+        > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Message<vd> : never;
         export type From<vdm extends Verbatim.Declaration.Map.Prototype> = {
             [name in Verbatim.Declaration.Map.NameOf<vdm>]: Message<Verbatim.Declaration.Extract<vdm, name>>;
         }[Verbatim.Declaration.Map.NameOf<vdm>];
 
-        export type Snapshot<fd extends Verbatim.Declaration.Prototype> = Omit<Message<fd>, never>;
-        export namespace Snapshot {
-            export type Distributive<vdm extends Verbatim.Declaration.Map.Prototype> = {
-                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Snapshot<Verbatim.Declaration.Extract<vdm, name>>;
-            }[Verbatim.Declaration.Map.NameOf<vdm>];
-        }
-        export namespace create {
-            export type Options<vdm extends Verbatim.Declaration.Map.Prototype> = {
-                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Omit<Message<Verbatim.Declaration.Extract<vdm, name>>, never>;
-            }[Verbatim.Declaration.Map.NameOf<vdm>];
-        }
-    }
-
-    export class Response<in out vd extends Verbatim.Declaration.Prototype> {
-        public static readonly NOMINAL = Symbol();
-        private declare readonly [Response.NOMINAL]: void;
-        public id?: string;
-        public name: vd['name'];
-        public text: string;
-        private constructor(fr: Omit<Response<vd>, never>) {
-            this.id = fr.id;
-            this.name = fr.name;
-            this.text = fr.text;
-        }
-        public static create<vdm extends Verbatim.Declaration.Map.Prototype>(fr: Response.create.Options<vdm>): Response.Distributive<vdm> {
-            return new Response(fr) as Response.Distributive<vdm>;
-        }
-        public static capture<vdm extends Verbatim.Declaration.Map.Prototype>(response: Response.Distributive<vdm>): Response.Snapshot.Distributive<vdm> {
-            return response as Response.Snapshot.Distributive<vdm>;
-        }
-        public static restore<vdm extends Verbatim.Declaration.Map.Prototype>(snapshot: Response.Snapshot.Distributive<vdm>): Response.Distributive<vdm> {
-            return new Response(snapshot) as Response.Distributive<vdm>;
-        }
-    }
-    export namespace Response {
-        export type Snapshot<vd extends Verbatim.Declaration.Prototype> = Omit<Response<vd>, never>;
-        export namespace Snapshot {
-            export type Distributive<vdm extends Verbatim.Declaration.Map.Prototype> = {
-                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Snapshot<Verbatim.Declaration.Extract<vdm, name>>;
-            }[Verbatim.Declaration.Map.NameOf<vdm>];
-        }
-        export type Distributive<vdm extends Verbatim.Declaration.Map.Prototype> = {
-            [name in Verbatim.Declaration.Map.NameOf<vdm>]: Response<Verbatim.Declaration.Extract<vdm, name>>;
-        }[Verbatim.Declaration.Map.NameOf<vdm>];
-        export namespace create {
-            export type Options<vdm extends Verbatim.Declaration.Map.Prototype> = {
-                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Omit<Response<Verbatim.Declaration.Extract<vdm, name>>, never>;
+        export type Options<vd extends Verbatim.Declaration.Prototype> = Omit<Message<vd>, never>;
+        export namespace Options {
+            export type Of<
+                vdu extends Verbatim.Declaration.Prototype,
+            > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Options<vd> : never;
+            export type From<vdm extends Verbatim.Declaration.Map.Prototype> = {
+                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Options<Verbatim.Declaration.Extract<vdm, name>>;
             }[Verbatim.Declaration.Map.NameOf<vdm>];
         }
     }

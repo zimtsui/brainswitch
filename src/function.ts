@@ -33,9 +33,7 @@ export namespace Function {
 
         export namespace Map {
             export type Prototype = Record<string, Item<Function.Declaration.Paraschema.Prototype>>;
-            export type NameOf<
-                fdm extends Function.Declaration.Map.Prototype,
-            > = globalThis.Extract<keyof fdm, string>;
+            export type NameOf<fdm extends Function.Declaration.Map.Prototype> = globalThis.Extract<keyof fdm, string>;
         }
         export interface Item<in out ps extends Function.Declaration.Paraschema.Prototype> {
             description?: string;
@@ -46,25 +44,18 @@ export namespace Function {
                 fdm extends Function.Declaration.Map.Prototype,
                 name extends Function.Declaration.Map.NameOf<fdm>,
             > = Item<fdm[name]['paraschema']>;
-            export type From<
-                fdm extends Function.Declaration.Map.Prototype,
-            > = Function.Declaration.Item.Extract<fdm, Function.Declaration.Map.NameOf<fdm>>;
         }
+
         export type Entry<
             name extends string,
             ps extends Function.Declaration.Paraschema.Prototype,
         > = [name, Item<ps>];
         export namespace Entry {
-            export type Extract<
-                fdm extends Function.Declaration.Map.Prototype,
-                name extends Function.Declaration.Map.NameOf<fdm>,
-            > = Entry<name, fdm[name]['paraschema']>;
             export type From<
                 fdm extends Function.Declaration.Map.Prototype,
-            > = Entry<
-                Function.Declaration.Map.NameOf<fdm>,
-                fdm[Function.Declaration.Map.NameOf<fdm>]['paraschema']
-            >;
+            > = {
+                [name in Function.Declaration.Map.NameOf<fdm>]: Function.Declaration.Entry<name, fdm[name]['paraschema']>;
+            }[Function.Declaration.Map.NameOf<fdm>];
         }
     }
 
@@ -74,34 +65,29 @@ export namespace Function {
         public id?: string;
         public name: fd['name'];
         public args: Static<fd['paraschema']>;
-        private constructor(fc: Omit<Call<fd>, never>) {
+        protected constructor(fc: Omit<Call<fd>, never>) {
             this.id = fc.id;
             this.name = fc.name;
             this.args = fc.args;
         }
-        public static create<fdm extends Function.Declaration.Map.Prototype>(fc: Call.create.Options<fdm>): Call.From<fdm> {
-            return new Call(fc) as Call.From<fdm>;
-        }
-        public static restore<fdm extends Function.Declaration.Map.Prototype>(snapshot: Call.Snapshot.Distributive<fdm>): Call.From<fdm> {
-            return new Call(snapshot) as Call.From<fdm>;
-        }
-        public static capture<fdm extends Function.Declaration.Map.Prototype>(fc: Call.From<fdm>): Call.Snapshot.Distributive<fdm> {
-            return fc as Call.Snapshot.Distributive<fdm>;
+        public static create<fdu extends Function.Declaration.Prototype>(fc: Call.Options.Of<fdu>): Call.Of<fdu> {
+            return new Call(fc) as Call.Of<fdu>;
         }
     }
     export namespace Call {
+        export type Of<
+            fdu extends Function.Declaration.Prototype,
+        > = fdu extends infer fd extends Function.Declaration.Prototype ? Call<fd> : never;
         export type From<fdm extends Function.Declaration.Map.Prototype> = {
             [name in Function.Declaration.Map.NameOf<fdm>]: Call<Function.Declaration.Extract<fdm, name>>;
         }[Function.Declaration.Map.NameOf<fdm>];
 
-        export type Snapshot<fd extends Function.Declaration.Prototype> = Omit<Call<fd>, never>;
-        export namespace Snapshot {
-            export type Distributive<fdm extends Function.Declaration.Map.Prototype> = {
-                [name in Function.Declaration.Map.NameOf<fdm>]: Snapshot<Function.Declaration.Extract<fdm, name>>;
-            }[Function.Declaration.Map.NameOf<fdm>];
-        }
-        export namespace create {
-            export type Options<fdm extends Function.Declaration.Map.Prototype> = {
+        export type Options<fd extends Function.Declaration.Prototype> = Omit<Call<fd>, never>;
+        export namespace Options {
+            export type Of<
+                fdu extends Function.Declaration.Prototype,
+            > = fdu extends infer fd extends Function.Declaration.Prototype ? Options<fd> : never;
+            export type From<fdm extends Function.Declaration.Map.Prototype> = {
                 [name in Function.Declaration.Map.NameOf<fdm>]: Omit<Call<Function.Declaration.Extract<fdm, name>>, never>;
             }[Function.Declaration.Map.NameOf<fdm>];
         }
@@ -126,33 +112,29 @@ export namespace Function {
         public id?: string;
         public name: fd['name'];
         public text: string;
-        private constructor(fr: Omit<Response<fd>, never>) {
+        protected constructor(fr: Omit<Response<fd>, never>) {
             this.id = fr.id;
             this.name = fr.name;
             this.text = fr.text;
         }
-        public static create<fdm extends Function.Declaration.Map.Prototype>(fr: Response.create.Options<fdm>): Response.From<fdm> {
-            return new Response(fr) as Response.From<fdm>;
-        }
-        public static capture<fdm extends Function.Declaration.Map.Prototype>(response: Response.From<fdm>): Response.Snapshot.Distributive<fdm> {
-            return response as Response.Snapshot.Distributive<fdm>;
-        }
-        public static restore<fdm extends Function.Declaration.Map.Prototype>(snapshot: Response.Snapshot.Distributive<fdm>): Response.From<fdm> {
-            return new Response(snapshot) as Response.From<fdm>;
+        public static create<fdu extends Function.Declaration.Prototype>(fr: Response.Options.Of<fdu>): Response.Of<fdu> {
+            return new Response(fr) as Response.Of<fdu>;
         }
     }
     export namespace Response {
-        export type Snapshot<fd extends Function.Declaration.Prototype> = Omit<Response<fd>, never>;
-        export namespace Snapshot {
-            export type Distributive<fdm extends Function.Declaration.Map.Prototype> = {
-                [name in Function.Declaration.Map.NameOf<fdm>]: Snapshot<Function.Declaration.Extract<fdm, name>>;
-            }[Function.Declaration.Map.NameOf<fdm>];
-        }
+        export type Of<
+            fdu extends Function.Declaration.Prototype,
+        > = fdu extends infer fd extends Function.Declaration.Prototype ? Response<fd> : never;
         export type From<fdm extends Function.Declaration.Map.Prototype> = {
             [name in Function.Declaration.Map.NameOf<fdm>]: Response<Function.Declaration.Extract<fdm, name>>;
         }[Function.Declaration.Map.NameOf<fdm>];
-        export namespace create {
-            export type Options<fdm extends Function.Declaration.Map.Prototype> = {
+
+        export type Options<fd extends Function.Declaration.Prototype> = Omit<Response<fd>, never>;
+        export namespace Options {
+            export type Of<
+                fdu extends Function.Declaration.Prototype,
+            > = fdu extends infer fd extends Function.Declaration.Prototype ? Options<fd> : never;
+            export type From<fdm extends Function.Declaration.Map.Prototype> = {
                 [name in Function.Declaration.Map.NameOf<fdm>]: Omit<Response<Function.Declaration.Extract<fdm, name>>, never>;
             }[Function.Declaration.Map.NameOf<fdm>];
         }
