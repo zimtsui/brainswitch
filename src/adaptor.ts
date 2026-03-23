@@ -64,7 +64,7 @@ export class Adaptor {
         applyPatch?: boolean,
         toolChoice?: Function.ToolChoice.From<fdm>,
         parallelToolCall?: boolean,
-    ): OpenAIResponsesNativeEngine<fdm> {
+    ): OpenAIResponsesNativeEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         if (endpointSpec?.apiType === 'openai-responses') {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
@@ -77,7 +77,7 @@ export class Adaptor {
             throttle,
             applyPatch,
         };
-        return new OpenAIResponsesNativeEngine<fdm>(options);
+        return new OpenAIResponsesNativeEngine(options);
     }
 
     public makeGoogleNativeEngine<
@@ -91,7 +91,7 @@ export class Adaptor {
         urlContext?: boolean,
         googleSearch?: boolean,
         parallelToolCall?: boolean,
-    ): GoogleNativeEngine<fdm> {
+    ): GoogleNativeEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         if (endpointSpec?.apiType === 'google') {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
@@ -106,6 +106,6 @@ export class Adaptor {
             urlContext,
             googleSearch,
         };
-        return new GoogleNativeEngine<fdm>(options);
+        return new GoogleNativeEngine(options);
     }
 }

@@ -16,6 +16,11 @@ export interface Session<
     RoleMessage.Developer
 > {}
 export namespace Session {
+    export type From<
+        fdm extends Function.Declaration.Map.Prototype,
+        vdm extends Verbatim.Declaration.Map.Prototype,
+    > = Session<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+
     export type ChatMessage<
         fdu extends Function.Declaration.Prototype,
         vdu extends Verbatim.Declaration.Prototype,
@@ -23,6 +28,12 @@ export namespace Session {
         RoleMessage.User<fdu>,
         RoleMessage.Ai<fdu, vdu>
     >;
+    export namespace ChatMessage {
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+            vdm extends Verbatim.Declaration.Map.Prototype,
+        > = ChatMessage<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+    }
 }
 
 
@@ -38,11 +49,11 @@ export namespace RoleMessage {
     > {
         protected declare [NOMINAL]: void;
         public constructor(
-            protected parts: RoleMessage.Ai.Part<fdu>[],
+            protected parts: RoleMessage.Ai.Part<fdu, vdu>[],
             protected raw: Google.Content,
         ) {}
 
-        public getParts(): RoleMessage.Ai.Part<fdu>[] {
+        public getParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
             return this.parts;
         }
         public getRaw(): Google.Content {
@@ -65,14 +76,27 @@ export namespace RoleMessage {
         }
     }
     export namespace Ai {
-        export type Part<fdu extends Function.Declaration.Prototype> =
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+            vdm extends Verbatim.Declaration.Map.Prototype,
+        > = Ai<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+        export type Part<
+            fdu extends Function.Declaration.Prototype,
+            vdu extends Verbatim.Declaration.Prototype,
+        > =
             |   RoleMessage.Part.Text
             |   Function.Call.Of<fdu>
+            |   Verbatim.Message.Of<vdu>
             |   RoleMessage.Ai.Part.ExecutableCode
             |   RoleMessage.Ai.Part.CodeExecutionResult
         ;
 
         export namespace Part {
+            export type From<
+                fdm extends Function.Declaration.Map.Prototype,
+                vdm extends Verbatim.Declaration.Map.Prototype,
+            > = Part<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+
             export class ExecutableCode {
                 protected declare [NOMINAL]: void;
                 public constructor(public code: string, public language: string) {}

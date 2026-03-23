@@ -3,15 +3,19 @@ import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts
 import { Function } from '#@/function.ts';
 import { type GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
 import * as CompatibleAgentloopModule from '#@/agentloop.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 /**
  * @param session mutable
  */
-export async function *agentloop<fdm extends Function.Declaration.Map>(
+export async function *agentloop<
+    fdm extends Function.Declaration.Map.Prototype,
+    vdm extends Verbatim.Declaration.Map.Prototype,
+>(
     wfctx: InferenceContext,
-    session: Session<fdm>,
-    engine: GoogleNativeEngine<fdm>,
+    session: Session.From<fdm, vdm>,
+    engine: GoogleNativeEngine<fdm, vdm>,
     fnm: Function.Map<fdm>,
     limit = Number.POSITIVE_INFINITY,
 ): AsyncGenerator<string, string, void> {
@@ -21,22 +25,22 @@ export async function *agentloop<fdm extends Function.Declaration.Map>(
         if (!fcs.length) return response.getOnlyText();
         const pfrs: Promise<Function.Response.From<fdm>>[] = [];
         for (const part of response.getParts()) {
-            if (part instanceof RoleMessage.Part.Text.Instance) {
+            if (part instanceof RoleMessage.Part.Text) {
                 yield part.text;
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.From<fdm>;
                 const f = fnm[fc.name];
                 pfrs.push((async () => {
-                    return Function.Response.create<fdm>({
+                    return Function.Response.of({
                         id: fc.id,
                         name: fc.name,
                         text: await f.call(fnm, fc.args),
-                    } as Function.Response.create.Options<fdm>);
+                    } as Function.Response.Options.From<fdm>);
                 })());
             } else throw new Error();
         }
-        const frs = await Promise.all(pfrs);
-        engine.pushUserMessage(session, RoleMessage.User.create<fdm>(frs));
+        const frs: Function.Response.From<fdm>[] = await Promise.all(pfrs);
+        engine.pushUserMessage(session, new RoleMessage.User(frs));
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }

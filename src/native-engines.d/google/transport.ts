@@ -11,21 +11,25 @@ import type { GoogleNativeMessageCodec } from '#@/native-engines.d/google/messag
 import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 import type { GoogleBilling } from '#@/api-types/google/billing.ts';
 import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class GoogleNativeTransport<fdm extends Function.Declaration.Map> {
+export class GoogleNativeTransport<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
     protected apiURL: URL;
 
-    public constructor(protected ctx: GoogleNativeTransport.Context<fdm>) {
+    public constructor(protected ctx: GoogleNativeTransport.Context<fdm, vdm>) {
         this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/v1beta/models/${this.ctx.inferenceParams.model}:generateContent`);
     }
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         const systemInstruction = session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage);
         const contents = this.ctx.messageCodec.convertFromChatMessages(session.chatMessages);
 
@@ -87,19 +91,22 @@ export class GoogleNativeTransport<fdm extends Function.Declaration.Map> {
 }
 
 export namespace GoogleNativeTransport {
-    export interface Context<fdm extends Function.Declaration.Map> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         inferenceParams: InferenceParams;
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice<fdm>;
+        toolChoice: Function.ToolChoice.From<fdm>;
         codeExecution: boolean;
         urlContext: boolean;
         googleSearch: boolean;
 
-        messageCodec: GoogleNativeMessageCodec<fdm>;
+        messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
         toolCodec: GoogleToolCodec<fdm>;
         billing: GoogleBilling;
-        toolCallValidator: ToolCallValidator<fdm>;
+        toolCallValidator: ToolCallValidator.From<fdm>;
     }
 }

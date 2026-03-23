@@ -32,7 +32,7 @@ export class OpenAIResponsesNativeMessageCodec<
             else if (item.type === 'reasoning')
                 return [];
             else if (item.type === 'apply_patch_call')
-                return [Tool.ApplyPatch.Call.create(item)];
+                return [new Tool.ApplyPatch.Call(item)];
             else throw new Error();
         });
         return new RoleMessage.Ai(parts, output);

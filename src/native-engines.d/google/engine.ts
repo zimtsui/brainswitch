@@ -8,28 +8,32 @@ import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
 import { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
 import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
-export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> extends
+export class GoogleNativeEngine<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> extends
     Engine<
         fdm,
-        RoleMessage.User<fdm>,
-        RoleMessage.Ai<fdm>,
+        RoleMessage.User.From<fdm>,
+        RoleMessage.Ai.From<fdm, vdm>,
         RoleMessage.Developer,
-        Session<fdm>
+        Session.From<fdm, vdm>
     >
 {
-    protected toolChoice: Function.ToolChoice<fdm>;
+    protected toolChoice: Function.ToolChoice.From<fdm>;
     protected codeExecution: boolean;
     protected urlContext: boolean;
     protected googleSearch: boolean;
 
     protected toolCodec: GoogleToolCodec<fdm>;
-    protected compatibleMessageCodec: GoogleCompatibleMessageCodec<fdm>;
-    protected messageCodec: GoogleNativeMessageCodec<fdm>;
+    protected compatibleMessageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
+    protected messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
     protected billing: GoogleBilling;
-    protected toolCallValidator: ToolCallValidator<fdm>;
-    protected transport: GoogleNativeTransport<fdm>;
+    protected toolCallValidator: ToolCallValidator.From<fdm>;
+    protected transport: GoogleNativeTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: GoogleNativeEngine.Options<fdm>) {
@@ -70,16 +74,16 @@ export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> ext
 
     protected override infer(
         wfctx: InferenceContext,
-        session: Session<fdm>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<fdm>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 
     public override appendUserMessage(
-        session: Session<fdm>,
-        message: RoleMessage.User<fdm>,
-    ): Session<fdm> {
+        session: Session.From<fdm, vdm>,
+        message: RoleMessage.User.From<fdm>,
+    ): Session.From<fdm, vdm> {
         return {
             developerMessage: session.developerMessage,
             chatMessages: [...session.chatMessages, message],
@@ -87,17 +91,17 @@ export class GoogleNativeEngine<in out fdm extends Function.Declaration.Map> ext
     }
 
     public override pushUserMessage(
-        session: Session<fdm>,
-        message: RoleMessage.User<fdm>,
-    ): Session<fdm> {
+        session: Session.From<fdm, vdm>,
+        message: RoleMessage.User.From<fdm>,
+    ): Session.From<fdm, vdm> {
         session.chatMessages.push(message);
         return session;
     }
 }
 
 export namespace GoogleNativeEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map> extends Engine.Options<fdm> {
-        toolChoice?: Function.ToolChoice<fdm>;
+    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends Engine.Options<fdm> {
+        toolChoice?: Function.ToolChoice.From<fdm>;
         codeExecution?: boolean;
         urlContext?: boolean;
         googleSearch?: boolean;

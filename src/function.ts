@@ -8,6 +8,12 @@ export interface Function<in out fd extends Function.Declaration.Prototype> {
 
 export namespace Function {
 
+    export namespace Name {
+        export type From<
+            fdm extends Function.Declaration.Map.Prototype,
+        > = Extract<keyof fdm, string>;
+    }
+
     export interface Declaration<
         name extends string,
         ps extends Function.Declaration.Paraschema.Prototype,
@@ -24,27 +30,21 @@ export namespace Function {
 
         export type Extract<
             fdm extends Function.Declaration.Map.Prototype,
-            nameu extends Function.Declaration.Map.NameOf<fdm>,
+            nameu extends Function.Name.From<fdm>,
         > = {
-            [name in Function.Declaration.Map.NameOf<fdm>]: Function.Declaration<name, fdm[name]['paraschema']>;
+            [name in Function.Name.From<fdm>]: Function.Declaration<name, fdm[name]['paraschema']>;
         }[nameu];
         export type From<
             fdm extends Function.Declaration.Map.Prototype,
-        > = Function.Declaration.Extract<fdm, Function.Declaration.Map.NameOf<fdm>>;
+        > = Function.Declaration.Extract<fdm, Function.Name.From<fdm>>;
 
         export namespace Map {
             export type Prototype = Record<string, Item<Function.Declaration.Paraschema.Prototype>>;
-            export type NameOf<fdm extends Function.Declaration.Map.Prototype> = globalThis.Extract<keyof fdm, string>;
         }
+
         export interface Item<in out ps extends Function.Declaration.Paraschema.Prototype> {
             description?: string;
             paraschema: ps;
-        }
-        export namespace Item {
-            export type Extract<
-                fdm extends Function.Declaration.Map.Prototype,
-                name extends Function.Declaration.Map.NameOf<fdm>,
-            > = Item<fdm[name]['paraschema']>;
         }
 
         export type Entry<
@@ -52,11 +52,12 @@ export namespace Function {
             ps extends Function.Declaration.Paraschema.Prototype,
         > = [name, Item<ps>];
         export namespace Entry {
+            export type Of<
+                fdu extends Function.Declaration.Prototype,
+            > = fdu extends infer fd extends Function.Declaration.Prototype ? Entry<fd['name'], fd['paraschema']> : never;
             export type From<
                 fdm extends Function.Declaration.Map.Prototype,
-            > = {
-                [name in Function.Declaration.Map.NameOf<fdm>]: Function.Declaration.Entry<name, fdm[name]['paraschema']>;
-            }[Function.Declaration.Map.NameOf<fdm>];
+            > = Function.Declaration.Entry.Of<Function.Declaration.From<fdm>>;
         }
     }
 
@@ -70,7 +71,7 @@ export namespace Function {
             this.name = fc.name;
             this.args = fc.args;
         }
-        public static create<fdu extends Function.Declaration.Prototype>(fc: Call.Options.Of<fdu>): Call.Of<fdu> {
+        public static of<fdu extends Function.Declaration.Prototype>(fc: Call.Options.Of<fdu>): Call.Of<fdu> {
             return new Call(fc) as Call.Of<fdu>;
         }
 
@@ -117,7 +118,7 @@ export namespace Function {
             this.name = fr.name;
             this.text = fr.text;
         }
-        public static create<fdu extends Function.Declaration.Prototype>(fr: Response.Options.Of<fdu>): Response.Of<fdu> {
+        public static of<fdu extends Function.Declaration.Prototype>(fr: Response.Options.Of<fdu>): Response.Of<fdu> {
             return new Response(fr) as Response.Of<fdu>;
         }
     }
@@ -156,6 +157,6 @@ export namespace Function {
     }
 
     export type Map<fdm extends Function.Declaration.Map.Prototype> = {
-        [name in Function.Declaration.Map.NameOf<fdm>]: Function<Function.Declaration.Extract<fdm, name>>;
+        [name in Function.Name.From<fdm>]: Function<Function.Declaration.Extract<fdm, name>>;
     };
 }

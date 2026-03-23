@@ -56,7 +56,7 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map.Prototy
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: googlefc });
         if (ajv.validate(fditem.paraschema, googlefc.args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: googlefc });
-        return Function.Call.create({
+        return Function.Call.of({
             id: googlefc.id,
             name: googlefc.name,
             args: googlefc.args,

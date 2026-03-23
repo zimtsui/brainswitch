@@ -69,7 +69,7 @@ export class OpenAIResponsesToolCodec<
         })();
         if (ajv.validate(fditem.paraschema, args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
-        return Function.Call.create({
+        return Function.Call.of({
             id: apifc.call_id,
             name: apifc.name,
             args,

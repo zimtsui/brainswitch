@@ -4,21 +4,25 @@ import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
 import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
 import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
-    public constructor(protected ctx: GoogleNativeMessageCodec.Context<fdm>) {}
+export class GoogleNativeMessageCodec<
+    in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
+> {
+    public constructor(protected ctx: GoogleNativeMessageCodec.Context<fdm, vdm>) {}
 
 
     public convertFromAiMessage(
-        aiMessage: RoleMessage.Ai<fdm>,
+        aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): Google.Content {
         return aiMessage.getRaw();
     }
 
     public convertFromUserMessage(
-        userMessage: RoleMessage.User<fdm>,
+        userMessage: RoleMessage.User.From<fdm>,
     ): Google.Content {
         return this.ctx.compatibleMessageCodec.convertFromUserMessage(userMessage);
     }
@@ -30,25 +34,25 @@ export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
     }
 
     public convertFromChatMessages(
-        chatMessages: Session.ChatMessage<fdm>[],
+        chatMessages: Session.ChatMessage.From<fdm, vdm>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
-            if (chatMessage instanceof RoleMessage.User.Instance) return this.convertFromUserMessage(chatMessage);
-            else if (chatMessage instanceof RoleMessage.Ai.Instance) return this.convertFromAiMessage(chatMessage);
+            if (chatMessage instanceof RoleMessage.User) return this.convertFromUserMessage(chatMessage);
+            else if (chatMessage instanceof RoleMessage.Ai) return this.convertFromAiMessage(chatMessage);
             else throw new Error();
         });
     }
 
     public convertToAiMessage(
         content: Google.Content,
-    ): RoleMessage.Ai<fdm> {
+    ): RoleMessage.Ai.From<fdm, vdm> {
         if (content.parts) {} else throw new Error();
-        return RoleMessage.Ai.create(content.parts.flatMap(part => {
-            const parts: RoleMessage.Ai.Part<fdm>[] = [];
+        return new RoleMessage.Ai(content.parts.flatMap(part => {
+            const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
             let payload = false;
             if (part.text) {
                 payload = true;
-                parts.push(RoleMessage.Part.Text.create(part.text));
+                parts.push(new RoleMessage.Part.Text(part.text));
             }
             if (part.functionCall) {
                 payload = true;
@@ -58,12 +62,12 @@ export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
                 payload = true;
                 if (part.executableCode.code) {} else throw new Error();
                 if (part.executableCode.language) {} else throw new Error();
-                parts.push(RoleMessage.Ai.Part.ExecutableCode.create(part.executableCode.code, part.executableCode.language));
+                parts.push(new RoleMessage.Ai.Part.ExecutableCode(part.executableCode.code, part.executableCode.language));
             }
             if (this.ctx.codeExecution && part.codeExecutionResult) {
                 payload = true;
                 if (part.codeExecutionResult.outcome) {} else throw new Error();
-                parts.push(RoleMessage.Ai.Part.CodeExecutionResult.create(part.codeExecutionResult.outcome, part.codeExecutionResult.output));
+                parts.push(new RoleMessage.Ai.Part.CodeExecutionResult(part.codeExecutionResult.outcome, part.codeExecutionResult.output));
             }
             if (payload) {} else throw new ResponseInvalid('Unknown content part', { cause: content });
             return parts;
@@ -72,9 +76,12 @@ export class GoogleNativeMessageCodec<fdm extends Function.Declaration.Map> {
 }
 
 export namespace GoogleNativeMessageCodec {
-    export interface Context<fdm extends Function.Declaration.Map> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         toolCodec: GoogleToolCodec<fdm>;
-        compatibleMessageCodec: GoogleCompatibleMessageCodec<fdm>;
+        compatibleMessageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
         codeExecution: boolean;
     }
 }

@@ -38,7 +38,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
         })();
         if (ajv.validate(fditem.paraschema, args)) {}
         else throw new ResponseInvalid('Invalid function arguments', { cause: apifc });
-        return Function.Call.create({
+        return Function.Call.of({
             id: apifc.id,
             name: apifc.function.name,
             args,

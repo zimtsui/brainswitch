@@ -30,7 +30,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map.Prot
         })();
         if (ajv.validate(fditem.paraschema, args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
-        return Function.Call.create({
+        return Function.Call.of({
             id: apifc.id,
             name: apifc.name,
             args,
