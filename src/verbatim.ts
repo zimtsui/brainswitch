@@ -58,7 +58,7 @@ export namespace Verbatim {
     }
 
     export class Message<in out vd extends Verbatim.Declaration.Prototype> {
-        public static readonly NOMINAL = Symbol();
+        private static readonly NOMINAL = Symbol();
         private declare readonly [Message.NOMINAL]: void;
         public name: vd['name'];
         public args: Static<vd['paraschema']>;

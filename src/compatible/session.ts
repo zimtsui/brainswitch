@@ -21,79 +21,67 @@ export namespace Session {
     >;
 }
 
-export type RoleMessage = RoleMessage.Instance;
 export namespace RoleMessage {
 
-    export const NOMINAL = Symbol();
-    export abstract class Instance {
-        private declare readonly [NOMINAL]: void;
-        public abstract getText(): string;
-        public abstract getOnlyText(): string;
-    }
     export namespace Part {
-        export type Text = Text.Instance;
-        export namespace Text {
-            export function create(text: string): Text {
-                return new Instance(text);
+        export class Text {
+            private static NOMINAL = Symbol();
+
+            public static create(text: string): Text {
+                return new Text(text);
             }
-            export function paragraph(text: string): Text {
-                return new Instance(text.trimEnd() + '\n\n');
+            public static paragraph(text: string): Text {
+                return new Text(text.trimEnd() + '\n\n');
             }
-            export const NOMINAL = Symbol();
-            export class Instance {
-                private declare readonly [NOMINAL]: void;
-                public constructor(public text: string) {}
-            }
+
+            private declare readonly [Text.NOMINAL]: void;
+            public constructor(public text: string) {}
         }
     }
 
-    export type Ai<
-        fdu extends Function.Declaration.Prototype,
-        vdu extends Verbatim.Declaration.Prototype,
-    > = Ai.Instance<fdu, vdu>;
-    export namespace Ai {
-        export function create<
+    export class Ai<
+        in out fdu extends Function.Declaration.Prototype,
+        in out vdu extends Verbatim.Declaration.Prototype,
+    > {
+        public static create<
             fdu extends Function.Declaration.Prototype,
             vdu extends Verbatim.Declaration.Prototype,
         >(parts: RoleMessage.Ai.Part<fdu, vdu>[]): RoleMessage.Ai<fdu, vdu> {
-            return new Instance(parts);
+            return new Ai(parts);
         }
-        export const NOMINAL = Symbol();
-        export class Instance<
-            in out fdu extends Function.Declaration.Prototype,
-            in out vdu extends Verbatim.Declaration.Prototype,
-        > extends RoleMessage.Instance {
-            public declare readonly [NOMINAL]: void;
-            public constructor(protected parts: RoleMessage.Ai.Part<fdu, vdu>[]) {
-                super();
-            }
-            public getParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
-                return this.parts;
-            }
-            public getText(): string {
-                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
-            }
-            public getOnlyText(): string {
-                if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
-                return this.getText();
-            }
-            public getOnlyFunctionCall(): Function.Call<fdu> {
-                const fcs = this.getFunctionCalls();
-                if (fcs.length === 1) {} else throw new Error();
-                return fcs[0]!;
-            }
-            public getFunctionCalls(): Function.Call<fdu>[] {
-                return this.parts.filter(part => part instanceof Function.Call);
-            }
-            public getOnlyVerbatimMessage(): Verbatim.Message<vdu> {
-                const vms = this.getVerbatimMessages();
-                if (vms.length === 1) {} else throw new Error();
-                return vms[0]!;
-            }
-            public getVerbatimMessages(): Verbatim.Message<vdu>[] {
-                return this.parts.filter(part => part instanceof Verbatim.Message);
-            }
+
+        private static NOMINAL = Symbol();
+        public declare readonly [Ai.NOMINAL]: void;
+
+        public constructor(protected parts: RoleMessage.Ai.Part<fdu, vdu>[]) {}
+        public getParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
+            return this.parts;
         }
+        public getText(): string {
+            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
+        }
+        public getOnlyText(): string {
+            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
+            return this.getText();
+        }
+        public getOnlyFunctionCall(): Function.Call<fdu> {
+            const fcs = this.getFunctionCalls();
+            if (fcs.length === 1) {} else throw new Error();
+            return fcs[0]!;
+        }
+        public getFunctionCalls(): Function.Call<fdu>[] {
+            return this.parts.filter(part => part instanceof Function.Call);
+        }
+        public getOnlyVerbatimMessage(): Verbatim.Message<vdu> {
+            const vms = this.getVerbatimMessages();
+            if (vms.length === 1) {} else throw new Error();
+            return vms[0]!;
+        }
+        public getVerbatimMessages(): Verbatim.Message<vdu>[] {
+            return this.parts.filter(part => part instanceof Verbatim.Message);
+        }
+    }
+    export namespace Ai {
         export type Part<
             fdu extends Function.Declaration.Prototype,
             vdu extends Verbatim.Declaration.Prototype,
@@ -104,40 +92,39 @@ export namespace RoleMessage {
         ;
     }
 
-    export type User<fdu extends Function.Declaration.Prototype> = User.Instance<fdu>;
+    export class User<
+        in out fdu extends Function.Declaration.Prototype,
+    > {
+        public create<fdu extends Function.Declaration.Prototype>(parts: RoleMessage.User.Part<fdu>[]): RoleMessage.User<fdu> {
+            return new User(parts);
+        }
+
+        private static NOMINAL = Symbol();
+        private declare readonly [User.NOMINAL]: void;
+
+        public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {}
+        public getParts(): RoleMessage.User.Part<fdu>[] {
+            return this.parts;
+        }
+        public getText(): string {
+            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
+        }
+        public getOnlyText(): string {
+            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
+            return this.getText();
+        }
+        public getFunctionResponses(): Function.Response<fdu>[] {
+            return this.parts.filter(part => part instanceof Function.Response);
+        }
+        public getOnlyFunctionResponse(): Function.Response<fdu> {
+            if (this.parts.length === 1 && this.parts[0] instanceof Function.Response) {} else throw new Error();
+            return this.parts[0]! as Function.Response<fdu>;
+        }
+        public getVerbatimMessages(): Verbatim.Message<Verbatim.Declaration.Prototype>[] {
+            return this.parts.filter(part => part instanceof Verbatim.Message);
+        }
+    }
     export namespace User {
-        export function create<fdu extends Function.Declaration.Prototype>(parts: RoleMessage.User.Part<fdu>[]): RoleMessage.User<fdu> {
-            return new Instance(parts);
-        }
-        export const NOMINAL = Symbol();
-        export class Instance<
-            in out fdu extends Function.Declaration.Prototype,
-        > extends RoleMessage.Instance {
-            private declare readonly [NOMINAL]: void;
-            public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {
-                super();
-            }
-            public getParts(): RoleMessage.User.Part<fdu>[] {
-                return this.parts;
-            }
-            public getText(): string {
-                return this.parts.filter(part => part instanceof RoleMessage.Part.Text.Instance).map(part => part.text).join('');
-            }
-            public getOnlyText(): string {
-                if (this.parts.every(part => part instanceof RoleMessage.Part.Text.Instance)) {} else throw new Error();
-                return this.getText();
-            }
-            public getFunctionResponses(): Function.Response<fdu>[] {
-                return this.parts.filter(part => part instanceof Function.Response);
-            }
-            public getOnlyFunctionResponse(): Function.Response<fdu> {
-                if (this.parts.length === 1 && this.parts[0] instanceof Function.Response) {} else throw new Error();
-                return this.parts[0]! as Function.Response<fdu>;
-            }
-            public getVerbatimMessages(): Verbatim.Message<Verbatim.Declaration.Prototype>[] {
-                return this.parts.filter(part => part instanceof Verbatim.Message);
-            }
-        }
         export type Part<fdu extends Function.Declaration.Prototype> =
             |   RoleMessage.Part.Text
             |   Function.Response<fdu>
@@ -145,27 +132,26 @@ export namespace RoleMessage {
         ;
     }
 
-    export type Developer = Developer.Instance;
+    export class Developer {
+        public static create(parts: Developer.Part[]): Developer {
+            return new Developer(parts);
+        }
+
+        private static NOMINAL = Symbol();
+        private declare readonly [Developer.NOMINAL]: void;
+
+        public constructor(protected parts: Developer.Part[]) {}
+        public getParts(): Developer.Part[] {
+            return this.parts;
+        }
+        public getText(): string {
+            return this.parts.map(part => part.text).join('');
+        }
+        public getOnlyText(): string {
+            return this.getText();
+        }
+    }
     export namespace Developer {
-        export function create(parts: Developer.Part[]): Developer {
-            return new Instance(parts);
-        }
-        export const NOMINAL = Symbol();
-        export class Instance extends RoleMessage.Instance {
-            private declare readonly [NOMINAL]: void;
-            public constructor(protected parts: Developer.Part[]) {
-                super();
-            }
-            public getParts(): Developer.Part[] {
-                return this.parts;
-            }
-            public getText(): string {
-                return this.parts.map(part => part.text).join('');
-            }
-            public getOnlyText(): string {
-                return this.getText();
-            }
-        }
         export type Part = Part.Text;
     }
 }

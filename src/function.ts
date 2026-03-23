@@ -60,7 +60,7 @@ export namespace Function {
     }
 
     export class Call<in out fd extends Function.Declaration.Prototype> {
-        public static readonly NOMINAL = Symbol();
+        private static readonly NOMINAL = Symbol();
         private declare readonly [Call.NOMINAL]: void;
         public id?: string;
         public name: fd['name'];
@@ -107,7 +107,7 @@ export namespace Function {
     }
 
     export class Response<in out fd extends Function.Declaration.Prototype> {
-        public static readonly NOMINAL = Symbol();
+        private static readonly NOMINAL = Symbol();
         private declare readonly [Response.NOMINAL]: void;
         public id?: string;
         public name: fd['name'];

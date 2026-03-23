@@ -6,8 +6,8 @@ const ajv = new Ajv();
 
 
 
-export function encode<vd extends Verbatim.Declaration.Prototype>(
-    message: Verbatim.Message<vd>,
+export function encode<vdu extends Verbatim.Declaration.Prototype>(
+    message: Verbatim.Message.Of<vdu>,
 ): string {
     let result = `<verbatim name="${message.name}">\n`;
     for (const [key, value] of Object.entries(message.args)) {
@@ -28,7 +28,7 @@ export function decode<vdm extends Verbatim.Declaration.Map.Prototype>(
         const vditem = vdm[name];
         if (vditem) {} else throw Error();
         if (ajv.validate(vditem.paraschema, args)) {}
-        else throw new ResponseInvalid('Function call not conforming to schema', { cause: str });
+        else throw new ResponseInvalid('Verbatim message not conforming to schema', { cause: str });
         messages.push(Verbatim.Message.create<vdu>({
             name,
             args,
