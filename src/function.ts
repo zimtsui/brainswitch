@@ -17,7 +17,7 @@ export namespace Function {
     export interface Declaration<
         name extends string,
         ps extends Function.Declaration.Paraschema.Prototype,
-    > extends Declaration.Item<ps> {
+    > extends Function.Declaration.Item<ps> {
         name: name;
     }
 
@@ -142,10 +142,10 @@ export namespace Function {
     }
 
     export type ToolChoice<fdu extends Function.Declaration.Prototype> =
-        | fdu['name'][]
-        | typeof ToolChoice.NONE
-        | typeof ToolChoice.REQUIRED
-        | typeof ToolChoice.AUTO;
+        |   fdu['name'][]
+        |   typeof ToolChoice.NONE
+        |   typeof ToolChoice.REQUIRED
+        |   typeof ToolChoice.AUTO;
     export namespace ToolChoice {
         export const NONE = Symbol();
         export const REQUIRED = Symbol();
