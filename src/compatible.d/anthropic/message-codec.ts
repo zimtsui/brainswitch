@@ -64,6 +64,10 @@ export class AnthropicCompatibleMessageCodec<
         else throw new Error();
     }
 
+    /**
+     * @throws {@link VerbatimCodec.ChannelNotFound}
+     * @throws {@link VerbatimCodec.InvalidSchema}
+     */
     public convertToAiMessage(
         raw: Anthropic.ContentBlock[],
     ): AnthropicCompatibleMessageCodec.Message.Ai.From<fdm, vdm> {

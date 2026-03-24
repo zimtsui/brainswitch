@@ -64,6 +64,10 @@ export class GoogleCompatibleMessageCodec<
         return { parts };
     }
 
+    /**
+     * @throws {@link VerbatimCodec.ChannelNotFound}
+     * @throws {@link VerbatimCodec.InvalidSchema}
+     */
     public convertToAiMessage(
         content: Google.Content,
     ): GoogleCompatibleMessageCodec.Message.Ai.From<fdm, vdm> {

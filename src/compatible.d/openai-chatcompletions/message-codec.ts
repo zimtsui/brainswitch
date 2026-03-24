@@ -14,6 +14,10 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<
 > {
     public constructor(protected ctx: OpenAIChatCompletionsCompatibleMessageCodec.Context<fdm, vdm>) {}
 
+    /**
+     * @throws {@link VerbatimCodec.ChannelNotFound}
+     * @throws {@link VerbatimCodec.InvalidSchema}
+     */
     public convertToAiMessage(
         message: OpenAI.ChatCompletionMessage,
     ): RoleMessage.Ai.From<fdm, vdm> {

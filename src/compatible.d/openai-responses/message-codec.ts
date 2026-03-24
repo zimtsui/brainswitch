@@ -14,6 +14,10 @@ export class OpenAIResponsesCompatibleMessageCodec<
 > {
     public constructor(protected ctx: OpenAIResponsesCompatibleMessageCodec.Context<fdm, vdm>) {}
 
+    /**
+     * @throws {@link VerbatimCodec.ChannelNotFound}
+     * @throws {@link VerbatimCodec.InvalidSchema}
+     */
     public convertToAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
     ): OpenAIResponsesCompatibleMessageCodec.Message.Ai.From<fdm, vdm> {

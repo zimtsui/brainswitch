@@ -13,6 +13,7 @@ import type { Validator } from '#@/native-engines.d/openai-responses/validation.
 import type { Verbatim } from '#@/verbatim.ts';
 import * as ChoiceCodec from '#@/native-engines.d/openai-responses/choice-codec.ts';
 import { Structuring } from '#@/native-engines.d/openai-responses/structuring.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -92,9 +93,15 @@ export class OpenAIResponsesNativeTransport<
         wfctx.cost?.(this.ctx.billing.charge(response.usage));
         logger.message.debug(response.usage);
 
-        const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.output);
-        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
-        return aiMessage;
+        try {
+            const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.output);
+            this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
+            return aiMessage;
+        } catch (e) {
+            if (e instanceof VerbatimCodec.ChannelNotFound || e instanceof VerbatimCodec.InvalidSchema)
+                throw new ResponseInvalid('Invalid verbatim message', { cause: response.output });
+            else throw e;
+        }
     }
 
     public async fetch(

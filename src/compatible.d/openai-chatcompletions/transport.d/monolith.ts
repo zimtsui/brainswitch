@@ -14,6 +14,7 @@ import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/openai-chatcompletions/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -79,18 +80,20 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<
         if (completion.usage) {} else throw new Error();
         const cost = this.ctx.billing.charge(completion.usage);
 
-        const aiMessage = this.ctx.messageCodec.convertToAiMessage(choice.message);
-
-        const text = aiMessage.getText();
-        if (text) logger.inference.debug(text);
-        const apifcs = choice.message.tool_calls;
-        if (apifcs?.length) logger.message.debug(apifcs);
+        if (choice.message.content) logger.inference.debug(choice.message.content);
+        if (choice.message.tool_calls) logger.message.debug(choice.message.tool_calls);
         logger.message.debug(completion.usage);
         wfctx.cost?.(cost);
 
-        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
-
-        return aiMessage;
+        try {
+            const aiMessage = this.ctx.messageCodec.convertToAiMessage(choice.message);
+            this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
+            return aiMessage;
+        } catch (e) {
+            if (e instanceof VerbatimCodec.ChannelNotFound || e instanceof VerbatimCodec.InvalidSchema)
+                throw new ResponseInvalid('Invalid verbatim message', { cause: choice.message });
+            else throw e;
+        }
     }
 }
 

@@ -14,6 +14,7 @@ import type { Validator } from '#@/compatible/validation.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import * as ChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -86,9 +87,15 @@ export class GoogleNativeTransport<
         if (response.usageMetadata) {} else throw new ResponseInvalid('Usage metadata missing', { cause: response });
         wfctx.cost?.(this.ctx.billing.charge(response.usageMetadata));
 
-        const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.candidates[0].content);
-        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
-        return aiMessage;
+        try {
+            const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.candidates[0].content);
+            this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
+            return aiMessage;
+        } catch (e) {
+            if (e instanceof VerbatimCodec.ChannelNotFound || e instanceof VerbatimCodec.InvalidSchema)
+                throw new ResponseInvalid('Invalid verbatim message', { cause: response.candidates[0].content });
+            else throw e;
+        }
     }
 }
 

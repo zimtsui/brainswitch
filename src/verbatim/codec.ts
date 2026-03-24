@@ -17,6 +17,10 @@ export function encode<vdu extends Verbatim.Declaration.Prototype>(
     return result;
 }
 
+/**
+ * @throws {@link InvalidSchema}
+ * @throws {@link ChannelNotFound}
+ */
 export function decode<vdm extends Verbatim.Declaration.Map.Prototype>(
     str: string,
     vdm: vdm,
@@ -26,9 +30,9 @@ export function decode<vdm extends Verbatim.Declaration.Map.Prototype>(
     const rawMessages = extractVerbatim(str);
     for (const [name, args] of rawMessages) {
         const vditem = vdm[name];
-        if (vditem) {} else throw Error();
+        if (vditem) {} else throw new ChannelNotFound();
         if (ajv.validate(vditem.paraschema, args)) {}
-        else throw new ResponseInvalid('Verbatim message not conforming to schema', { cause: str });
+        else throw new InvalidSchema();
         parts.push(Verbatim.Message.create({
             name,
             args,
@@ -36,6 +40,9 @@ export function decode<vdm extends Verbatim.Declaration.Map.Prototype>(
     }
     return parts;
 }
+
+export class InvalidSchema {}
+export class ChannelNotFound {}
 
 
 export const XML_PHRASE_START = /[a-zA-Z_]/;
