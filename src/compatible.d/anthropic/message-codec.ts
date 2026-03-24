@@ -97,7 +97,7 @@ export namespace AnthropicCompatibleMessageCodec {
             in out fdu extends Function.Declaration.Prototype,
             in out vdu extends Verbatim.Declaration.Prototype,
         > extends RoleMessage.Ai<fdu, vdu> {
-            protected declare [NOMINAL]: void;
+            protected declare [NOMINAL]: never;
 
             public constructor(
                 parts: RoleMessage.Ai.Part<fdu, vdu>[],

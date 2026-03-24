@@ -46,7 +46,7 @@ export namespace RoleMessage {
         in out fdu extends Function.Declaration.Prototype,
         in out vdu extends Verbatim.Declaration.Prototype,
     > {
-        protected declare [NOMINAL]: void;
+        protected declare [NOMINAL]: never;
         public constructor(
             protected parts: RoleMessage.Ai.Part<fdu, vdu>[],
             protected raw: OpenAI.Responses.ResponseOutputItem[],
@@ -125,7 +125,7 @@ export namespace RoleMessage {
     export class User<
         in out fdu extends Function.Declaration.Prototype,
     > {
-        protected declare [NOMINAL]: void;
+        protected declare [NOMINAL]: never;
         public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {}
         public getParts(): RoleMessage.User.Part<fdu>[] {
             return this.parts;

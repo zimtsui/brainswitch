@@ -1,5 +1,4 @@
 import { Verbatim } from '#@/verbatim.ts';
-import { ResponseInvalid } from '#@/engine.ts';
 import Ajv from 'ajv';
 
 const ajv = new Ajv();
@@ -21,22 +20,18 @@ export function encode<vdu extends Verbatim.Declaration.Prototype>(
  * @throws {@link InvalidSchema}
  * @throws {@link ChannelNotFound}
  */
-export function decode<vdm extends Verbatim.Declaration.Map.Prototype>(
-    str: string,
-    vdm: vdm,
-): Verbatim.Message.From<vdm>[] {
+export function decode<
+    vdm extends Verbatim.Declaration.Map.Prototype,
+>(str: string, vdm: vdm): Verbatim.Message.From<vdm>[] {
     type vdu = Verbatim.Declaration.From<vdm>;
-    const parts: Verbatim.Message.From<vdm>[] = [];
+    const parts: Verbatim.Message.Of<vdu>[] = [];
     const rawMessages = extractVerbatim(str);
     for (const [name, args] of rawMessages) {
         const vditem = vdm[name];
         if (vditem) {} else throw new ChannelNotFound();
-        if (ajv.validate(vditem.paraschema, args)) {}
-        else throw new InvalidSchema();
-        parts.push(Verbatim.Message.create({
-            name,
-            args,
-        } as Verbatim.Message.Options.Of<vdu>));
+        if (ajv.validate(vditem.paraschema, args)) {} else throw new InvalidSchema();
+        const options = { name, args } as Verbatim.Message.Options.Of<vdu>;
+        parts.push(Verbatim.Message.create(options));
     }
     return parts;
 }
@@ -65,14 +60,14 @@ export const XML_VERBATIM = new RegExp(
     `<\\/verbatim\\s*>`,
 );
 
-export function extractArgs(str: string): Record<string, string> {
+function extractArgs(str: string): Record<string, string> {
     const results: Record<string, string> = {};
     for (const match of str.matchAll(new RegExp(XML_ARG_CDATA, 'g')))
         results[match.groups!.arg_cdata_name!] = match.groups!.arg_cdata_body!;
     return results;
 }
 
-export function extractVerbatim(str: string): [name: string, params: Record<string, string>][] {
+function extractVerbatim(str: string): [name: string, params: Record<string, string>][] {
     const results: [name: string, params: Record<string, string>][] = [];
     for (const match of str.matchAll(new RegExp(XML_VERBATIM, 'g')))
         results.push([match.groups!.attr_val_body!, extractArgs(match.groups!.verbatim_body!)]);

@@ -48,7 +48,7 @@ export namespace RoleMessage {
                 return new Text(text.trimEnd() + '\n\n', []);
             }
 
-            protected declare [NOMINAL]: void;
+            protected declare [NOMINAL]: never;
             public constructor(
                 public text: string,
                 public vms: Verbatim.Message.Of<vdu>[],
@@ -60,7 +60,7 @@ export namespace RoleMessage {
         out fdu extends Function.Declaration.Prototype,
         out vdu extends Verbatim.Declaration.Prototype,
     > {
-        protected declare [NOMINAL]: void;
+        protected declare [NOMINAL]: never;
 
         public constructor(protected parts: RoleMessage.Ai.Part<fdu, vdu>[]) {}
         public getParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
@@ -122,7 +122,7 @@ export namespace RoleMessage {
     export class User<
         out fdu extends Function.Declaration.Prototype,
     > {
-        protected declare [NOMINAL]: void;
+        protected declare [NOMINAL]: never;
 
         public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {}
         public getParts(): RoleMessage.User.Part<fdu>[] {
@@ -157,7 +157,7 @@ export namespace RoleMessage {
     }
 
     export class Developer {
-        protected declare [NOMINAL]: void;
+        protected declare [NOMINAL]: never;
 
         public constructor(protected parts: Developer.Part[]) {}
         public getParts(): Developer.Part[] {

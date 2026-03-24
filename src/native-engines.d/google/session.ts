@@ -47,7 +47,7 @@ export namespace RoleMessage {
         in out fdu extends Function.Declaration.Prototype,
         in out vdu extends Verbatim.Declaration.Prototype,
     > {
-        protected declare [NOMINAL]: void;
+        protected declare [NOMINAL]: never;
         public constructor(
             protected parts: RoleMessage.Ai.Part<fdu, vdu>[],
             protected raw: Google.Content,
@@ -107,12 +107,12 @@ export namespace RoleMessage {
             > = Part<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
 
             export class ExecutableCode {
-                protected declare [NOMINAL]: void;
+                protected declare [NOMINAL]: never;
                 public constructor(public code: string, public language: string) {}
             }
 
             export class CodeExecutionResult {
-                protected declare [NOMINAL]: void;
+                protected declare [NOMINAL]: never;
                 public constructor(public outcome: string, public output?: string) {}
             }
         }

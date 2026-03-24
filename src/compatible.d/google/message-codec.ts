@@ -100,7 +100,7 @@ export namespace GoogleCompatibleMessageCodec {
             out fdu extends Function.Declaration.Prototype,
             out vdu extends Verbatim.Declaration.Prototype,
         > extends RoleMessage.Ai<fdu, vdu> {
-            protected declare [NOMINAL]: void;
+            protected declare [NOMINAL]: never;
             public constructor(parts: RoleMessage.Ai.Part<fdu, vdu>[], protected raw: Google.Content) {
                 super(parts);
             }
