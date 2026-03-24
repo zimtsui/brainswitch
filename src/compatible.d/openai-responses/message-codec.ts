@@ -3,6 +3,7 @@ import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
 import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 const NOMINAL = Symbol();
 
@@ -11,7 +12,7 @@ export class OpenAIResponsesCompatibleMessageCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: OpenAIResponsesCompatibleMessageCodec.Context<fdm>) {}
+    public constructor(protected ctx: OpenAIResponsesCompatibleMessageCodec.Context<fdm, vdm>) {}
 
     public convertToAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
@@ -20,7 +21,9 @@ export class OpenAIResponsesCompatibleMessageCodec<
             (item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
                 if (item.type === 'message') {
                     if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
-                    return [new RoleMessage.Part.Text(item.content.map(part => part.text).join(''))];
+                    const text = item.content.map(part => part.text).join('');
+                    const vms = VerbatimCodec.decode(text, this.ctx.vdm);
+                    return [new RoleMessage.Part.Text(text, vms)];
                 } else if (item.type === 'function_call')
                     return [this.ctx.toolCodec.convertToFunctionCall(item)];
                 else if (item.type === 'reasoning')
@@ -94,8 +97,12 @@ export class OpenAIResponsesCompatibleMessageCodec<
 }
 
 export namespace OpenAIResponsesCompatibleMessageCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         toolCodec: OpenAIResponsesToolCodec<fdm>;
+        vdm: vdm;
     }
 
     export namespace Message {

@@ -9,6 +9,8 @@ import { AliyunEngine } from '#@/compatible/engine.d/aliyun.ts';
 import { OpenAIResponsesNativeEngine } from '#@/native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
 import type { Verbatim } from './verbatim';
+import type { Structuring } from './compatible/structuring';
+import type { Structuring as OpenAIResponsesNativeStructuring } from './native-engines.d/openai-responses/structuring';
 
 
 export class Adaptor {
@@ -24,23 +26,25 @@ export class Adaptor {
         }
     }
 
-    public makeEngine<
+    public makeCompatibleEngine<
         fdm extends Function.Declaration.Map.Prototype,
         vdm extends Verbatim.Declaration.Map.Prototype,
     >(
         endpoint: string,
         functionDeclarationMap: fdm,
-        toolChoice?: Function.ToolChoice.From<fdm>,
+        verbatimDeclarationMap: vdm,
+        choice?: Structuring.Choice.From<fdm, vdm>,
         parallelToolCall?: boolean,
     ): CompatibleEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         if (endpointSpec) {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
         if (throttle) {} else throw new Error();
-        const options: CompatibleEngine.Options<fdm> = {
+        const options: CompatibleEngine.Options<fdm, vdm> = {
             ...endpointSpec,
             functionDeclarationMap,
-            toolChoice,
+            verbatimDeclarationMap,
+            choice,
             parallelToolCall,
             throttle,
         };
@@ -61,18 +65,20 @@ export class Adaptor {
     >(
         endpoint: string,
         functionDeclarationMap: fdm,
+        verbatimDeclarationMap: vdm,
         applyPatch?: boolean,
-        toolChoice?: Function.ToolChoice.From<fdm>,
+        choice?: OpenAIResponsesNativeStructuring.Choice.From<fdm, vdm>,
         parallelToolCall?: boolean,
     ): OpenAIResponsesNativeEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[endpoint];
         if (endpointSpec?.apiType === 'openai-responses') {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
         if (throttle) {} else throw new Error();
-        const options: OpenAIResponsesNativeEngine.Options<fdm> = {
+        const options: OpenAIResponsesNativeEngine.Options<fdm, vdm> = {
             ...endpointSpec,
             functionDeclarationMap,
-            toolChoice,
+            verbatimDeclarationMap,
+            choice,
             parallelToolCall,
             throttle,
             applyPatch,
@@ -86,7 +92,8 @@ export class Adaptor {
     >(
         endpoint: string,
         functionDeclarationMap: fdm,
-        toolChoice?: Function.ToolChoice.From<fdm>,
+        verbatimDeclarationMap: vdm,
+        choice?: Structuring.Choice.From<fdm, vdm>,
         codeExecution?: boolean,
         urlContext?: boolean,
         googleSearch?: boolean,
@@ -96,10 +103,11 @@ export class Adaptor {
         if (endpointSpec?.apiType === 'google') {} else throw new Error();
         const throttle = this.throttles.get(endpoint);
         if (throttle) {} else throw new Error();
-        const options: GoogleNativeEngine.Options<fdm> = {
+        const options: GoogleNativeEngine.Options<fdm, vdm> = {
             ...endpointSpec,
             functionDeclarationMap,
-            toolChoice,
+            verbatimDeclarationMap,
+            choice,
             parallelToolCall,
             throttle,
             codeExecution,

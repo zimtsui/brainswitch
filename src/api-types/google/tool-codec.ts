@@ -63,14 +63,6 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map.Prototy
         } as Function.Call.Options.From<fdm>);
     }
 
-    public convertFromToolChoice(
-        toolChoice: Function.ToolChoice.From<fdm>,
-    ): Google.FunctionCallingConfig {
-        if (toolChoice === Function.ToolChoice.NONE) return { mode: Google.FunctionCallingConfigMode.NONE };
-        else if (toolChoice === Function.ToolChoice.REQUIRED) return { mode: Google.FunctionCallingConfigMode.ANY };
-        else if (toolChoice === Function.ToolChoice.AUTO) return { mode: Google.FunctionCallingConfigMode.AUTO };
-        else return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [...toolChoice] };
-    }
 }
 
 

@@ -4,7 +4,7 @@ import { Function } from '#@/function.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
 import { AnthropicBilling } from '#@/api-types/anthropic/billing.ts';
-import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import { Validator } from '#@/compatible/validation.ts';
 import { AnthropicCompatibleMessageCodec } from '#@/compatible.d/anthropic/message-codec.ts';
 import { AnthropicCompatibleTransport } from '#@/compatible.d/anthropic/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
@@ -17,28 +17,31 @@ export class AnthropicCompatibleEngine<
     protected toolCodec: AnthropicToolCodec<fdm>;
     protected messageCodec: AnthropicCompatibleMessageCodec<fdm, vdm>;
     protected billing: AnthropicBilling;
-    protected toolCallValidator: ToolCallValidator.From<fdm>;
+    protected validator: Validator.From<fdm, vdm>;
     protected transport: AnthropicCompatibleTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
-    public constructor(options: AnthropicCompatibleEngine.Options<fdm>) {
+    public constructor(options: AnthropicCompatibleEngine.Options<fdm, vdm>) {
         super(options);
         this.parallelToolCall = options.parallelToolCall ?? false;
         this.toolCodec = new AnthropicToolCodec({ fdm: this.fdm });
-        this.messageCodec = new AnthropicCompatibleMessageCodec({ toolCodec: this.toolCodec });
+        this.messageCodec = new AnthropicCompatibleMessageCodec({
+            toolCodec: this.toolCodec,
+            vdm: this.vdm,
+        });
         this.billing = new AnthropicBilling({ pricing: this.pricing });
-        this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
+        this.validator = new Validator({ choice: this.choice });
         this.transport = new AnthropicCompatibleTransport({
             providerSpec: this.providerSpec,
             inferenceSpec: this.inferenceParams,
             fdm: this.fdm,
             throttle: this.throttle,
-            toolChoice: this.toolChoice,
+            choice: this.choice,
             parallelToolCall: this.parallelToolCall,
             messageCodec: this.messageCodec,
             toolCodec: this.toolCodec,
             billing: this.billing,
-            toolCallValidator: this.toolCallValidator,
+            validator: this.validator,
         });
     }
 
@@ -52,7 +55,8 @@ export class AnthropicCompatibleEngine<
 }
 
 export namespace AnthropicCompatibleEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends
-        CompatibleEngine.Options<fdm>
-    {}
+    export interface Options<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > extends CompatibleEngine.Options<fdm, vdm> {}
 }

@@ -4,7 +4,7 @@ import { Function } from '#@/function.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
-import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import { Validator } from '#@/compatible/validation.ts';
 import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
 import { OpenAIResponsesCompatibleTransport } from '#@/compatible.d/openai-responses/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
@@ -17,28 +17,31 @@ export class OpenAIResponsesCompatibleEngine<
     protected toolCodec: OpenAIResponsesToolCodec<fdm>;
     protected messageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
     protected billing: OpenAIResponsesBilling;
-    protected toolCallValidator: ToolCallValidator.From<fdm>;
+    protected validator: Validator.From<fdm, vdm>;
     protected transport: OpenAIResponsesCompatibleTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
-    public constructor(options: OpenAIResponsesCompatibleEngine.Options<fdm>) {
+    public constructor(options: OpenAIResponsesCompatibleEngine.Options<fdm, vdm>) {
         super(options);
         this.parallelToolCall = options.parallelToolCall ?? false;
         this.toolCodec = new OpenAIResponsesToolCodec({ fdm: this.fdm });
-        this.messageCodec = new OpenAIResponsesCompatibleMessageCodec({ toolCodec: this.toolCodec });
+        this.messageCodec = new OpenAIResponsesCompatibleMessageCodec({
+            toolCodec: this.toolCodec,
+            vdm: this.vdm,
+        });
         this.billing = new OpenAIResponsesBilling({ pricing: this.pricing });
-        this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
+        this.validator = new Validator({ choice: this.choice });
         this.transport = new OpenAIResponsesCompatibleTransport({
             inferenceSpec: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
             throttle: this.throttle,
-            toolChoice: this.toolChoice,
+            choice: this.choice,
             parallelToolCall: this.parallelToolCall,
             messageCodec: this.messageCodec,
             toolCodec: this.toolCodec,
             billing: this.billing,
-            toolCallValidator: this.toolCallValidator,
+            validator: this.validator,
         });
     }
 
@@ -52,7 +55,8 @@ export class OpenAIResponsesCompatibleEngine<
 }
 
 export namespace OpenAIResponsesCompatibleEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends
-        CompatibleEngine.Options<fdm>
-    {}
+    export interface Options<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > extends CompatibleEngine.Options<fdm, vdm> {}
 }

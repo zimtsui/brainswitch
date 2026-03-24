@@ -5,6 +5,8 @@ import OpenAI from 'openai';
 import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
 import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import { ResponseInvalid } from '#@/engine.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -23,10 +25,13 @@ export class OpenAIResponsesNativeMessageCodec<
     public convertToAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
     ): RoleMessage.Ai.From<fdm, vdm> {
-        const parts = output.flatMap((item): RoleMessage.Ai.Part.From<fdm>[] => {
+        const parts = output.flatMap((item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
             if (item.type === 'message') {
-                if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
-                return [new RoleMessage.Part.Text(item.content.map(part => part.text).join(''))];
+                if (item.content.every(part => part.type === 'output_text')) {} else
+                    throw new ResponseInvalid('Refusal', { cause: output });
+                const text = item.content.map(part => part.text).join('');
+                const vms = VerbatimCodec.decode(text, this.ctx.vdm);
+                return [new RoleMessage.Part.Text(text, vms)];
             } else if (item.type === 'function_call')
                 return [this.ctx.toolCodec.convertToFunctionCall(item)];
             else if (item.type === 'reasoning')
@@ -91,5 +96,6 @@ export namespace OpenAIResponsesNativeMessageCodec {
     > {
         toolCodec: OpenAIResponsesToolCodec<fdm>;
         compatibleMessageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
+        vdm: vdm;
     }
 }

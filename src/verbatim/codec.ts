@@ -22,19 +22,19 @@ export function decode<vdm extends Verbatim.Declaration.Map.Prototype>(
     vdm: vdm,
 ): Verbatim.Message.From<vdm>[] {
     type vdu = Verbatim.Declaration.From<vdm>;
-    const messages: Verbatim.Message.From<vdm>[] = [];
+    const parts: Verbatim.Message.From<vdm>[] = [];
     const rawMessages = extractVerbatim(str);
     for (const [name, args] of rawMessages) {
         const vditem = vdm[name];
         if (vditem) {} else throw Error();
         if (ajv.validate(vditem.paraschema, args)) {}
         else throw new ResponseInvalid('Verbatim message not conforming to schema', { cause: str });
-        messages.push(Verbatim.Message.create({
+        parts.push(Verbatim.Message.create({
             name,
             args,
         } as Verbatim.Message.Options.Of<vdu>));
     }
-    return messages;
+    return parts;
 }
 
 

@@ -2,6 +2,7 @@ import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import { Engine } from '#@/engine.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import { Structuring } from '#@/compatible/structuring.ts';
 
 
 
@@ -10,18 +11,18 @@ export abstract class CompatibleEngine<
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > extends
     Engine<
-        fdm,
+        fdm, vdm,
         RoleMessage.User.From<fdm>,
         RoleMessage.Ai.From<fdm, vdm>,
         RoleMessage.Developer,
         Session.From<fdm, vdm>
     >
 {
-    protected toolChoice: Function.ToolChoice.From<fdm>;
+    protected choice: Structuring.Choice.From<fdm, vdm>;
 
-    public constructor(options: CompatibleEngine.Options<fdm>) {
+    public constructor(options: CompatibleEngine.Options<fdm, vdm>) {
         super(options);
-        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+        this.choice = options.choice ?? Structuring.Choice.AUTO;
     }
 
     public override appendUserMessage(
@@ -44,14 +45,10 @@ export abstract class CompatibleEngine<
 }
 
 export namespace CompatibleEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends
-        Engine.Options<fdm>,
-        CompatibleEngine.Options.Tools<fdm>
-    {}
-
-    export namespace Options {
-        export interface Tools<in out fdm extends Function.Declaration.Map.Prototype> extends Engine.Options.Tools<fdm> {
-            toolChoice?: Function.ToolChoice.From<fdm>;
-        }
+    export interface Options<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > extends Engine.Options<fdm, vdm> {
+        choice?: Structuring.Choice.From<fdm, vdm>;
     }
 }

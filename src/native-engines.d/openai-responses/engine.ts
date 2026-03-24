@@ -7,9 +7,10 @@ import { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-cod
 import { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
 import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
 import { OpenAIResponsesNativeMessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
-import { OpenAIResponsesNativeToolCallValidator } from '#@/native-engines.d/openai-responses/tool-call-validator.ts';
+import { Validator } from '#@/native-engines.d/openai-responses/validation.ts';
 import { OpenAIResponsesNativeTransport } from '#@/native-engines.d/openai-responses/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import { Structuring } from '#@/native-engines.d/openai-responses/structuring.ts';
 
 
 export class OpenAIResponsesNativeEngine<
@@ -17,7 +18,7 @@ export class OpenAIResponsesNativeEngine<
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > extends
     Engine<
-        fdm,
+        fdm, vdm,
         RoleMessage.User.From<fdm>,
         RoleMessage.Ai.From<fdm, vdm>,
         RoleMessage.Developer,
@@ -25,42 +26,46 @@ export class OpenAIResponsesNativeEngine<
     >
 {
     protected applyPatch: boolean;
-    protected toolChoice: Tool.Choice.From<fdm>;
+    protected choice: Structuring.Choice.From<fdm, vdm>;
 
     protected toolCodec: OpenAIResponsesToolCodec<fdm>;
     protected compatibleMessageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
     protected messageCodec: OpenAIResponsesNativeMessageCodec<fdm, vdm>;
     protected billing: OpenAIResponsesBilling;
-    protected toolCallValidator: OpenAIResponsesNativeToolCallValidator.From<fdm>;
+    protected validator: Validator.From<fdm, vdm>;
     protected transport: OpenAIResponsesNativeTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
-    public constructor(options: OpenAIResponsesNativeEngine.Options<fdm>) {
+    public constructor(options: OpenAIResponsesNativeEngine.Options<fdm, vdm>) {
         super(options);
         this.parallelToolCall = options.parallelToolCall ?? false;
         this.applyPatch = options.applyPatch ?? false;
-        this.toolChoice = options.toolChoice ?? Function.ToolChoice.AUTO;
+        this.choice = options.choice ?? Structuring.Choice.AUTO;
 
         this.toolCodec = new OpenAIResponsesToolCodec({ fdm: this.fdm });
-        this.compatibleMessageCodec = new OpenAIResponsesCompatibleMessageCodec({ toolCodec: this.toolCodec });
+        this.compatibleMessageCodec = new OpenAIResponsesCompatibleMessageCodec({
+            toolCodec: this.toolCodec,
+            vdm: this.vdm,
+        });
         this.messageCodec = new OpenAIResponsesNativeMessageCodec({
             toolCodec: this.toolCodec,
             compatibleMessageCodec: this.compatibleMessageCodec,
+            vdm: this.vdm,
         });
         this.billing = new OpenAIResponsesBilling({ pricing: this.pricing });
-        this.toolCallValidator = new OpenAIResponsesNativeToolCallValidator({ toolChoice: this.toolChoice });
+        this.validator = new Validator({ choice: this.choice });
         this.transport = new OpenAIResponsesNativeTransport({
             inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
             throttle: this.throttle,
-            toolChoice: this.toolChoice,
+            choice: this.choice,
             parallelToolCall: this.parallelToolCall,
             applyPatch: this.applyPatch,
             messageCodec: this.messageCodec,
             toolCodec: this.toolCodec,
             billing: this.billing,
-            toolCallValidator: this.toolCallValidator,
+            validator: this.validator,
         });
     }
 
@@ -92,8 +97,11 @@ export class OpenAIResponsesNativeEngine<
 }
 
 export namespace OpenAIResponsesNativeEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends Engine.Options<fdm> {
+    export interface Options<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > extends Engine.Options<fdm, vdm> {
         applyPatch?: boolean;
-        toolChoice?: Tool.Choice.From<fdm>;
+        choice?: Structuring.Choice.From<fdm, vdm>;
     }
 }

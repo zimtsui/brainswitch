@@ -4,7 +4,8 @@ import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
 import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
 import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
-import type { Verbatim } from '#@/verbatim.ts';
+import { Verbatim } from '#@/verbatim.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -52,7 +53,8 @@ export class GoogleNativeMessageCodec<
             let payload = false;
             if (part.text) {
                 payload = true;
-                parts.push(new RoleMessage.Part.Text(part.text));
+                const vms = VerbatimCodec.decode(part.text, this.ctx.vdm);
+                parts.push(new RoleMessage.Part.Text(part.text, vms));
             }
             if (part.functionCall) {
                 payload = true;
@@ -83,5 +85,6 @@ export namespace GoogleNativeMessageCodec {
         toolCodec: GoogleToolCodec<fdm>;
         compatibleMessageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
         codeExecution: boolean;
+        vdm: vdm;
     }
 }

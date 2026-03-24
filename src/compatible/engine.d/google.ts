@@ -5,7 +5,7 @@ import { type InferenceContext } from '#@/inference-context.ts';
 import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
 import { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 import { GoogleBilling } from '#@/api-types/google/billing.ts';
-import { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import { Validator } from '#@/compatible/validation.ts';
 import { GoogleCompatibleTransport } from '#@/compatible.d/google/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 
@@ -18,30 +18,33 @@ export class GoogleCompatibleEngine<
     protected toolCodec: GoogleToolCodec<fdm>;
     protected messageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
     protected billing: GoogleBilling;
-    protected toolCallValidator: ToolCallValidator.From<fdm>;
+    protected validator: Validator.From<fdm, vdm>;
     protected transport: GoogleCompatibleTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
-    public constructor(options: GoogleCompatibleEngine.Options<fdm>) {
+    public constructor(options: GoogleCompatibleEngine.Options<fdm, vdm>) {
         super(options);
         this.parallelToolCall = options.parallelToolCall ?? true;
         if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
         this.toolCodec = new GoogleToolCodec({
             fdm: this.fdm,
         });
-        this.messageCodec = new GoogleCompatibleMessageCodec({ toolCodec: this.toolCodec });
+        this.messageCodec = new GoogleCompatibleMessageCodec({
+            toolCodec: this.toolCodec,
+            vdm: this.vdm,
+        });
         this.billing = new GoogleBilling({ pricing: this.pricing });
-        this.toolCallValidator = new ToolCallValidator({ toolChoice: this.toolChoice });
+        this.validator = new Validator({ choice: this.choice });
         this.transport = new GoogleCompatibleTransport({
             inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
             throttle: this.throttle,
-            toolChoice: this.toolChoice,
+            choice: this.choice,
             messageCodec: this.messageCodec,
             toolCodec: this.toolCodec,
             billing: this.billing,
-            toolCallValidator: this.toolCallValidator,
+            validator: this.validator,
         });
     }
 
@@ -55,7 +58,8 @@ export class GoogleCompatibleEngine<
 }
 
 export namespace GoogleCompatibleEngine {
-    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends
-        CompatibleEngine.Options<fdm>
-    {}
+    export interface Options<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > extends CompatibleEngine.Options<fdm, vdm> {}
 }

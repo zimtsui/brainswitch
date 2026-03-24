@@ -3,6 +3,7 @@ import { Function } from '#@/function.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 const NOMINAL = Symbol();
 
@@ -11,7 +12,7 @@ export class AnthropicCompatibleMessageCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: AnthropicCompatibleMessageCodec.Context<fdm>) {}
+    public constructor(protected ctx: AnthropicCompatibleMessageCodec.Context<fdm, vdm>) {}
 
     public convertFromUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
@@ -67,8 +68,10 @@ export class AnthropicCompatibleMessageCodec<
         raw: Anthropic.ContentBlock[],
     ): AnthropicCompatibleMessageCodec.Message.Ai.From<fdm, vdm> {
         const parts = raw.flatMap((item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
-            if (item.type === 'text') return [new RoleMessage.Part.Text(item.text)];
-            else if (item.type === 'tool_use') return [this.ctx.toolCodec.convertToFunctionCall(item)];
+            if (item.type === 'text') {
+                const vms = VerbatimCodec.decode(item.text, this.ctx.vdm);
+                return [new RoleMessage.Part.Text(item.text, vms)];
+            } else if (item.type === 'tool_use') return [this.ctx.toolCodec.convertToFunctionCall(item)];
             else if (item.type === 'thinking') return [];
             else throw new Error();
         });
@@ -77,8 +80,12 @@ export class AnthropicCompatibleMessageCodec<
 }
 
 export namespace AnthropicCompatibleMessageCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         toolCodec: AnthropicToolCodec<fdm>;
+        vdm: vdm;
     }
 
     export namespace Message {

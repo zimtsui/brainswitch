@@ -74,6 +74,16 @@ export namespace RoleMessage {
         public getFunctionCalls(): Function.Call.Of<fdu>[] {
             return this.parts.filter(part => part instanceof Function.Call);
         }
+        public getVerbatimMessages(): Verbatim.Message.Of<vdu>[] {
+            return this.parts
+                .filter(part => part instanceof RoleMessage.Part.Text)
+                .flatMap(part => part.vms);
+        }
+        public getOnlyVerbatimMessage(): Verbatim.Message.Of<vdu> {
+            const vms = this.getVerbatimMessages();
+            if (vms.length === 1) {} else throw new Error();
+            return vms[0]!;
+        }
     }
     export namespace Ai {
         export type From<
@@ -84,9 +94,8 @@ export namespace RoleMessage {
             fdu extends Function.Declaration.Prototype,
             vdu extends Verbatim.Declaration.Prototype,
         > =
-            |   RoleMessage.Part.Text
+            |   RoleMessage.Part.Text<vdu>
             |   Function.Call.Of<fdu>
-            |   Verbatim.Message.Of<vdu>
             |   RoleMessage.Ai.Part.ExecutableCode
             |   RoleMessage.Ai.Part.CodeExecutionResult
         ;

@@ -40,7 +40,7 @@ export async function *agentloop<
                 })());
             } else if (part instanceof Tool.ApplyPatch.Call) {
                 const apc: Tool.ApplyPatch.Call = part;
-                const tl = tlm[Tool.Choice.APPLY_PATCH];
+                const tl = tlm[Tool.APPLY_PATCH];
                 ptcs.push((async () => {
                     return new Tool.ApplyPatch.Response({
                         id: apc.raw.call_id,

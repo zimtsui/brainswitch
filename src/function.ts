@@ -11,8 +11,13 @@ export namespace Function {
     export namespace Name {
         export type From<
             fdm extends Function.Declaration.Map.Prototype,
-        > = Extract<keyof fdm, string>;
+        > = globalThis.Extract<keyof fdm, string>;
     }
+
+    export type Extract<
+        fdm extends Function.Declaration.Map.Prototype,
+        name extends Function.Name.From<fdm>,
+    > = Function<Function.Declaration.Extract<fdm, name>>;
 
     export interface Declaration<
         name extends string,
@@ -75,18 +80,6 @@ export namespace Function {
             return new Call(fc) as Call.Of<fdu>;
         }
 
-        public static validate<fdu extends Function.Declaration.Prototype>(
-            toolCalls: Function.Call.Of<fdu>[],
-            toolChoice: Function.ToolChoice<fdu>,
-            e: Error,
-        ): void {
-            if (toolChoice === Function.ToolChoice.REQUIRED)
-                if (toolCalls.length) {} else throw e;
-            else if (toolChoice instanceof Array) for (const fc of toolCalls) {
-                if (toolChoice.includes(fc.name)) {} else throw e;
-            } else if (toolChoice === Function.ToolChoice.NONE)
-                if (!toolCalls.length) {} else throw e;
-        }
     }
     export namespace Call {
         export type Of<
@@ -139,21 +132,6 @@ export namespace Function {
                 fdm extends Function.Declaration.Map.Prototype,
             > = Function.Response.Options.Of<Function.Declaration.From<fdm>>;
         }
-    }
-
-    export type ToolChoice<fdu extends Function.Declaration.Prototype> =
-        |   fdu['name'][]
-        |   typeof ToolChoice.NONE
-        |   typeof ToolChoice.REQUIRED
-        |   typeof ToolChoice.AUTO;
-    export namespace ToolChoice {
-        export const NONE = Symbol();
-        export const REQUIRED = Symbol();
-        export const AUTO = Symbol();
-
-        export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-        > = Function.ToolChoice<Function.Declaration.From<fdm>>;
     }
 
     export type Map<fdm extends Function.Declaration.Map.Prototype> = {

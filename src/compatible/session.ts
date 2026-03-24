@@ -43,13 +43,16 @@ export namespace Session {
 export namespace RoleMessage {
 
     export namespace Part {
-        export class Text {
-            public static paragraph(text: string): Text {
-                return new Text(text.trimEnd() + '\n\n');
+        export class Text<out vdu extends Verbatim.Declaration.Prototype> {
+            public static paragraph(text: string): Text<never> {
+                return new Text(text.trimEnd() + '\n\n', []);
             }
 
             protected declare [NOMINAL]: void;
-            public constructor(public text: string) {}
+            public constructor(
+                public text: string,
+                public vms: Verbatim.Message.Of<vdu>[],
+            ) {}
         }
     }
 
@@ -84,7 +87,9 @@ export namespace RoleMessage {
             return vms[0]!;
         }
         public getVerbatimMessages(): Verbatim.Message.Of<vdu>[] {
-            return this.parts.filter(part => part instanceof Verbatim.Message);
+            return this.parts
+                .filter(part => part instanceof RoleMessage.Part.Text)
+                .flatMap(part => part.vms);
         }
     }
     export namespace Ai {
@@ -100,9 +105,8 @@ export namespace RoleMessage {
             fdu extends Function.Declaration.Prototype,
             vdu extends Verbatim.Declaration.Prototype,
         > =
-            |   RoleMessage.Part.Text
+            |   RoleMessage.Part.Text<vdu>
             |   Function.Call.Of<fdu>
-            |   Verbatim.Message.Of<vdu>
         ;
         export namespace Part {
             export type From<
@@ -138,9 +142,6 @@ export namespace RoleMessage {
             if (this.parts.length === 1 && this.parts[0] instanceof Function.Response) {} else throw new Error();
             return this.parts[0]!;
         }
-        public getVerbatimMessages(): Verbatim.Message.Of<Verbatim.Declaration.Prototype>[] {
-            return this.parts.filter(part => part instanceof Verbatim.Message);
-        }
     }
     export namespace User {
         export type From<
@@ -150,9 +151,8 @@ export namespace RoleMessage {
         >;
 
         export type Part<fdu extends Function.Declaration.Prototype> =
-            |   RoleMessage.Part.Text
+            |   RoleMessage.Part.Text<never>
             |   Function.Response.Of<fdu>
-            |   Verbatim.Message.Of<Verbatim.Declaration.Prototype>
         ;
     }
 
@@ -171,6 +171,6 @@ export namespace RoleMessage {
         }
     }
     export namespace Developer {
-        export type Part = Part.Text;
+        export type Part = Part.Text<never>;
     }
 }

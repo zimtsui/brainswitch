@@ -10,8 +10,10 @@ import { logger } from '#@/telemetry.ts';
 import type { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
 import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 import type { GoogleBilling } from '#@/api-types/google/billing.ts';
-import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import type { Validator } from '#@/compatible/validation.ts';
+import type { Structuring } from '#@/compatible/structuring.ts';
+import * as GoogleChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
 
 
 
@@ -41,7 +43,7 @@ export class GoogleCompatibleTransport<
                 functionDeclarations: tools,
             }] : undefined,
             toolConfig: tools.length ? {
-                functionCallingConfig: this.ctx.toolCodec.convertFromToolChoice(this.ctx.toolChoice),
+                functionCallingConfig: GoogleChoiceCodec.encode(this.ctx.choice),
             } : undefined,
             systemInstruction,
             generationConfig: this.ctx.inferenceParams.maxTokens || this.ctx.inferenceParams.additionalOptions ? {
@@ -82,7 +84,7 @@ export class GoogleCompatibleTransport<
         wfctx.cost?.(this.ctx.billing.charge(response.usageMetadata));
 
         const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.candidates[0].content);
-        this.ctx.toolCallValidator.validate(aiMessage.getFunctionCalls());
+        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
         return aiMessage;
     }
 
@@ -98,11 +100,11 @@ export namespace GoogleCompatibleTransport {
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice.From<fdm>;
+        choice: Structuring.Choice.From<fdm, vdm>;
 
         messageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
         toolCodec: GoogleToolCodec<fdm>;
         billing: GoogleBilling;
-        toolCallValidator: ToolCallValidator.From<fdm>;
+        validator: Validator.From<fdm, vdm>;
     }
 }

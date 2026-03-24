@@ -40,21 +40,6 @@ export class OpenAIResponsesToolCodec<
         return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
     }
 
-    public convertFromToolChoice(
-        toolChoice: Function.ToolChoice.From<fdm>,
-    ): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed {
-        if (toolChoice === Function.ToolChoice.NONE) return 'none';
-        else if (toolChoice === Function.ToolChoice.REQUIRED) return 'required';
-        else if (toolChoice === Function.ToolChoice.AUTO) return 'auto';
-        else {
-            return {
-                type: 'allowed_tools',
-                mode: 'required',
-                tools: toolChoice.map(name => ({ type: 'function', name }) satisfies OpenAI.Responses.ToolChoiceFunction),
-            };
-        }
-    }
-
     public convertToFunctionCall(
         apifc: OpenAI.Responses.ResponseFunctionToolCall,
     ): Function.Call.From<fdm> {

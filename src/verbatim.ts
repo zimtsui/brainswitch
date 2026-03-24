@@ -1,7 +1,6 @@
 import { type Static, type TObject, type TString } from '@sinclair/typebox';
 
 
-
 export namespace Verbatim {
 
     export interface Declaration<
@@ -47,13 +46,12 @@ export namespace Verbatim {
             ps extends Verbatim.Declaration.Paraschema.Prototype,
         > = [name, Verbatim.Declaration.Item<ps>];
         export namespace Entry {
-            export type Extract<
+            export type Of<
+                vdu extends Verbatim.Declaration.Prototype,
+            > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Entry<vd['name'], vd['paraschema']> : never;
+            export type From<
                 vdm extends Verbatim.Declaration.Map.Prototype,
-                name extends Verbatim.Declaration.Map.NameOf<vdm>,
-            > = Verbatim.Declaration.Entry<name, vdm[name]['paraschema']>;
-            export type From<vdm extends Verbatim.Declaration.Map.Prototype> = {
-                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Verbatim.Declaration.Entry<name, vdm[name]['paraschema']>;
-            }[Verbatim.Declaration.Map.NameOf<vdm>];
+            > = Verbatim.Declaration.Entry.Of<Verbatim.Declaration.From<vdm>>;
         }
     }
 
@@ -74,18 +72,18 @@ export namespace Verbatim {
         export type Of<
             vdu extends Verbatim.Declaration.Prototype,
         > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Message<vd> : never;
-        export type From<vdm extends Verbatim.Declaration.Map.Prototype> = {
-            [name in Verbatim.Declaration.Map.NameOf<vdm>]: Message<Verbatim.Declaration.Extract<vdm, name>>;
-        }[Verbatim.Declaration.Map.NameOf<vdm>];
+        export type From<
+            vdm extends Verbatim.Declaration.Map.Prototype,
+        > = Verbatim.Message.Of<Verbatim.Declaration.From<vdm>>;
 
         export type Options<vd extends Verbatim.Declaration.Prototype> = Omit<Message<vd>, never>;
         export namespace Options {
             export type Of<
                 vdu extends Verbatim.Declaration.Prototype,
             > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Options<vd> : never;
-            export type From<vdm extends Verbatim.Declaration.Map.Prototype> = {
-                [name in Verbatim.Declaration.Map.NameOf<vdm>]: Options<Verbatim.Declaration.Extract<vdm, name>>;
-            }[Verbatim.Declaration.Map.NameOf<vdm>];
+            export type From<
+                vdm extends Verbatim.Declaration.Map.Prototype,
+            > = Verbatim.Message.Options.Of<Verbatim.Declaration.From<vdm>>;
         }
     }
 
@@ -97,4 +95,5 @@ export namespace Verbatim {
             [name in Verbatim.Declaration.Map.NameOf<vdm>]: Verbatim.Handler<Verbatim.Declaration.Extract<vdm, name>>;
         };
     }
+
 }

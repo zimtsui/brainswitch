@@ -6,6 +6,7 @@ import { env } from 'node:process';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { logger } from '#@/telemetry.ts';
 import { type GenericSession } from '#@/session.ts';
+import type { Verbatim } from './verbatim';
 
 
 export interface Pricing {
@@ -27,6 +28,7 @@ export interface InferenceParams {
 
 export abstract class Engine<
     in out fdm extends Function.Declaration.Map.Prototype,
+    in out vdm extends Verbatim.Declaration.Map.Prototype,
     userm, aim, devm,
     session extends GenericSession<userm, aim, devm>,
 > {
@@ -35,10 +37,11 @@ export abstract class Engine<
     public name: string;
     public pricing: Pricing;
     public fdm: fdm;
+    public vdm: vdm;
     protected throttle: Throttle;
     protected abstract parallelToolCall: boolean;
 
-    public constructor(options: Engine.Options<fdm>) {
+    public constructor(options: Engine.Options<fdm, vdm>) {
         const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
 
         this.providerSpec = {
@@ -62,6 +65,7 @@ export abstract class Engine<
             cachePrice: options.cachePrice ?? inputPrice,
         };
         this.fdm = options.functionDeclarationMap;
+        this.vdm = options.verbatimDeclarationMap;
         this.throttle = options.throttle;
     }
 
@@ -127,14 +131,14 @@ export abstract class Engine<
 }
 
 export namespace Engine {
-    export interface Options<in out fdm extends Function.Declaration.Map.Prototype> extends EndpointSpec, Options.Tools<fdm> {
+    export interface Options<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > extends EndpointSpec {
         throttle: Throttle;
-    }
-    export namespace Options {
-        export interface Tools<in out fdm extends Function.Declaration.Map.Prototype> {
-            functionDeclarationMap: fdm;
-            parallelToolCall?: boolean;
-        }
+        functionDeclarationMap: fdm;
+        verbatimDeclarationMap: vdm;
+        parallelToolCall?: boolean;
     }
 }
 

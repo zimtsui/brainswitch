@@ -66,18 +66,6 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map.Prot
         return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
     }
 
-    public convertFromToolChoice(
-        toolChoice: Function.ToolChoice.From<fdm>,
-        parallelToolCall: boolean,
-    ): Anthropic.ToolChoice {
-        if (toolChoice === Function.ToolChoice.NONE) return { type: 'none' };
-        else if (toolChoice === Function.ToolChoice.REQUIRED) return { type: 'any', disable_parallel_tool_use: !parallelToolCall };
-        else if (toolChoice === Function.ToolChoice.AUTO) return { type: 'auto', disable_parallel_tool_use: !parallelToolCall };
-        else {
-            if (toolChoice.length === 1) {} else throw new Error();
-            return { type: 'tool', name: toolChoice[0]!, disable_parallel_tool_use: !parallelToolCall };
-        }
-    }
 }
 
 export namespace AnthropicToolCodec {

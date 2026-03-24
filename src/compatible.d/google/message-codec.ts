@@ -4,6 +4,7 @@ import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
 import { type GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 const NOMINAL = Symbol();
 
@@ -11,7 +12,7 @@ export class GoogleCompatibleMessageCodec<
     fdm extends Function.Declaration.Map.Prototype,
     vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: GoogleCompatibleMessageCodec.Context<fdm>) {}
+    public constructor(protected ctx: GoogleCompatibleMessageCodec.Context<fdm, vdm>) {}
 
     public convertFromAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
@@ -70,7 +71,10 @@ export class GoogleCompatibleMessageCodec<
         return new GoogleCompatibleMessageCodec.Message.Ai(content.parts.flatMap(part => {
             const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
             if (part.functionCall || part.text) {} else throw new ResponseInvalid('Unknown content part', { cause: content });
-            if (part.text) parts.push(new RoleMessage.Part.Text(part.text));
+            if (part.text) {
+                const vms = VerbatimCodec.decode(part.text, this.ctx.vdm);
+                parts.push(new RoleMessage.Part.Text(part.text, vms));
+            }
             if (part.functionCall) parts.push(this.ctx.toolCodec.convertToFunctionCall(part.functionCall));
             return parts;
         }), content);
@@ -79,8 +83,12 @@ export class GoogleCompatibleMessageCodec<
 
 
 export namespace GoogleCompatibleMessageCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         toolCodec: GoogleToolCodec<fdm>;
+        vdm: vdm;
     }
 
     export namespace Message {

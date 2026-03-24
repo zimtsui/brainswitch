@@ -3,33 +3,23 @@ import OpenAI from 'openai';
 
 
 export namespace Tool {
+    export const APPLY_PATCH = Symbol();
+
     export namespace Name {
         export type From<
             fdm extends Function.Declaration.Map.Prototype,
-        > = Function.Name.From<fdm> | typeof Choice.APPLY_PATCH;
+        > = Function.Name.From<fdm> | typeof Tool.APPLY_PATCH;
     }
 
     export type Map<fdm extends Function.Declaration.Map.Prototype> = {
         [name in Tool.Name.From<fdm>]:
-            name extends typeof Tool.Choice.APPLY_PATCH
+            name extends typeof Tool.APPLY_PATCH
                 ? Tool.ApplyPatch
             : name extends Function.Name.From<fdm>
-                ? Function<Function.Declaration.Extract<fdm, name>>
+                ? Function.Extract<fdm, name>
             : never;
     };
 
-    export type Choice<fdu extends Function.Declaration.Prototype> =
-        |   (fdu['name'] | typeof Tool.Choice.APPLY_PATCH)[]
-        |   typeof Function.ToolChoice.NONE
-        |   typeof Function.ToolChoice.REQUIRED
-        |   typeof Function.ToolChoice.AUTO
-    ;
-    export namespace Choice {
-        export const APPLY_PATCH = Symbol();
-        export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-        > = Choice<Function.Declaration.From<fdm>>;
-    }
 
     export namespace Call {
         export type Of<fdu extends Function.Declaration.Prototype> =

@@ -1,7 +1,6 @@
 import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '#@/engine.ts';
 import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/session.ts';
 import { Function } from '#@/function.ts';
-import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import OpenAI from 'openai';
 import * as Undici from 'undici';
 import { type InferenceContext } from '#@/inference-context.ts';
@@ -10,8 +9,10 @@ import { logger } from '#@/telemetry.ts';
 import type { OpenAIResponsesNativeMessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
 import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
-import type { OpenAIResponsesNativeToolCallValidator } from '#@/native-engines.d/openai-responses/tool-call-validator.ts';
+import type { Validator } from '#@/native-engines.d/openai-responses/validation.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import * as ChoiceCodec from '#@/native-engines.d/openai-responses/choice-codec.ts';
+import { Structuring } from '#@/native-engines.d/openai-responses/structuring.ts';
 
 
 
@@ -37,28 +38,10 @@ export class OpenAIResponsesNativeTransport<
             input: session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.convertFromChatMessage(chatMessage)),
             instructions: session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage),
             tools: tools.length ? tools : undefined,
-            tool_choice: tools.length ? this.convertFromToolChoice(this.ctx.toolChoice) : undefined,
+            tool_choice: tools.length ? ChoiceCodec.encode(this.ctx.choice) : undefined,
             parallel_tool_calls: tools.length ? this.ctx.parallelToolCall : undefined,
             max_output_tokens: this.ctx.inferenceParams.maxTokens,
             ...this.ctx.inferenceParams.additionalOptions,
-        };
-    }
-
-    protected convertFromToolChoice(
-        toolChoice: Tool.Choice.From<fdm>,
-    ): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed {
-        if (toolChoice === Function.ToolChoice.NONE) return 'none';
-        else if (toolChoice === Function.ToolChoice.REQUIRED) return 'required';
-        else if (toolChoice === Function.ToolChoice.AUTO) return 'auto';
-        else return {
-            type: 'allowed_tools',
-            mode: 'required',
-            tools: toolChoice.map(name => {
-                if (name === Tool.Choice.APPLY_PATCH)
-                    return { type: 'apply_patch' } satisfies OpenAI.Responses.ToolChoiceApplyPatch;
-                else
-                    return { type: 'function', name } satisfies OpenAI.Responses.ToolChoiceFunction;
-            }),
         };
     }
 
@@ -110,7 +93,7 @@ export class OpenAIResponsesNativeTransport<
         logger.message.debug(response.usage);
 
         const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.output);
-        this.ctx.toolCallValidator.validate(aiMessage.getToolCalls());
+        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
         return aiMessage;
     }
 
@@ -132,13 +115,13 @@ export namespace OpenAIResponsesNativeTransport {
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Tool.Choice.From<fdm>;
+        choice: Structuring.Choice.From<fdm, vdm>;
         parallelToolCall: boolean;
         applyPatch: boolean;
 
         messageCodec: OpenAIResponsesNativeMessageCodec<fdm, vdm>;
         toolCodec: OpenAIResponsesToolCodec<fdm>;
         billing: OpenAIResponsesBilling;
-        toolCallValidator: OpenAIResponsesNativeToolCallValidator.From<fdm>;
+        validator: Validator.From<fdm, vdm>;
     }
 }

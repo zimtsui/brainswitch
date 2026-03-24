@@ -48,11 +48,11 @@ export namespace RoleMessage {
     > {
         protected declare [NOMINAL]: void;
         public constructor(
-            protected parts: RoleMessage.Ai.Part<fdu>[],
+            protected parts: RoleMessage.Ai.Part<fdu, vdu>[],
             protected raw: OpenAI.Responses.ResponseOutputItem[],
         ) {}
 
-        public getParts(): RoleMessage.Ai.Part<fdu>[] {
+        public getParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
             return this.parts;
         }
         public getRaw(): OpenAI.Responses.ResponseOutputItem[] {
@@ -90,6 +90,16 @@ export namespace RoleMessage {
             if (tcs.every(tc => tc instanceof Function.Call)) {} else throw new Error();
             return tcs;
         }
+        public getVerbatimMessages(): Verbatim.Message.Of<vdu>[] {
+            return this.parts
+                .filter(part => part instanceof RoleMessage.Part.Text)
+                .flatMap(part => part.vms);
+        }
+        public getOnlyVerbatimMessage(): Verbatim.Message.Of<vdu> {
+            const vms = this.getVerbatimMessages();
+            if (vms.length === 1) {} else throw new Error();
+            return vms[0]!;
+        }
     }
     export namespace Ai {
         export type From<
@@ -97,14 +107,18 @@ export namespace RoleMessage {
             vdm extends Verbatim.Declaration.Map.Prototype,
         > = RoleMessage.Ai<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
 
-        export type Part<fdu extends Function.Declaration.Prototype> =
-            |   RoleMessage.Part.Text
+        export type Part<
+            fdu extends Function.Declaration.Prototype,
+            vdu extends Verbatim.Declaration.Prototype,
+        > =
+            |   RoleMessage.Part.Text<vdu>
             |   Tool.Call.Of<fdu>
         ;
         export namespace Part {
             export type From<
                 fdm extends Function.Declaration.Map.Prototype,
-            > = RoleMessage.Ai.Part<Function.Declaration.From<fdm>>;
+                vdm extends Verbatim.Declaration.Map.Prototype,
+            > = RoleMessage.Ai.Part<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
         }
     }
 
@@ -133,7 +147,7 @@ export namespace RoleMessage {
         > = RoleMessage.User<Function.Declaration.From<fdm>>;
 
         export type Part<fdu extends Function.Declaration.Prototype> =
-            |   RoleMessage.Part.Text
+            |   RoleMessage.Part.Text<never>
             |   Tool.Response.Of<fdu>
         ;
         export namespace Part {

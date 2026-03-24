@@ -10,8 +10,10 @@ import { logger } from '#@/telemetry.ts';
 import type { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
 import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
 import type { GoogleBilling } from '#@/api-types/google/billing.ts';
-import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
+import type { Validator } from '#@/compatible/validation.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import * as ChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
+import type { Structuring } from '#@/compatible/structuring.ts';
 
 
 
@@ -45,7 +47,7 @@ export class GoogleNativeTransport<
             contents,
             tools: tools.length ? tools : undefined,
             toolConfig: functionDeclarations.length ? {
-                functionCallingConfig: this.ctx.toolCodec.convertFromToolChoice(this.ctx.toolChoice),
+                functionCallingConfig: ChoiceCodec.encode(this.ctx.choice),
             } : undefined,
             systemInstruction,
             generationConfig: this.ctx.inferenceParams.maxTokens || this.ctx.inferenceParams.additionalOptions ? {
@@ -85,7 +87,7 @@ export class GoogleNativeTransport<
         wfctx.cost?.(this.ctx.billing.charge(response.usageMetadata));
 
         const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.candidates[0].content);
-        this.ctx.toolCallValidator.validate(aiMessage.getFunctionCalls());
+        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
         return aiMessage;
     }
 }
@@ -99,7 +101,7 @@ export namespace GoogleNativeTransport {
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice.From<fdm>;
+        choice: Structuring.Choice.From<fdm, vdm>;
         codeExecution: boolean;
         urlContext: boolean;
         googleSearch: boolean;
@@ -107,6 +109,6 @@ export namespace GoogleNativeTransport {
         messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
         toolCodec: GoogleToolCodec<fdm>;
         billing: GoogleBilling;
-        toolCallValidator: ToolCallValidator.From<fdm>;
+        validator: Validator.From<fdm, vdm>;
     }
 }

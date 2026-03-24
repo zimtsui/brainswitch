@@ -2,8 +2,9 @@ import { ResponseInvalid } from '#@/engine.ts';
 import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
-import type { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletion/tool-codec.ts';
+import type { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletions/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -11,14 +12,16 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: OpenAIChatCompletionsCompatibleMessageCodec.Context<fdm>) {}
+    public constructor(protected ctx: OpenAIChatCompletionsCompatibleMessageCodec.Context<fdm, vdm>) {}
 
     public convertToAiMessage(
         message: OpenAI.ChatCompletionMessage,
     ): RoleMessage.Ai.From<fdm, vdm> {
         const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
-        if (message.content)
-            parts.push(new RoleMessage.Part.Text(message.content));
+        if (message.content) {
+            const vms = VerbatimCodec.decode(message.content, this.ctx.vdm);
+            parts.push(new RoleMessage.Part.Text(message.content, vms));
+        }
         if (message.tool_calls)
             parts.push(...message.tool_calls.map(apifc => {
                 if (apifc.type === 'function') {} else throw new Error();
@@ -81,7 +84,11 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<
 }
 
 export namespace OpenAIChatCompletionsCompatibleMessageCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
+    export interface Context<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
         toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
+        vdm: vdm;
     }
 }

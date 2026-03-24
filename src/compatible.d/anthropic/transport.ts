@@ -8,8 +8,10 @@ import { logger } from '#@/telemetry.ts';
 import type { AnthropicCompatibleMessageCodec } from '#@/compatible.d/anthropic/message-codec.ts';
 import type { AnthropicBilling } from '#@/api-types/anthropic/billing.ts';
 import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
-import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import { Validator } from '#@/compatible/validation.ts';
+import * as ChoiceCodec from '#@/compatible.d/anthropic/choice-codec.ts';
+import type { Structuring } from '#@/compatible/structuring.ts';
 
 
 export class AnthropicCompatibleTransport<
@@ -36,7 +38,7 @@ export class AnthropicCompatibleTransport<
             messages: session.chatMessages.map(chatMessage => this.ctx.messageCodec.convertFromChatMessage(chatMessage)),
             system: session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage),
             tools: tools.length ? tools : undefined,
-            tool_choice: tools.length ? this.ctx.toolCodec.convertFromToolChoice(this.ctx.toolChoice, this.ctx.parallelToolCall) : undefined,
+            tool_choice: tools.length ? ChoiceCodec.encode(this.ctx.choice, this.ctx.parallelToolCall) : undefined,
             max_tokens: this.ctx.inferenceSpec.maxTokens ?? 64 * 1024,
             ...this.ctx.inferenceSpec.additionalOptions,
         };
@@ -118,7 +120,7 @@ export class AnthropicCompatibleTransport<
         wfctx.cost?.(this.ctx.billing.charge(response.usage));
 
         const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.content);
-        this.ctx.toolCallValidator.validate(aiMessage.getFunctionCalls());
+        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
 
         return aiMessage;
     }
@@ -133,12 +135,12 @@ export namespace AnthropicCompatibleTransport {
         inferenceSpec: InferenceParams;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice.From<fdm>;
+        choice: Structuring.Choice.From<fdm, vdm>;
         parallelToolCall: boolean;
 
         messageCodec: AnthropicCompatibleMessageCodec<fdm, vdm>;
         toolCodec: AnthropicToolCodec<fdm>;
         billing: AnthropicBilling;
-        toolCallValidator: ToolCallValidator.From<fdm>;
+        validator: Validator.From<fdm, vdm>;
     }
 }

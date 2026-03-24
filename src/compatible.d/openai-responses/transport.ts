@@ -9,8 +9,10 @@ import { logger } from '#@/telemetry.ts';
 import type { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
 import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
-import type { ToolCallValidator } from '#@/compatible/tool-call-validator.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import { Validator } from '#@/compatible/validation.ts';
+import * as ChoiceCodec from '#@/compatible.d/openai-responses/choice-codec.ts';
+import type { Structuring } from '#@/compatible/structuring.ts';
 
 
 export class OpenAIResponsesCompatibleTransport<
@@ -34,7 +36,7 @@ export class OpenAIResponsesCompatibleTransport<
             input: session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.convertFromChatMessage(chatMessage)),
             instructions: session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage),
             tools: tools.length ? tools : undefined,
-            tool_choice: tools.length ? this.ctx.toolCodec.convertFromToolChoice(this.ctx.toolChoice) : undefined,
+            tool_choice: tools.length ? ChoiceCodec.encode(this.ctx.choice) : undefined,
             parallel_tool_calls: tools.length ? this.ctx.parallelToolCall : undefined,
             max_output_tokens: this.ctx.inferenceSpec.maxTokens,
             ...this.ctx.inferenceSpec.additionalOptions,
@@ -87,7 +89,7 @@ export class OpenAIResponsesCompatibleTransport<
         wfctx.cost?.(this.ctx.billing.charge(response.usage));
 
         const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.output);
-        this.ctx.toolCallValidator.validate(aiMessage.getFunctionCalls());
+        this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
 
         return aiMessage;
     }
@@ -116,12 +118,12 @@ export namespace OpenAIResponsesCompatibleTransport {
         providerSpec: ProviderSpec;
         fdm: fdm;
         throttle: Throttle;
-        toolChoice: Function.ToolChoice.From<fdm>;
+        choice: Structuring.Choice.From<fdm, vdm>;
         parallelToolCall: boolean;
 
         messageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
         toolCodec: OpenAIResponsesToolCodec<fdm>;
         billing: OpenAIResponsesBilling;
-        toolCallValidator: ToolCallValidator.From<fdm>;
+        validator: Validator.From<fdm, vdm>;
     }
 }

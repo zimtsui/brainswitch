@@ -4,6 +4,8 @@ export * from '#@/session.ts';
 export * from '#@/compatible/session.ts';
 export * from '#@/compatible/engine.ts';
 export * from '#@/function.ts';
+export * from '#@/verbatim.ts';
+export * from '#@/compatible/structuring.ts';
 export * from '#@/config.ts';
 export * from '#@/inference-context.ts';
 export * from '#@/endpoint-spec.ts';
