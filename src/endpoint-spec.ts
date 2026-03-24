@@ -18,6 +18,7 @@ export namespace EndpointSpec {
         inputPrice: Type.Optional(Type.Number()),
         outputPrice: Type.Optional(Type.Number()),
         cachePrice: Type.Optional(Type.Number()),
+        parallelToolCall: Type.Optional(Type.Boolean()),
         additionalOptions: Type.Optional(Type.Record(Type.String(), Type.Any())),
         rpm: Type.Optional(Type.Number({ minimum: 0 })),
         timeout: Type.Optional(Type.Number({ minimum: 0 })),

@@ -22,7 +22,7 @@ export abstract class CompatibleEngine<
 
     public constructor(options: CompatibleEngine.Options<fdm, vdm>) {
         super(options);
-        this.choice = options.choice ?? Structuring.Choice.AUTO;
+        this.choice = options.structuringChoice ?? Structuring.Choice.AUTO;
     }
 
     public override appendUserMessage(
@@ -49,6 +49,6 @@ export namespace CompatibleEngine {
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
     > extends Engine.Options<fdm, vdm> {
-        choice?: Structuring.Choice.From<fdm, vdm>;
+        structuringChoice?: Structuring.Choice.From<fdm, vdm>;
     }
 }

@@ -29,23 +29,16 @@ export class Adaptor {
     public makeCompatibleEngine<
         fdm extends Function.Declaration.Map.Prototype,
         vdm extends Verbatim.Declaration.Map.Prototype,
-    >(
-        endpoint: string,
-        functionDeclarationMap: fdm,
-        verbatimDeclarationMap: vdm,
-        choice?: Structuring.Choice.From<fdm, vdm>,
-        parallelToolCall?: boolean,
-    ): CompatibleEngine<fdm, vdm> {
-        const endpointSpec = this.config.brainswitch.endpoints[endpoint];
+    >(adaptorOptions: Adaptor.CompatibleEngine.Options<fdm, vdm>): CompatibleEngine<fdm, vdm> {
+        const endpointSpec = this.config.brainswitch.endpoints[adaptorOptions.endpoint];
         if (endpointSpec) {} else throw new Error();
-        const throttle = this.throttles.get(endpoint);
+        const throttle = this.throttles.get(adaptorOptions.endpoint);
         if (throttle) {} else throw new Error();
         const options: CompatibleEngine.Options<fdm, vdm> = {
             ...endpointSpec,
-            functionDeclarationMap,
-            verbatimDeclarationMap,
-            choice,
-            parallelToolCall,
+            functionDeclarationMap: adaptorOptions.functionDeclarationMap,
+            verbatimDeclarationMap: adaptorOptions.verbatimDeclarationMap,
+            structuringChoice: adaptorOptions.structuringChoice,
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')
@@ -62,26 +55,18 @@ export class Adaptor {
     public makeOpenAIResponsesNativeEngine<
         fdm extends Function.Declaration.Map.Prototype,
         vdm extends Verbatim.Declaration.Map.Prototype,
-    >(
-        endpoint: string,
-        functionDeclarationMap: fdm,
-        verbatimDeclarationMap: vdm,
-        applyPatch?: boolean,
-        choice?: OpenAIResponsesNativeStructuring.Choice.From<fdm, vdm>,
-        parallelToolCall?: boolean,
-    ): OpenAIResponsesNativeEngine<fdm, vdm> {
-        const endpointSpec = this.config.brainswitch.endpoints[endpoint];
+    >(adaptorOptions: Adaptor.OpenAIResponsesNativeEngineOptions<fdm, vdm>): OpenAIResponsesNativeEngine<fdm, vdm> {
+        const endpointSpec = this.config.brainswitch.endpoints[adaptorOptions.endpoint];
         if (endpointSpec?.apiType === 'openai-responses') {} else throw new Error();
-        const throttle = this.throttles.get(endpoint);
+        const throttle = this.throttles.get(adaptorOptions.endpoint);
         if (throttle) {} else throw new Error();
         const options: OpenAIResponsesNativeEngine.Options<fdm, vdm> = {
             ...endpointSpec,
-            functionDeclarationMap,
-            verbatimDeclarationMap,
-            choice,
-            parallelToolCall,
+            functionDeclarationMap: adaptorOptions.functionDeclarationMap,
+            verbatimDeclarationMap: adaptorOptions.verbatimDeclarationMap,
+            structuringChoice: adaptorOptions.structuringChoice,
             throttle,
-            applyPatch,
+            applyPatch: adaptorOptions.applyPatch,
         };
         return new OpenAIResponsesNativeEngine(options);
     }
@@ -89,31 +74,61 @@ export class Adaptor {
     public makeGoogleNativeEngine<
         fdm extends Function.Declaration.Map.Prototype,
         vdm extends Verbatim.Declaration.Map.Prototype,
-    >(
-        endpoint: string,
-        functionDeclarationMap: fdm,
-        verbatimDeclarationMap: vdm,
-        choice?: Structuring.Choice.From<fdm, vdm>,
-        codeExecution?: boolean,
-        urlContext?: boolean,
-        googleSearch?: boolean,
-        parallelToolCall?: boolean,
-    ): GoogleNativeEngine<fdm, vdm> {
-        const endpointSpec = this.config.brainswitch.endpoints[endpoint];
+    >(adaptorOptions: Adaptor.GoogleNativeEngineOptions<fdm, vdm>): GoogleNativeEngine<fdm, vdm> {
+        const endpointSpec = this.config.brainswitch.endpoints[adaptorOptions.endpoint];
         if (endpointSpec?.apiType === 'google') {} else throw new Error();
-        const throttle = this.throttles.get(endpoint);
+        const throttle = this.throttles.get(adaptorOptions.endpoint);
         if (throttle) {} else throw new Error();
         const options: GoogleNativeEngine.Options<fdm, vdm> = {
             ...endpointSpec,
-            functionDeclarationMap,
-            verbatimDeclarationMap,
-            choice,
-            parallelToolCall,
+            functionDeclarationMap: adaptorOptions.functionDeclarationMap,
+            verbatimDeclarationMap: adaptorOptions.verbatimDeclarationMap,
+            structuringChoice: adaptorOptions.structuringChoice,
+            parallelToolCall: adaptorOptions.parallelToolCall,
             throttle,
-            codeExecution,
-            urlContext,
-            googleSearch,
+            codeExecution: adaptorOptions.codeExecution,
+            urlContext: adaptorOptions.urlContext,
+            googleSearch: adaptorOptions.googleSearch,
         };
         return new GoogleNativeEngine(options);
+    }
+}
+
+export namespace Adaptor {
+    export namespace CompatibleEngine {
+        export interface Options<
+            in out fdm extends Function.Declaration.Map.Prototype,
+            in out vdm extends Verbatim.Declaration.Map.Prototype,
+        > {
+            endpoint: string;
+            functionDeclarationMap: fdm;
+            verbatimDeclarationMap: vdm;
+            structuringChoice?: Structuring.Choice.From<fdm, vdm>;
+        }
+    }
+
+    export interface OpenAIResponsesNativeEngineOptions<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+     > {
+        endpoint: string;
+        functionDeclarationMap: fdm;
+        verbatimDeclarationMap: vdm;
+        applyPatch?: boolean;
+        structuringChoice?: OpenAIResponsesNativeStructuring.Choice.From<fdm, vdm>;
+    }
+
+    export interface GoogleNativeEngineOptions<
+        in out fdm extends Function.Declaration.Map.Prototype,
+        in out vdm extends Verbatim.Declaration.Map.Prototype,
+    > {
+        endpoint: string;
+        functionDeclarationMap: fdm;
+        verbatimDeclarationMap: vdm;
+        structuringChoice?: Structuring.Choice.From<fdm, vdm>;
+        codeExecution?: boolean;
+        urlContext?: boolean;
+        googleSearch?: boolean;
+        parallelToolCall?: boolean;
     }
 }

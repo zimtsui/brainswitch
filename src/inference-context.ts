@@ -2,7 +2,7 @@ import { RWLock } from '@zimtsui/coroutine-locks';
 
 
 export interface InferenceContext {
-    busy: RWLock | null;
-    signal: AbortSignal | null;
+    busy?: RWLock;
+    signal?: AbortSignal;
     cost?(deltaCost: number): void;
 }

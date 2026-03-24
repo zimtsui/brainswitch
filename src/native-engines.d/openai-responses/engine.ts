@@ -39,7 +39,7 @@ export class OpenAIResponsesNativeEngine<
         super(options);
         this.parallelToolCall = options.parallelToolCall ?? false;
         this.applyPatch = options.applyPatch ?? false;
-        this.choice = options.choice ?? Structuring.Choice.AUTO;
+        this.choice = options.structuringChoice ?? Structuring.Choice.AUTO;
 
         this.toolCodec = new ToolCodec({ fdm: this.fdm });
         this.compatibleMessageCodec = new CompatibleMessageCodec({
@@ -101,6 +101,6 @@ export namespace OpenAIResponsesNativeEngine {
         in out vdm extends Verbatim.Declaration.Map.Prototype,
     > extends Engine.Options<fdm, vdm> {
         applyPatch?: boolean;
-        choice?: Structuring.Choice.From<fdm, vdm>;
+        structuringChoice?: Structuring.Choice.From<fdm, vdm>;
     }
 }

@@ -41,7 +41,7 @@ export class GoogleNativeEngine<
         super(options);
         this.parallelToolCall = options.parallelToolCall ?? true;
         if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
-        this.choice = options.choice ?? Structuring.Choice.AUTO;
+        this.choice = options.structuringChoice ?? Structuring.Choice.AUTO;
         this.codeExecution = options.codeExecution ?? false;
         this.urlContext = options.urlContext ?? false;
         this.googleSearch = options.googleSearch ?? false;
@@ -109,7 +109,7 @@ export namespace GoogleNativeEngine {
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
     > extends Engine.Options<fdm, vdm> {
-        choice?: Structuring.Choice.From<fdm, vdm>;
+        structuringChoice?: Structuring.Choice.From<fdm, vdm>;
         codeExecution?: boolean;
         urlContext?: boolean;
         googleSearch?: boolean;
