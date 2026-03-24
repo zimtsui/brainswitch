@@ -3,7 +3,6 @@ import { ResponseInvalid } from '#@/engine.ts';
 import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import { Structuring } from '#@/native-engines.d/openai-responses/structuring.ts';
 import type { Verbatim } from '#@/verbatim.ts';
-import { RoleMessage } from '#@/native-engines.d/openai-responses/session.ts';
 
 
 

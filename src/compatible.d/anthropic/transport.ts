@@ -5,9 +5,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { Throttle } from '#@/throttle.ts';
 import { logger } from '#@/telemetry.ts';
-import type { AnthropicCompatibleMessageCodec } from '#@/compatible.d/anthropic/message-codec.ts';
-import type { AnthropicBilling } from '#@/api-types/anthropic/billing.ts';
-import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
+import type { MessageCodec } from '#@/compatible.d/anthropic/message-codec.ts';
+import type { Billing } from '#@/api-types/anthropic/billing.ts';
+import type { ToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/anthropic/choice-codec.ts';
@@ -15,13 +15,13 @@ import type { Structuring } from '#@/compatible/structuring.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
-export class AnthropicCompatibleTransport<
+export class Transport<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
     protected client: Anthropic;
 
-    public constructor(protected ctx: AnthropicCompatibleTransport.Context<fdm, vdm>) {
+    public constructor(protected ctx: Transport.Context<fdm, vdm>) {
         this.client = new Anthropic({
             baseURL: this.ctx.providerSpec.baseUrl,
             apiKey: this.ctx.providerSpec.apiKey,
@@ -132,7 +132,7 @@ export class AnthropicCompatibleTransport<
     }
 }
 
-export namespace AnthropicCompatibleTransport {
+export namespace Transport {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
@@ -144,9 +144,9 @@ export namespace AnthropicCompatibleTransport {
         choice: Structuring.Choice.From<fdm, vdm>;
         parallelToolCall: boolean;
 
-        messageCodec: AnthropicCompatibleMessageCodec<fdm, vdm>;
-        toolCodec: AnthropicToolCodec<fdm>;
-        billing: AnthropicBilling;
+        messageCodec: MessageCodec<fdm, vdm>;
+        toolCodec: ToolCodec<fdm>;
+        billing: Billing;
         validator: Validator.From<fdm, vdm>;
     }
 }

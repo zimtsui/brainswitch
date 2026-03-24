@@ -3,7 +3,7 @@ import { CompatibleEngine } from '#@/compatible/engine.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { type Session, RoleMessage } from '#@/compatible/session.ts';
 import { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletions/tool-codec.ts';
-import { OpenAIChatCompletionsCompatibleMessageCodec } from '#@/compatible.d/openai-chatcompletions/message-codec.ts';
+import { MessageCodec } from '#@/compatible.d/openai-chatcompletions/message-codec.ts';
 import { OpenAIChatCompletionsBilling } from '#@/api-types/openai-chatcompletions/billing.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import { AliyunTransport } from '#@/compatible.d/aliyun/transport.ts';
@@ -11,25 +11,25 @@ import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export class AliyunEngine<
+export class AliyunCompatibleEngine<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > extends CompatibleEngine<fdm, vdm> {
     protected toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
-    protected messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm, vdm>;
+    protected messageCodec: MessageCodec<fdm, vdm>;
     protected billing: OpenAIChatCompletionsBilling;
     protected validator: Validator.From<fdm, vdm>;
     protected transport: AliyunTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
-    public constructor(options: AliyunEngine.Options<fdm, vdm>) {
+    public constructor(options: AliyunCompatibleEngine.Options<fdm, vdm>) {
         super(options);
         this.parallelToolCall = options.parallelToolCall ?? false;
         this.toolCodec = new OpenAIChatCompletionsToolCodec({
             fdm: this.fdm,
             parallelToolCall: this.parallelToolCall,
         });
-        this.messageCodec = new OpenAIChatCompletionsCompatibleMessageCodec({
+        this.messageCodec = new MessageCodec({
             toolCodec: this.toolCodec,
             vdm: this.vdm,
         });
@@ -58,7 +58,7 @@ export class AliyunEngine<
     }
 }
 
-export namespace AliyunEngine {
+export namespace AliyunCompatibleEngine {
     export interface Options<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,

@@ -2,8 +2,8 @@ import { ResponseInvalid } from '#@/engine.ts';
 import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
 import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
-import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
-import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
+import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
+import type { ToolCodec } from '#@/api-types/google/tool-codec.ts';
 import { Verbatim } from '#@/verbatim.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
@@ -82,8 +82,8 @@ export namespace GoogleNativeMessageCodec {
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
     > {
-        toolCodec: GoogleToolCodec<fdm>;
-        compatibleMessageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
+        toolCodec: ToolCodec<fdm>;
+        compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
         codeExecution: boolean;
         vdm: vdm;
     }

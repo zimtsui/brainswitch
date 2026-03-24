@@ -2,10 +2,10 @@ import { Function } from '#@/function.ts';
 import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
 import { Engine } from '#@/engine.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
-import { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
-import { GoogleBilling } from '#@/api-types/google/billing.ts';
+import { ToolCodec } from '#@/api-types/google/tool-codec.ts';
+import { Billing } from '#@/api-types/google/billing.ts';
 import { Validator } from '#@/compatible/validation.ts';
-import { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
+import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
 import { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
 import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
@@ -29,10 +29,10 @@ export class GoogleNativeEngine<
     protected urlContext: boolean;
     protected googleSearch: boolean;
 
-    protected toolCodec: GoogleToolCodec<fdm>;
-    protected compatibleMessageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
+    protected toolCodec: ToolCodec<fdm>;
+    protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
     protected messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
-    protected billing: GoogleBilling;
+    protected billing: Billing;
     protected validator: Validator.From<fdm, vdm>;
     protected transport: GoogleNativeTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
@@ -46,10 +46,10 @@ export class GoogleNativeEngine<
         this.urlContext = options.urlContext ?? false;
         this.googleSearch = options.googleSearch ?? false;
 
-        this.toolCodec = new GoogleToolCodec({
+        this.toolCodec = new ToolCodec({
             fdm: this.fdm,
         });
-        this.compatibleMessageCodec = new GoogleCompatibleMessageCodec({
+        this.compatibleMessageCodec = new CompatibleMessageCodec({
             toolCodec: this.toolCodec,
             vdm: this.vdm,
         });
@@ -59,7 +59,7 @@ export class GoogleNativeEngine<
             codeExecution: this.codeExecution,
             vdm: this.vdm,
         });
-        this.billing = new GoogleBilling({ pricing: this.pricing });
+        this.billing = new Billing({ pricing: this.pricing });
         this.validator = new Validator({ choice: this.choice });
         this.transport = new GoogleNativeTransport({
             inferenceParams: this.inferenceParams,

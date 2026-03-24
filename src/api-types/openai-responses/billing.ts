@@ -2,8 +2,8 @@ import OpenAI from 'openai';
 import type { Pricing } from '#@/engine.ts';
 
 
-export class OpenAIResponsesBilling {
-    public constructor(protected ctx: OpenAIResponsesBilling.Context) {}
+export class Billing {
+    public constructor(protected ctx: Billing.Context) {}
 
 
     public charge(usage: OpenAI.Responses.ResponseUsage): number {
@@ -17,7 +17,7 @@ export class OpenAIResponsesBilling {
     }
 }
 
-export namespace OpenAIResponsesBilling {
+export namespace Billing {
     export interface Context {
         pricing: Pricing;
     }

@@ -4,12 +4,12 @@ import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';
 import { type InferenceContext } from '#@/inference-context.ts';
-import type { GoogleRestfulRequest } from '#@/api-types/google/restful-request.ts';
+import type { RestfulRequest } from '#@/api-types/google/restful-request.ts';
 import { Throttle } from '#@/throttle.ts';
 import { logger } from '#@/telemetry.ts';
-import type { GoogleCompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
-import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
-import type { GoogleBilling } from '#@/api-types/google/billing.ts';
+import type { MessageCodec } from '#@/compatible.d/google/message-codec.ts';
+import type { ToolCodec } from '#@/api-types/google/tool-codec.ts';
+import type { Billing } from '#@/api-types/google/billing.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import type { Validator } from '#@/compatible/validation.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
@@ -18,12 +18,12 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
-export class GoogleCompatibleTransport<
+export class Transport<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
     protected apiURL: URL;
-    public constructor(protected ctx: GoogleCompatibleTransport.Context<fdm, vdm>) {
+    public constructor(protected ctx: Transport.Context<fdm, vdm>) {
         this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/v1beta/models/${this.ctx.inferenceParams.model}:generateContent`)
     }
 
@@ -38,7 +38,7 @@ export class GoogleCompatibleTransport<
         await this.ctx.throttle.requests(wfctx);
 
         const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
-        const reqbody: GoogleRestfulRequest = {
+        const reqbody: RestfulRequest = {
             contents,
             tools: tools.length ? [{
                 functionDeclarations: tools,
@@ -98,7 +98,7 @@ export class GoogleCompatibleTransport<
 
 }
 
-export namespace GoogleCompatibleTransport {
+export namespace Transport {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
@@ -109,9 +109,9 @@ export namespace GoogleCompatibleTransport {
         throttle: Throttle;
         choice: Structuring.Choice.From<fdm, vdm>;
 
-        messageCodec: GoogleCompatibleMessageCodec<fdm, vdm>;
-        toolCodec: GoogleToolCodec<fdm>;
-        billing: GoogleBilling;
+        messageCodec: MessageCodec<fdm, vdm>;
+        toolCodec: ToolCodec<fdm>;
+        billing: Billing;
         validator: Validator.From<fdm, vdm>;
     }
 }

@@ -7,8 +7,8 @@ const ajv = new Ajv();
 
 
 
-export class GoogleToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
-    public constructor(protected ctx: GoogleToolCodec.Context<fdm>) {}
+export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
+    public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
         fc: Function.Call.From<fdm>,
@@ -66,7 +66,7 @@ export class GoogleToolCodec<in out fdm extends Function.Declaration.Map.Prototy
 }
 
 
-export namespace GoogleToolCodec {
+export namespace ToolCodec {
     export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         fdm: fdm;
     }

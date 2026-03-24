@@ -7,7 +7,7 @@ import type { Verbatim } from '#@/verbatim.ts';
 
 
 
-export abstract class OpenAIChatCompletionsCompatibleTransport<
+export abstract class Transport<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {

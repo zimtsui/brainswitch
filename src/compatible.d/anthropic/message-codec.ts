@@ -1,18 +1,18 @@
 import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import Anthropic from '@anthropic-ai/sdk';
-import type { AnthropicToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
+import type { ToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 const NOMINAL = Symbol();
 
 
-export class AnthropicCompatibleMessageCodec<
+export class MessageCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: AnthropicCompatibleMessageCodec.Context<fdm, vdm>) {}
+    public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
     public convertFromUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
@@ -32,7 +32,7 @@ export class AnthropicCompatibleMessageCodec<
     public convertFromAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): Anthropic.ContentBlockParam[] {
-        if (aiMessage instanceof AnthropicCompatibleMessageCodec.Message.Ai)
+        if (aiMessage instanceof MessageCodec.Message.Ai)
             return aiMessage.getRaw();
         else {
             return aiMessage.getParts().map(part => {
@@ -70,7 +70,7 @@ export class AnthropicCompatibleMessageCodec<
      */
     public convertToAiMessage(
         raw: Anthropic.ContentBlock[],
-    ): AnthropicCompatibleMessageCodec.Message.Ai.From<fdm, vdm> {
+    ): MessageCodec.Message.Ai.From<fdm, vdm> {
         const parts = raw.flatMap((item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
             if (item.type === 'text') {
                 const vms = VerbatimCodec.decode(item.text, this.ctx.vdm);
@@ -79,16 +79,16 @@ export class AnthropicCompatibleMessageCodec<
             else if (item.type === 'thinking') return [];
             else throw new Error();
         });
-        return new AnthropicCompatibleMessageCodec.Message.Ai(parts, raw);
+        return new MessageCodec.Message.Ai(parts, raw);
     }
 }
 
-export namespace AnthropicCompatibleMessageCodec {
+export namespace MessageCodec {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
     > {
-        toolCodec: AnthropicToolCodec<fdm>;
+        toolCodec: ToolCodec<fdm>;
         vdm: vdm;
     }
 

@@ -5,7 +5,7 @@ import { Throttle } from '#@/throttle.ts';
 import { GoogleCompatibleEngine } from '#@/compatible/engine.d/google.ts';
 import { OpenAIResponsesCompatibleEngine } from '#@/compatible/engine.d/openai-responses.ts';
 import { AnthropicCompatibleEngine } from '#@/compatible/engine.d/anthropic.ts';
-import { AliyunEngine } from '#@/compatible/engine.d/aliyun.ts';
+import { AliyunCompatibleEngine } from '#@/compatible/engine.d/aliyun.ts';
 import { OpenAIResponsesNativeEngine } from '#@/native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
 import type { Verbatim } from './verbatim';
@@ -53,7 +53,7 @@ export class Adaptor {
         else if (endpointSpec.apiType === 'google')
             return new GoogleCompatibleEngine<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'aliyun')
-            return new AliyunEngine<fdm, vdm>(options);
+            return new AliyunCompatibleEngine<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'anthropic')
             return new AnthropicCompatibleEngine<fdm, vdm>(options);
         else throw new Error();

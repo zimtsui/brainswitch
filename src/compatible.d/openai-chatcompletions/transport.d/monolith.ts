@@ -1,14 +1,14 @@
 import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import type OpenAI from 'openai';
-import { OpenAIChatCompletionsCompatibleTransport } from '#@/compatible.d/openai-chatcompletions/transport.ts';
+import { Transport } from '#@/compatible.d/openai-chatcompletions/transport.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import * as Undici from 'undici';
 import { ResponseInvalid } from '#@/engine.ts';
 import { logger } from '#@/telemetry.ts';
 import type { OpenAIChatCompletionsBilling } from '#@/api-types/openai-chatcompletions/billing.ts';
 import type { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletions/tool-codec.ts';
-import type { OpenAIChatCompletionsCompatibleMessageCodec } from '#@/compatible.d/openai-chatcompletions/message-codec.ts';
+import type { MessageCodec } from '#@/compatible.d/openai-chatcompletions/message-codec.ts';
 import type { Throttle } from '#@/throttle.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
@@ -18,11 +18,11 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
-export abstract class OpenAIChatCompletionsCompatibleMonolith<
+export abstract class MonolithTransport<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
-> extends OpenAIChatCompletionsCompatibleTransport<fdm, vdm> {
-    public constructor(protected ctx: OpenAIChatCompletionsCompatibleMonolith.Context<fdm, vdm>) {
+> extends Transport<fdm, vdm> {
+    public constructor(protected ctx: MonolithTransport.Context<fdm, vdm>) {
         super();
     }
 
@@ -97,7 +97,7 @@ export abstract class OpenAIChatCompletionsCompatibleMonolith<
     }
 }
 
-export namespace OpenAIChatCompletionsCompatibleMonolith {
+export namespace MonolithTransport {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
@@ -113,7 +113,7 @@ export namespace OpenAIChatCompletionsCompatibleMonolith {
         choice: Structuring.Choice.From<fdm, vdm>;
         parallelToolCall: boolean;
 
-        messageCodec: OpenAIChatCompletionsCompatibleMessageCodec<fdm, vdm>;
+        messageCodec: MessageCodec<fdm, vdm>;
         toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
         billing: OpenAIChatCompletionsBilling;
         validator: Validator.From<fdm, vdm>;

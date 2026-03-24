@@ -3,8 +3,8 @@ import type { Pricing } from '#@/engine.ts';
 import { logger } from '#@/telemetry.ts';
 
 
-export class GoogleBilling {
-    public constructor(protected ctx: GoogleBilling.Context) {}
+export class Billing {
+    public constructor(protected ctx: Billing.Context) {}
 
     public charge(usageMetadata: Google.GenerateContentResponseUsageMetadata): number {
         logger.message.debug(usageMetadata);
@@ -23,7 +23,7 @@ export class GoogleBilling {
     }
 }
 
-export namespace GoogleBilling {
+export namespace Billing {
     export interface Context {
         pricing: Pricing
     }

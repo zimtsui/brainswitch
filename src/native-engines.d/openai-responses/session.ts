@@ -1,4 +1,4 @@
-import * as Compatible from '#@/compatible/session.ts';
+import { RoleMessage as CompatibleRoleMessage} from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import type { GenericSession } from '#@/session.ts';
@@ -39,7 +39,7 @@ export namespace Session {
 
 export namespace RoleMessage {
     export namespace Part {
-        export import Text = Compatible.RoleMessage.Part.Text;
+        export import Text = CompatibleRoleMessage.Part.Text;
     }
 
     export class Ai<
@@ -157,5 +157,5 @@ export namespace RoleMessage {
         }
     }
 
-    export import Developer = Compatible.RoleMessage.Developer;
+    export import Developer = CompatibleRoleMessage.Developer;
 }

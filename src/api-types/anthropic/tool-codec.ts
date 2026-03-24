@@ -7,8 +7,8 @@ import { type TObject } from '@sinclair/typebox';
 const ajv = new Ajv();
 
 
-export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
-    public constructor(protected ctx: AnthropicToolCodec.Context<fdm>) {}
+export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
+    public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
         fc: Function.Call.From<fdm>,
@@ -68,7 +68,7 @@ export class AnthropicToolCodec<in out fdm extends Function.Declaration.Map.Prot
 
 }
 
-export namespace AnthropicToolCodec {
+export namespace ToolCodec {
     export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         fdm: fdm;
     }

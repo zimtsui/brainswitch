@@ -8,11 +8,11 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
-export class OpenAIChatCompletionsCompatibleMessageCodec<
+export class MessageCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: OpenAIChatCompletionsCompatibleMessageCodec.Context<fdm, vdm>) {}
+    public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
     /**
      * @throws {@link VerbatimCodec.ChannelNotFound}
@@ -87,7 +87,7 @@ export class OpenAIChatCompletionsCompatibleMessageCodec<
 
 }
 
-export namespace OpenAIChatCompletionsCompatibleMessageCodec {
+export namespace MessageCodec {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,

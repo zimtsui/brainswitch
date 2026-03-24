@@ -7,10 +7,10 @@ const ajv = new Ajv();
 
 
 
-export class OpenAIResponsesToolCodec<
+export class ToolCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: OpenAIResponsesToolCodec.Context<fdm>) {}
+    public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
     public convertFromFunctionResponse(
         fr: Function.Response.From<fdm>,
@@ -62,7 +62,7 @@ export class OpenAIResponsesToolCodec<
     }
 }
 
-export namespace OpenAIResponsesToolCodec {
+export namespace ToolCodec {
     export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
         fdm: fdm;
     }

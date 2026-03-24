@@ -6,9 +6,9 @@ import * as Undici from 'undici';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { Throttle } from '#@/throttle.ts';
 import { logger } from '#@/telemetry.ts';
-import type { OpenAIResponsesNativeMessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
-import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
-import type { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
+import type { MessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
+import type { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
+import type { Billing } from '#@/api-types/openai-responses/billing.ts';
 import type { Validator } from '#@/native-engines.d/openai-responses/validation.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import * as ChoiceCodec from '#@/native-engines.d/openai-responses/choice-codec.ts';
@@ -17,13 +17,13 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
-export class OpenAIResponsesNativeTransport<
+export class Transport<
     fdm extends Function.Declaration.Map.Prototype,
     vdm extends Verbatim.Declaration.Map.Prototype,
 > {
     protected apiURL: URL;
 
-    public constructor(protected ctx: OpenAIResponsesNativeTransport.Context<fdm, vdm>) {
+    public constructor(protected ctx: Transport.Context<fdm, vdm>) {
         this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/responses`);
     }
 
@@ -113,7 +113,7 @@ export class OpenAIResponsesNativeTransport<
     }
 }
 
-export namespace OpenAIResponsesNativeTransport {
+export namespace Transport {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
@@ -126,9 +126,9 @@ export namespace OpenAIResponsesNativeTransport {
         parallelToolCall: boolean;
         applyPatch: boolean;
 
-        messageCodec: OpenAIResponsesNativeMessageCodec<fdm, vdm>;
-        toolCodec: OpenAIResponsesToolCodec<fdm>;
-        billing: OpenAIResponsesBilling;
+        messageCodec: MessageCodec<fdm, vdm>;
+        toolCodec: ToolCodec<fdm>;
+        billing: Billing;
         validator: Validator.From<fdm, vdm>;
     }
 }

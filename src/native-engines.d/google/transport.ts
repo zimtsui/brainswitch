@@ -4,12 +4,12 @@ import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';
 import { type InferenceContext } from '#@/inference-context.ts';
-import type { GoogleRestfulRequest } from '#@/api-types/google/restful-request.ts';
+import type { RestfulRequest } from '#@/api-types/google/restful-request.ts';
 import { Throttle } from '#@/throttle.ts';
 import { logger } from '#@/telemetry.ts';
 import type { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
-import type { GoogleToolCodec } from '#@/api-types/google/tool-codec.ts';
-import type { GoogleBilling } from '#@/api-types/google/billing.ts';
+import type { ToolCodec } from '#@/api-types/google/tool-codec.ts';
+import type { Billing } from '#@/api-types/google/billing.ts';
 import type { Validator } from '#@/compatible/validation.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import * as ChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
@@ -44,7 +44,7 @@ export class GoogleNativeTransport<
         if (this.ctx.urlContext) tools.push({ urlContext: {} });
         if (this.ctx.googleSearch) tools.push({ googleSearch: {} });
         if (this.ctx.codeExecution) tools.push({ codeExecution: {} });
-        const reqbody: GoogleRestfulRequest = {
+        const reqbody: RestfulRequest = {
             contents,
             tools: tools.length ? tools : undefined,
             toolConfig: functionDeclarations.length ? {
@@ -114,8 +114,8 @@ export namespace GoogleNativeTransport {
         googleSearch: boolean;
 
         messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
-        toolCodec: GoogleToolCodec<fdm>;
-        billing: GoogleBilling;
+        toolCodec: ToolCodec<fdm>;
+        billing: Billing;
         validator: Validator.From<fdm, vdm>;
     }
 }

@@ -2,8 +2,8 @@ import type { Pricing } from '#@/engine.ts';
 import Anthropic from '@anthropic-ai/sdk';
 
 
-export class AnthropicBilling {
-    public constructor(protected ctx: AnthropicBilling.Context) {}
+export class Billing {
+    public constructor(protected ctx: Billing.Context) {}
 
     public charge(usage: Anthropic.Usage): number {
         const cacheHitTokenCount = usage.cache_read_input_tokens || 0;
@@ -16,7 +16,7 @@ export class AnthropicBilling {
     }
 }
 
-export namespace AnthropicBilling {
+export namespace Billing {
     export interface Context {
         pricing: Pricing;
     }

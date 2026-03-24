@@ -45,7 +45,7 @@ export namespace RoleMessage {
     export namespace Part {
         export class Text<out vdu extends Verbatim.Declaration.Prototype> {
             public static paragraph(text: string): Text<never> {
-                return new Text(text.trimEnd() + '\n\n', []);
+                return new RoleMessage.Part.Text(text.trimEnd() + '\n\n', []);
             }
 
             protected declare [NOMINAL]: never;
@@ -67,36 +67,38 @@ export namespace RoleMessage {
             return this.parts;
         }
         public getText(): string {
-            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
+            return this.parts
+                .filter(part => part instanceof RoleMessage.Part.Text)
+                .map(part => part.text).join('');
         }
         public getOnlyText(): string {
             if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
             return this.getText();
+        }
+        public getFunctionCalls(): Function.Call.Of<fdu>[] {
+            return this.parts.filter(part => part instanceof Function.Call);
         }
         public getOnlyFunctionCall(): Function.Call.Of<fdu> {
             const fcs = this.getFunctionCalls();
             if (fcs.length === 1) {} else throw new Error();
             return fcs[0]!;
         }
-        public getFunctionCalls(): Function.Call.Of<fdu>[] {
-            return this.parts.filter(part => part instanceof Function.Call);
+        public getVerbatimMessages(): Verbatim.Message.Of<vdu>[] {
+            return this.parts
+                .filter(part => part instanceof RoleMessage.Part.Text)
+                .flatMap(part => part.vms);
         }
         public getOnlyVerbatimMessage(): Verbatim.Message.Of<vdu> {
             const vms = this.getVerbatimMessages();
             if (vms.length === 1) {} else throw new Error();
             return vms[0]!;
         }
-        public getVerbatimMessages(): Verbatim.Message.Of<vdu>[] {
-            return this.parts
-                .filter(part => part instanceof RoleMessage.Part.Text)
-                .flatMap(part => part.vms);
-        }
     }
     export namespace Ai {
         export type From<
             fdm extends Function.Declaration.Map.Prototype,
             vdm extends Verbatim.Declaration.Map.Prototype,
-        > = Ai<
+        > = RoleMessage.Ai<
             Function.Declaration.From<fdm>,
             Verbatim.Declaration.From<vdm>
         >;
@@ -112,7 +114,7 @@ export namespace RoleMessage {
             export type From<
                 fdm extends Function.Declaration.Map.Prototype,
                 vdm extends Verbatim.Declaration.Map.Prototype,
-            > = Part<
+            > = RoleMessage.Ai.Part<
                 Function.Declaration.From<fdm>,
                 Verbatim.Declaration.From<vdm>
             >;
@@ -146,9 +148,7 @@ export namespace RoleMessage {
     export namespace User {
         export type From<
             fdm extends Function.Declaration.Map.Prototype,
-        > = User<
-            Function.Declaration.From<fdm>
-        >;
+        > = RoleMessage.User<Function.Declaration.From<fdm>>;
 
         export type Part<fdu extends Function.Declaration.Prototype> =
             |   RoleMessage.Part.Text<never>
@@ -159,8 +159,8 @@ export namespace RoleMessage {
     export class Developer {
         protected declare [NOMINAL]: never;
 
-        public constructor(protected parts: Developer.Part[]) {}
-        public getParts(): Developer.Part[] {
+        public constructor(protected parts: RoleMessage.Developer.Part[]) {}
+        public getParts(): RoleMessage.Developer.Part[] {
             return this.parts;
         }
         public getText(): string {
@@ -171,6 +171,6 @@ export namespace RoleMessage {
         }
     }
     export namespace Developer {
-        export type Part = Part.Text<never>;
+        export type Part = RoleMessage.Part.Text<never>;
     }
 }

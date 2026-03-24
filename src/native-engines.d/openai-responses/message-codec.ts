@@ -2,19 +2,19 @@ import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/
 import { Function } from '#@/function.ts';
 import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import OpenAI from 'openai';
-import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
-import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
+import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
+import type { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import { ResponseInvalid } from '#@/engine.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
-export class OpenAIResponsesNativeMessageCodec<
+export class MessageCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: OpenAIResponsesNativeMessageCodec.Context<fdm, vdm>) {}
+    public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
     public convertFromFunctionResponse(
         fr: Function.Response.From<fdm>,
@@ -89,13 +89,13 @@ export class OpenAIResponsesNativeMessageCodec<
     }
 }
 
-export namespace OpenAIResponsesNativeMessageCodec {
+export namespace MessageCodec {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
     > {
-        toolCodec: OpenAIResponsesToolCodec<fdm>;
-        compatibleMessageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
+        toolCodec: ToolCodec<fdm>;
+        compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
         vdm: vdm;
     }
 }

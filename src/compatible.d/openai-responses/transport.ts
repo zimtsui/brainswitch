@@ -6,9 +6,9 @@ import * as Undici from 'undici';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { Throttle } from '#@/throttle.ts';
 import { logger } from '#@/telemetry.ts';
-import type { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
-import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
-import type { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
+import type { MessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
+import type { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
+import type { Billing } from '#@/api-types/openai-responses/billing.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/openai-responses/choice-codec.ts';
@@ -16,13 +16,13 @@ import type { Structuring } from '#@/compatible/structuring.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
-export class OpenAIResponsesCompatibleTransport<
+export class Transport<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
     protected apiURL: URL;
 
-    public constructor(protected ctx: OpenAIResponsesCompatibleTransport.Context<fdm, vdm>) {
+    public constructor(protected ctx: Transport.Context<fdm, vdm>) {
         this.apiURL = new URL(`${this.ctx.providerSpec.baseUrl}/responses`);
     }
 
@@ -57,7 +57,7 @@ export class OpenAIResponsesCompatibleTransport<
         wfctx: InferenceContext,
         session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<OpenAIResponsesCompatibleMessageCodec.Message.Ai.From<fdm, vdm>> {
+    ): Promise<MessageCodec.Message.Ai.From<fdm, vdm>> {
         const params = this.makeParams(session);
         logger.message.trace(params);
 
@@ -115,7 +115,7 @@ export class OpenAIResponsesCompatibleTransport<
     }
 }
 
-export namespace OpenAIResponsesCompatibleTransport {
+export namespace Transport {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
@@ -127,9 +127,9 @@ export namespace OpenAIResponsesCompatibleTransport {
         choice: Structuring.Choice.From<fdm, vdm>;
         parallelToolCall: boolean;
 
-        messageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
-        toolCodec: OpenAIResponsesToolCodec<fdm>;
-        billing: OpenAIResponsesBilling;
+        messageCodec: MessageCodec<fdm, vdm>;
+        toolCodec: ToolCodec<fdm>;
+        billing: Billing;
         validator: Validator.From<fdm, vdm>;
     }
 }

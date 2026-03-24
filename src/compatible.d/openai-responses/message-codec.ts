@@ -1,18 +1,18 @@
 import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
-import type { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
+import type { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 const NOMINAL = Symbol();
 
 
-export class OpenAIResponsesCompatibleMessageCodec<
+export class MessageCodec<
     in out fdm extends Function.Declaration.Map.Prototype,
     in out vdm extends Verbatim.Declaration.Map.Prototype,
 > {
-    public constructor(protected ctx: OpenAIResponsesCompatibleMessageCodec.Context<fdm, vdm>) {}
+    public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
     /**
      * @throws {@link VerbatimCodec.ChannelNotFound}
@@ -20,7 +20,7 @@ export class OpenAIResponsesCompatibleMessageCodec<
      */
     public convertToAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
-    ): OpenAIResponsesCompatibleMessageCodec.Message.Ai.From<fdm, vdm> {
+    ): MessageCodec.Message.Ai.From<fdm, vdm> {
         const parts = output.flatMap(
             (item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
                 if (item.type === 'message') {
@@ -35,7 +35,7 @@ export class OpenAIResponsesCompatibleMessageCodec<
                 else throw new Error();
             },
         );
-        return new OpenAIResponsesCompatibleMessageCodec.Message.Ai(parts, output);
+        return new MessageCodec.Message.Ai(parts, output);
     }
 
     public convertFromFunctionCall(
@@ -69,7 +69,7 @@ export class OpenAIResponsesCompatibleMessageCodec<
     public convertFromAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseInput {
-        if (aiMessage instanceof OpenAIResponsesCompatibleMessageCodec.Message.Ai)
+        if (aiMessage instanceof MessageCodec.Message.Ai)
             return aiMessage.getRaw();
         else {
             return aiMessage.getParts().map(part => {
@@ -100,12 +100,12 @@ export class OpenAIResponsesCompatibleMessageCodec<
     }
 }
 
-export namespace OpenAIResponsesCompatibleMessageCodec {
+export namespace MessageCodec {
     export interface Context<
         in out fdm extends Function.Declaration.Map.Prototype,
         in out vdm extends Verbatim.Declaration.Map.Prototype,
     > {
-        toolCodec: OpenAIResponsesToolCodec<fdm>;
+        toolCodec: ToolCodec<fdm>;
         vdm: vdm;
     }
 

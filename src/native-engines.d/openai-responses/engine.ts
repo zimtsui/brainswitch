@@ -1,14 +1,13 @@
 import { Function } from '#@/function.ts';
 import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/session.ts';
-import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 import { Engine } from '#@/engine.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
-import { OpenAIResponsesToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
-import { OpenAIResponsesBilling } from '#@/api-types/openai-responses/billing.ts';
-import { OpenAIResponsesCompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
-import { OpenAIResponsesNativeMessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
+import { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
+import { Billing } from '#@/api-types/openai-responses/billing.ts';
+import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
+import { MessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
 import { Validator } from '#@/native-engines.d/openai-responses/validation.ts';
-import { OpenAIResponsesNativeTransport } from '#@/native-engines.d/openai-responses/transport.ts';
+import { Transport } from '#@/native-engines.d/openai-responses/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import { Structuring } from '#@/native-engines.d/openai-responses/structuring.ts';
 
@@ -28,12 +27,12 @@ export class OpenAIResponsesNativeEngine<
     protected applyPatch: boolean;
     protected choice: Structuring.Choice.From<fdm, vdm>;
 
-    protected toolCodec: OpenAIResponsesToolCodec<fdm>;
-    protected compatibleMessageCodec: OpenAIResponsesCompatibleMessageCodec<fdm, vdm>;
-    protected messageCodec: OpenAIResponsesNativeMessageCodec<fdm, vdm>;
-    protected billing: OpenAIResponsesBilling;
+    protected toolCodec: ToolCodec<fdm>;
+    protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
+    protected messageCodec: MessageCodec<fdm, vdm>;
+    protected billing: Billing;
     protected validator: Validator.From<fdm, vdm>;
-    protected transport: OpenAIResponsesNativeTransport<fdm, vdm>;
+    protected transport: Transport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: OpenAIResponsesNativeEngine.Options<fdm, vdm>) {
@@ -42,19 +41,19 @@ export class OpenAIResponsesNativeEngine<
         this.applyPatch = options.applyPatch ?? false;
         this.choice = options.choice ?? Structuring.Choice.AUTO;
 
-        this.toolCodec = new OpenAIResponsesToolCodec({ fdm: this.fdm });
-        this.compatibleMessageCodec = new OpenAIResponsesCompatibleMessageCodec({
+        this.toolCodec = new ToolCodec({ fdm: this.fdm });
+        this.compatibleMessageCodec = new CompatibleMessageCodec({
             toolCodec: this.toolCodec,
             vdm: this.vdm,
         });
-        this.messageCodec = new OpenAIResponsesNativeMessageCodec({
+        this.messageCodec = new MessageCodec({
             toolCodec: this.toolCodec,
             compatibleMessageCodec: this.compatibleMessageCodec,
             vdm: this.vdm,
         });
-        this.billing = new OpenAIResponsesBilling({ pricing: this.pricing });
+        this.billing = new Billing({ pricing: this.pricing });
         this.validator = new Validator({ choice: this.choice });
-        this.transport = new OpenAIResponsesNativeTransport({
+        this.transport = new Transport({
             inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
