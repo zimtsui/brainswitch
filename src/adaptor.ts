@@ -27,8 +27,8 @@ export class Adaptor {
     }
 
     public makeCompatibleEngine<
-        fdm extends Function.Declaration.Map.Prototype,
-        vdm extends Verbatim.Declaration.Map.Prototype,
+        fdm extends Function.Decl.Map.Proto,
+        vdm extends Verbatim.Decl.Map.Proto,
     >(adaptorOptions: Adaptor.CompatibleEngine.Options<fdm, vdm>): CompatibleEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[adaptorOptions.endpoint];
         if (endpointSpec) {} else throw new Error();
@@ -53,8 +53,8 @@ export class Adaptor {
     }
 
     public makeOpenAIResponsesNativeEngine<
-        fdm extends Function.Declaration.Map.Prototype,
-        vdm extends Verbatim.Declaration.Map.Prototype,
+        fdm extends Function.Decl.Map.Proto,
+        vdm extends Verbatim.Decl.Map.Proto,
     >(adaptorOptions: Adaptor.OpenAIResponsesNativeEngineOptions<fdm, vdm>): OpenAIResponsesNativeEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[adaptorOptions.endpoint];
         if (endpointSpec?.apiType === 'openai-responses') {} else throw new Error();
@@ -72,8 +72,8 @@ export class Adaptor {
     }
 
     public makeGoogleNativeEngine<
-        fdm extends Function.Declaration.Map.Prototype,
-        vdm extends Verbatim.Declaration.Map.Prototype,
+        fdm extends Function.Decl.Map.Proto,
+        vdm extends Verbatim.Decl.Map.Proto,
     >(adaptorOptions: Adaptor.GoogleNativeEngineOptions<fdm, vdm>): GoogleNativeEngine<fdm, vdm> {
         const endpointSpec = this.config.brainswitch.endpoints[adaptorOptions.endpoint];
         if (endpointSpec?.apiType === 'google') {} else throw new Error();
@@ -97,8 +97,8 @@ export class Adaptor {
 export namespace Adaptor {
     export namespace CompatibleEngine {
         export interface Options<
-            in out fdm extends Function.Declaration.Map.Prototype,
-            in out vdm extends Verbatim.Declaration.Map.Prototype,
+            in out fdm extends Function.Decl.Map.Proto,
+            in out vdm extends Verbatim.Decl.Map.Proto,
         > {
             endpoint: string;
             functionDeclarationMap: fdm;
@@ -108,8 +108,8 @@ export namespace Adaptor {
     }
 
     export interface OpenAIResponsesNativeEngineOptions<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
      > {
         endpoint: string;
         functionDeclarationMap: fdm;
@@ -119,8 +119,8 @@ export namespace Adaptor {
     }
 
     export interface GoogleNativeEngineOptions<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         endpoint: string;
         functionDeclarationMap: fdm;

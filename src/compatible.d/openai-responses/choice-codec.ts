@@ -6,8 +6,8 @@ import type { OpenAI } from 'openai';
 
 
 export function encode<
-    fdu extends Function.Declaration.Prototype,
-    vdu extends Verbatim.Declaration.Prototype,
+    fdu extends Function.Decl.Proto,
+    vdu extends Verbatim.Decl.Proto,
 >(
     choice: Structuring.Choice<fdu, vdu>,
 ): OpenAI.Responses.ToolChoiceOptions | OpenAI.Responses.ToolChoiceAllowed {

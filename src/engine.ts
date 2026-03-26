@@ -27,8 +27,8 @@ export interface InferenceParams {
 }
 
 export abstract class Engine<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
     userm, aim, devm,
     session extends GenericSession<userm, aim, devm>,
 > {
@@ -132,8 +132,8 @@ export abstract class Engine<
 
 export namespace Engine {
     export interface Options<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > extends EndpointSpec {
         throttle: Throttle;
         functionDeclarationMap: fdm;

@@ -5,8 +5,8 @@ import Anthropic from '@anthropic-ai/sdk';
 
 
 export function encode<
-    fdu extends Function.Declaration.Prototype,
-    vdu extends Verbatim.Declaration.Prototype,
+    fdu extends Function.Decl.Proto,
+    vdu extends Verbatim.Decl.Proto,
 >(
     choice: Structuring.Choice<fdu, vdu>,
     parallelToolCall: boolean,

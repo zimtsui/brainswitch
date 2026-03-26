@@ -7,7 +7,7 @@ import { type TObject } from '@sinclair/typebox';
 const ajv = new Ajv();
 
 
-export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
+export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
     public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
@@ -28,7 +28,7 @@ export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
                 throw new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
             }
         })();
-        if (ajv.validate(fditem.paraschema, args)) {}
+        if (ajv.validate(fditem.parameters, args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
         return Function.Call.of({
             id: apifc.id,
@@ -49,19 +49,19 @@ export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
     }
 
     protected convertFromFunctionDeclarationEntry(
-        fdentry: Function.Declaration.Entry.From<fdm>,
+        fdentry: Function.Decl.Entry.From<fdm>,
     ): Anthropic.Tool {
         return {
             name: fdentry[0],
             description: fdentry[1].description,
-            input_schema: fdentry[1].paraschema as TObject,
+            input_schema: fdentry[1].parameters as TObject,
         };
     }
 
     public convertFromFunctionDeclarationMap(
         fdm: fdm,
     ): Anthropic.Tool[] {
-        const fdentries = Object.entries(fdm) as Function.Declaration.Entry.From<fdm>[];
+        const fdentries = Object.entries(fdm) as Function.Decl.Entry.From<fdm>[];
 
         return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
     }
@@ -69,7 +69,7 @@ export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
 }
 
 export namespace ToolCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
+    export interface Context<in out fdm extends Function.Decl.Map.Proto> {
         fdm: fdm;
     }
 }

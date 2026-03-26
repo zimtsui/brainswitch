@@ -11,8 +11,8 @@ import type { Verbatim } from '#@/verbatim.ts';
  * @param session mutable
  */
 export async function *agentloop<
-    fdm extends Function.Declaration.Map.Prototype,
-    vdm extends Verbatim.Declaration.Map.Prototype,
+    fdm extends Function.Decl.Map.Proto,
+    vdm extends Verbatim.Decl.Map.Proto,
 >(
     wfctx: InferenceContext,
     session: Session.From<fdm, vdm>,

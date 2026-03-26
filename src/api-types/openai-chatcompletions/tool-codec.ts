@@ -6,7 +6,7 @@ import Ajv from 'ajv';
 const ajv = new Ajv();
 
 
-export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
+export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map.Proto> {
     public constructor(protected ctx: OpenAIChatCompletionsToolCodec.Context<fdm>) {}
 
 
@@ -36,7 +36,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
                 return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
             }
         })();
-        if (ajv.validate(fditem.paraschema, args)) {}
+        if (ajv.validate(fditem.parameters, args)) {}
         else throw new ResponseInvalid('Invalid function arguments', { cause: apifc });
         return Function.Call.of({
             id: apifc.id,
@@ -58,7 +58,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
     }
 
     protected convertFromFunctionDeclarationEntry(
-        fdentry: Function.Declaration.Entry.From<fdm>,
+        fdentry: Function.Decl.Entry.From<fdm>,
     ): OpenAI.ChatCompletionTool {
         return {
             type: 'function',
@@ -66,13 +66,13 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
                 name: fdentry[0],
                 description: fdentry[1].description,
                 strict: true,
-                parameters: fdentry[1].paraschema,
+                parameters: fdentry[1].parameters,
             },
         };
     }
 
     public convertFromFunctionDeclarationMap(fdm: fdm): OpenAI.ChatCompletionTool[] {
-        const fdentries = Object.entries(fdm) as Function.Declaration.Entry.From<fdm>[];
+        const fdentries = Object.entries(fdm) as Function.Decl.Entry.From<fdm>[];
         return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
     }
 
@@ -80,7 +80,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Declarat
 }
 
 export namespace OpenAIChatCompletionsToolCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
+    export interface Context<in out fdm extends Function.Decl.Map.Proto> {
         parallelToolCall: boolean;
         fdm: fdm;
     }

@@ -1,0 +1,7 @@
+{{#each requests}}
+<verbatim:request name="{{{this.name}}}">
+    {{#each this.args}}
+    <verbatim:argument name="{{{this[0]}}}"><![CDATA[{{{this[1]}}}]]></verbatim:argument>
+    {{/each}}
+</verbatim:request>
+{{/each}}

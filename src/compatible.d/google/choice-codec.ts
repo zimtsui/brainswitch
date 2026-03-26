@@ -5,8 +5,8 @@ import * as Google from '@google/genai';
 
 
 export function encode<
-    fdu extends Function.Declaration.Prototype,
-    vdu extends Verbatim.Declaration.Prototype,
+    fdu extends Function.Decl.Proto,
+    vdu extends Verbatim.Decl.Proto,
 >(
     choice: Structuring.Choice<fdu, vdu>,
 ): Google.FunctionCallingConfig {

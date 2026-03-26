@@ -19,8 +19,8 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 export class Transport<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > {
     protected apiURL: URL;
     public constructor(protected ctx: Transport.Context<fdm, vdm>) {
@@ -29,9 +29,9 @@ export class Transport<
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>,
+        session: Session<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>> {
+    ): Promise<RoleMessage.Ai<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>> {
         const systemInstruction = session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage);
         const contents = this.ctx.messageCodec.convertFromChatMessages(session.chatMessages);
 
@@ -89,7 +89,7 @@ export class Transport<
             this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
             return aiMessage;
         } catch (e) {
-            if (e instanceof VerbatimCodec.ChannelNotFound || e instanceof VerbatimCodec.InvalidSchema)
+            if (e instanceof VerbatimCodec.RequestInvalid)
                 throw new ResponseInvalid('Invalid verbatim message', { cause: response.candidates[0].content });
             else throw e;
         }
@@ -100,8 +100,8 @@ export class Transport<
 
 export namespace Transport {
     export interface Context<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         inferenceParams: InferenceParams;
         providerSpec: ProviderSpec;

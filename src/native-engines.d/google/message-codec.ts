@@ -10,8 +10,8 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 export class GoogleNativeMessageCodec<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > {
     public constructor(protected ctx: GoogleNativeMessageCodec.Context<fdm, vdm>) {}
 
@@ -79,8 +79,8 @@ export class GoogleNativeMessageCodec<
 
 export namespace GoogleNativeMessageCodec {
     export interface Context<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         toolCodec: ToolCodec<fdm>;
         compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;

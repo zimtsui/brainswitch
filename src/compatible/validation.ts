@@ -6,15 +6,15 @@ import { RoleMessage } from '#@/compatible/session.ts';
 
 
 export class Validator<
-    in out fdu extends Function.Declaration.Prototype,
-    in out vdu extends Verbatim.Declaration.Prototype,
+    in out fdu extends Function.Decl.Proto,
+    in out vdu extends Verbatim.Decl.Proto,
 > {
     public constructor(protected ctx: Validator.Context<fdu, vdu>) {}
 
 
     public validate(
         fcs: Function.Call.Of<fdu>[],
-        vms: Verbatim.Message.Of<vdu>[],
+        vms: Verbatim.Request.Of<vdu>[],
     ): void {
         if (this.ctx.choice === Structuring.Choice.FCall.REQUIRED) {
             if (fcs.length) {} else throw new ResponseInvalid('Function call required.');
@@ -62,20 +62,20 @@ export class Validator<
 
 export namespace Validator {
     export type From<
-        fdm extends Function.Declaration.Map.Prototype,
-        vdm extends Verbatim.Declaration.Map.Prototype,
-    > = Validator<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+        fdm extends Function.Decl.Map.Proto,
+        vdm extends Verbatim.Decl.Map.Proto,
+    > = Validator<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>;
 
     export interface Context<
-        in out fdu extends Function.Declaration.Prototype,
-        in out vdu extends Verbatim.Declaration.Prototype,
+        in out fdu extends Function.Decl.Proto,
+        in out vdu extends Verbatim.Decl.Proto,
     > {
         choice: Structuring.Choice<fdu, vdu>;
     }
     export namespace Context {
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-            vdm extends Verbatim.Declaration.Map.Prototype,
-        > = Context<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+            fdm extends Function.Decl.Map.Proto,
+            vdm extends Verbatim.Decl.Map.Proto,
+        > = Context<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>;
     }
 }

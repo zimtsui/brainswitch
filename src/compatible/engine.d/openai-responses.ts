@@ -11,8 +11,8 @@ import type { Verbatim } from '#@/verbatim.ts';
 
 
 export class OpenAIResponsesCompatibleEngine<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > extends CompatibleEngine<fdm, vdm> {
     protected toolCodec: ToolCodec<fdm>;
     protected messageCodec: MessageCodec<fdm, vdm>;
@@ -56,7 +56,7 @@ export class OpenAIResponsesCompatibleEngine<
 
 export namespace OpenAIResponsesCompatibleEngine {
     export interface Options<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > extends CompatibleEngine.Options<fdm, vdm> {}
 }

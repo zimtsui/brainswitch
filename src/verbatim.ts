@@ -1,4 +1,3 @@
-import { type Static, type TObject, type TString } from '@sinclair/typebox';
 
 const NOMINAL = Symbol();
 
@@ -7,129 +6,138 @@ export namespace Verbatim {
 
     export namespace Name {
         export type From<
-            fdm extends Verbatim.Declaration.Map.Prototype,
+            fdm extends Verbatim.Decl.Map.Proto,
         > = globalThis.Extract<keyof fdm, string>;
     }
 
-    export interface Declaration<
+    export interface Decl<
         in out name extends string,
-        in out ps extends Declaration.Paraschema.Prototype,
-    > extends Verbatim.Declaration.Item<ps> {
+        in out params extends Decl.Params.Proto,
+    > extends Verbatim.Decl.Body<params> {
         name: name;
     }
 
-    export namespace Declaration {
-        export interface Prototype extends Verbatim.Declaration.Item.Prototype {
+    export namespace Decl {
+        export interface Proto extends Verbatim.Decl.Body.Proto {
             name: string;
         }
 
-        export namespace Paraschema {
-            export type Prototype = TObject<Record<string, TString>>;
+        export type Args<parameters extends Params.Proto> = {
+            [name in keyof parameters]: string;
+        }
+        export namespace Params {
+            export type Proto = Record<string, Para.Body>;
+        }
+        export namespace Para {
+            export interface Body {
+                description?: string;
+                mimeType: string;
+            }
         }
 
         export type Extract<
-            vdm extends Verbatim.Declaration.Map.Prototype,
+            vdm extends Verbatim.Decl.Map.Proto,
             nameu extends Verbatim.Name.From<vdm>,
         > = nameu extends infer name extends Verbatim.Name.From<vdm>
-            ? Verbatim.Declaration<name, vdm[name]['paraschema']>
+            ? Verbatim.Decl<name, vdm[name]['parameters']>
             : never;
 
         export type From<
-            vdm extends Verbatim.Declaration.Map.Prototype,
-        > = Verbatim.Declaration.Extract<vdm, Verbatim.Name.From<vdm>>;
+            vdm extends Verbatim.Decl.Map.Proto,
+        > = Verbatim.Decl.Extract<vdm, Verbatim.Name.From<vdm>>;
 
         export namespace Map {
-            export type Prototype = Record<string, Item<Verbatim.Declaration.Paraschema.Prototype>>;
+            export type Proto = Record<string, Body<Verbatim.Decl.Params.Proto>>;
         }
 
-        export interface Item<
-            in out ps extends Verbatim.Declaration.Paraschema.Prototype,
+        export interface Body<
+            in out params extends Verbatim.Decl.Params.Proto,
         > {
             description?: string;
-            paraschema: ps;
+            parameters: params;
         }
-        export namespace Item {
-            export interface Prototype {
+        export namespace Body {
+            export interface Proto {
                 description?: string;
-                paraschema: Verbatim.Declaration.Paraschema.Prototype;
+                parameters: Verbatim.Decl.Params.Proto;
             }
 
             export type Extract<
-                vdm extends Verbatim.Declaration.Map.Prototype,
+                vdm extends Verbatim.Decl.Map.Proto,
                 name extends Verbatim.Name.From<vdm>,
-            > = Verbatim.Declaration.Item<vdm[name]['paraschema']>;
+            > = Verbatim.Decl.Body<vdm[name]['parameters']>;
         }
 
         export type Entry<
             name extends string,
-            ps extends Verbatim.Declaration.Paraschema.Prototype,
-        > = [name, Verbatim.Declaration.Item<ps>];
+            ps extends Verbatim.Decl.Params.Proto,
+        > = [name, Verbatim.Decl.Body<ps>];
 
         export namespace Entry {
             export type Of<
-                vdu extends Verbatim.Declaration.Prototype,
-            > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Entry<vd['name'], vd['paraschema']> : never;
+                vdu extends Verbatim.Decl.Proto,
+            > = vdu extends infer vd extends Verbatim.Decl.Proto ? Entry<vd['name'], vd['parameters']> : never;
 
             export type From<
-                vdm extends Verbatim.Declaration.Map.Prototype,
-            > = Verbatim.Declaration.Entry.Of<Verbatim.Declaration.From<vdm>>;
+                vdm extends Verbatim.Decl.Map.Proto,
+            > = Verbatim.Decl.Entry.Of<Verbatim.Decl.From<vdm>>;
         }
     }
 
-    export class Message<in out vd extends Verbatim.Declaration.Prototype> {
+    export class Request<in out vd extends Verbatim.Decl.Proto> {
         protected declare [NOMINAL]: never;
         public name: vd['name'];
-        public args: Static<vd['paraschema']>;
-        protected constructor(vm: Message.Options<vd>) {
+        public args: Verbatim.Decl.Args<vd['parameters']>;
+        protected constructor(vm: Request.Options<vd>) {
             this.name = vm.name;
             this.args = vm.args;
         }
 
-        public static create<vdu extends Verbatim.Declaration.Prototype>(
-            vm: Verbatim.Message.Options.Of<vdu>,
-        ): Verbatim.Message.Of<vdu> {
-            return new Verbatim.Message(vm) as Verbatim.Message.Of<vdu>;
+        public static create<vdu extends Verbatim.Decl.Proto>(
+            vm: Verbatim.Request.Options.Of<vdu>,
+        ): Verbatim.Request.Of<vdu> {
+            return new Verbatim.Request(vm) as Verbatim.Request.Of<vdu>;
         }
     }
 
-    export namespace Message {
+    export namespace Request {
         export type Of<
-            vdu extends Verbatim.Declaration.Prototype,
-        > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Verbatim.Message<vd> : never;
+            vdu extends Verbatim.Decl.Proto,
+        > = vdu extends infer vd extends Verbatim.Decl.Proto ? Verbatim.Request<vd> : never;
 
         export type From<
-            vdm extends Verbatim.Declaration.Map.Prototype,
-        > = Verbatim.Message.Of<Verbatim.Declaration.From<vdm>>;
+            vdm extends Verbatim.Decl.Map.Proto,
+        > = Verbatim.Request.Of<Verbatim.Decl.From<vdm>>;
 
-        export type Options<vd extends Verbatim.Declaration.Prototype> = Omit<Verbatim.Message<vd>, never>;
+        export type Options<vd extends Verbatim.Decl.Proto> = Omit<Verbatim.Request<vd>, never>;
         export namespace Options {
 
             export type Of<
-                vdu extends Verbatim.Declaration.Prototype,
-            > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Verbatim.Message.Options<vd> : never;
+                vdu extends Verbatim.Decl.Proto,
+            > = vdu extends infer vd extends Verbatim.Decl.Proto ? Verbatim.Request.Options<vd> : never;
 
             export type From<
-                vdm extends Verbatim.Declaration.Map.Prototype,
-            > = Verbatim.Message.Options.Of<Verbatim.Declaration.From<vdm>>;
+                vdm extends Verbatim.Decl.Map.Proto,
+            > = Verbatim.Request.Options.Of<Verbatim.Decl.From<vdm>>;
         }
     }
 
-    export interface Handler<vd extends Verbatim.Declaration.Prototype> {
-        (params: Static<vd['paraschema']>): Promise<string>;
+    export interface Handler<vd extends Verbatim.Decl.Proto> {
+        (params: Verbatim.Decl.Args<vd['parameters']>): Promise<string>;
     }
 
     export namespace Handler {
         export type Extract<
-            vdm extends Verbatim.Declaration.Map.Prototype,
+            vdm extends Verbatim.Decl.Map.Proto,
             nameu extends Verbatim.Name.From<vdm>,
-        > = Verbatim.Handler.Of<Verbatim.Declaration.Extract<vdm, nameu>>;
+        > = Verbatim.Handler.Of<Verbatim.Decl.Extract<vdm, nameu>>;
 
         export type Of<
-            vdu extends Verbatim.Declaration.Prototype,
-        > = vdu extends infer vd extends Verbatim.Declaration.Prototype ? Handler<vd> : never;
+            vdu extends Verbatim.Decl.Proto,
+        > = vdu extends infer vd extends Verbatim.Decl.Proto ? Handler<vd> : never;
 
-        export type Map<vdm extends Verbatim.Declaration.Map.Prototype> = {
-            [name in Verbatim.Name.From<vdm>]: Verbatim.Handler<Verbatim.Declaration.Extract<vdm, name>>;
+        export type Map<vdm extends Verbatim.Decl.Map.Proto> = {
+            [name in Verbatim.Name.From<vdm>]: Verbatim.Handler<Verbatim.Decl.Extract<vdm, name>>;
         };
     }
 

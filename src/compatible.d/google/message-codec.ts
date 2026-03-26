@@ -9,8 +9,8 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 const NOMINAL = Symbol();
 
 export class MessageCodec<
-    fdm extends Function.Declaration.Map.Prototype,
-    vdm extends Verbatim.Declaration.Map.Prototype,
+    fdm extends Function.Decl.Map.Proto,
+    vdm extends Verbatim.Decl.Map.Proto,
 > {
     public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
@@ -65,8 +65,7 @@ export class MessageCodec<
     }
 
     /**
-     * @throws {@link VerbatimCodec.ChannelNotFound}
-     * @throws {@link VerbatimCodec.InvalidSchema}
+     * @throws {@link VerbatimCodec.RequestInvalid}
      */
     public convertToAiMessage(
         content: Google.Content,
@@ -88,8 +87,8 @@ export class MessageCodec<
 
 export namespace MessageCodec {
     export interface Context<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         toolCodec: ToolCodec<fdm>;
         vdm: vdm;
@@ -97,8 +96,8 @@ export namespace MessageCodec {
 
     export namespace Message {
         export class Ai<
-            out fdu extends Function.Declaration.Prototype,
-            out vdu extends Verbatim.Declaration.Prototype,
+            out fdu extends Function.Decl.Proto,
+            out vdu extends Verbatim.Decl.Proto,
         > extends RoleMessage.Ai<fdu, vdu> {
             protected declare [NOMINAL]: never;
             public constructor(parts: RoleMessage.Ai.Part<fdu, vdu>[], protected raw: Google.Content) {
@@ -110,11 +109,11 @@ export namespace MessageCodec {
         }
         export namespace Ai {
             export type From<
-                fdm extends Function.Declaration.Map.Prototype,
-                vdm extends Verbatim.Declaration.Map.Prototype,
+                fdm extends Function.Decl.Map.Proto,
+                vdm extends Verbatim.Decl.Map.Proto,
             > = Ai<
-                Function.Declaration.From<fdm>,
-                Verbatim.Declaration.From<vdm>
+                Function.Decl.From<fdm>,
+                Verbatim.Decl.From<vdm>
             >;
         }
     }

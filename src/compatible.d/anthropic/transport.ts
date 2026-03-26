@@ -16,8 +16,8 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 export class Transport<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > {
     protected client: Anthropic;
 
@@ -125,7 +125,7 @@ export class Transport<
             this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
             return aiMessage;
         } catch (e) {
-            if (e instanceof VerbatimCodec.ChannelNotFound || e instanceof VerbatimCodec.InvalidSchema)
+            if (e instanceof VerbatimCodec.RequestInvalid)
                 throw new ResponseInvalid('Invalid verbatim message', { cause: response.content });
             else throw e;
         }
@@ -134,8 +134,8 @@ export class Transport<
 
 export namespace Transport {
     export interface Context<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         providerSpec: ProviderSpec;
         inferenceSpec: InferenceParams;

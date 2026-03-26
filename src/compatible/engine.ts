@@ -7,8 +7,8 @@ import { Structuring } from '#@/compatible/structuring.ts';
 
 
 export abstract class CompatibleEngine<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > extends
     Engine<
         fdm, vdm,
@@ -46,8 +46,8 @@ export abstract class CompatibleEngine<
 
 export namespace CompatibleEngine {
     export interface Options<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > extends Engine.Options<fdm, vdm> {
         structuringChoice?: Structuring.Choice.From<fdm, vdm>;
     }

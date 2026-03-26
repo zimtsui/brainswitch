@@ -7,7 +7,7 @@ const ajv = new Ajv();
 
 
 
-export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
+export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
     public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
     public convertFromFunctionCall(
@@ -21,14 +21,14 @@ export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
     }
 
     public convertFromFunctionDeclarationMap(fdm: fdm): Google.FunctionDeclaration[] {
-        const fdentries = Object.entries(fdm) as Function.Declaration.Entry.From<fdm>[];
+        const fdentries = Object.entries(fdm) as Function.Decl.Entry.From<fdm>[];
         return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
     }
 
     protected convertFromFunctionDeclarationEntry(
-        fdentry: Function.Declaration.Entry.From<fdm>,
+        fdentry: Function.Decl.Entry.From<fdm>,
     ): Google.FunctionDeclaration {
-        const json = JSON.stringify(fdentry[1].paraschema);
+        const json = JSON.stringify(fdentry[1].parameters);
         const parsed = JSON.parse(json, (key, value) => {
             if (key === 'type' && typeof value === 'string') {
                 if (value === 'string') return Google.Type.STRING;
@@ -54,7 +54,7 @@ export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
         if (googlefc.name) {} else throw new Error();
         const fditem = this.ctx.fdm[googlefc.name];
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: googlefc });
-        if (ajv.validate(fditem.paraschema, googlefc.args)) {}
+        if (ajv.validate(fditem.parameters, googlefc.args)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: googlefc });
         return Function.Call.of({
             id: googlefc.id,
@@ -67,7 +67,7 @@ export class ToolCodec<in out fdm extends Function.Declaration.Map.Prototype> {
 
 
 export namespace ToolCodec {
-    export interface Context<in out fdm extends Function.Declaration.Map.Prototype> {
+    export interface Context<in out fdm extends Function.Decl.Map.Proto> {
         fdm: fdm;
     }
 }

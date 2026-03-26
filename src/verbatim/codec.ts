@@ -1,75 +1,82 @@
 import { Verbatim } from '#@/verbatim.ts';
-import Ajv from 'ajv';
-
-const ajv = new Ajv();
-
+import Handlebars from 'handlebars';
+import Assets from '#@/assets.ts';
 
 
-export function encode<vdu extends Verbatim.Declaration.Prototype>(
-    message: Verbatim.Message.Of<vdu>,
-): string {
-    let result = `<verbatim name="${message.name}">\n`;
-    for (const [key, value] of Object.entries(message.args)) {
-        result += `<${key}><![CDATA[\n${value}\n]]></${key}>\n`;
+export namespace Template {
+    export const requests = Handlebars.compile(Assets.verbatim.requests);
+    export namespace requests {
+        export interface Args {
+            requests: Args.Request[];
+        }
+        export namespace Args {
+            export interface Request {
+                name: string;
+                args: [name: string, value: string][];
+            }
+        }
     }
-    result += `</verbatim>`;
-    return result;
+}
+
+export function encode<vdu extends Verbatim.Decl.Proto>(
+    requests: Verbatim.Request.Of<vdu>[],
+): string {
+    return Template.requests({
+        requests: requests.map(
+            request => ({
+                name: request.name,
+                args: Object.entries(request.args),
+            }),
+        ),
+    });
 }
 
 /**
- * @throws {@link InvalidSchema}
- * @throws {@link ChannelNotFound}
+ * @throws {@link RequestInvalid}
  */
 export function decode<
-    vdm extends Verbatim.Declaration.Map.Prototype,
->(str: string, vdm: vdm): Verbatim.Message.From<vdm>[] {
-    type vdu = Verbatim.Declaration.From<vdm>;
-    const parts: Verbatim.Message.Of<vdu>[] = [];
-    const rawMessages = extractVerbatim(str);
-    for (const [name, args] of rawMessages) {
+    vdm extends Verbatim.Decl.Map.Proto,
+>(str: string, vdm: vdm): Verbatim.Request.From<vdm>[] {
+    type vdu = Verbatim.Decl.From<vdm>;
+    const parts: Verbatim.Request.Of<vdu>[] = [];
+    const requests = extractRequests(str);
+    for (const [name, args] of requests) {
         const vditem = vdm[name];
-        if (vditem) {} else throw new ChannelNotFound();
-        if (ajv.validate(vditem.paraschema, args)) {} else throw new InvalidSchema();
-        const options = { name, args } as Verbatim.Message.Options.Of<vdu>;
-        parts.push(Verbatim.Message.create(options));
+        if (vditem) {} else throw new RequestInvalid('Channel not found: ' + name);
+        const options = { name, args } as Verbatim.Request.Options.Of<vdu>;
+        parts.push(Verbatim.Request.create(options));
     }
     return parts;
 }
 
-export class InvalidSchema {}
-export class ChannelNotFound {}
-
-
-export const XML_PHRASE_START = /[a-zA-Z_]/;
-export const XML_PHRASE_CHAR = /[a-zA-Z0-9_\-.]/;
-export const XML_TAG_NAME = new RegExp(`(?:${XML_PHRASE_START.source})(?:${XML_PHRASE_CHAR.source})*`);
-export const XML_TAG_NS_NAME = new RegExp(`(?:(?<tag_ns>${XML_TAG_NAME.source}):)?(?<tag_name>${XML_TAG_NAME.source})`);
-
-
-export const XML_ARG_CDATA = new RegExp(
-    `<(?<arg_cdata_name>${XML_TAG_NS_NAME.source})\\s*>` +
-    `\\s*<!\\[CDATA\\[(?<arg_cdata_body>[\\s\\S]*?)\\]\\]>\\s*` +
-    `</\\k<arg_cdata_name>\\s*>`,
-);
+export class RequestInvalid extends Error{}
 
 
 export const XML_ATTR_VAL = /(?<attr_val_quote>['"])(?<attr_val_body>[\s\S]+?)\k<attr_val_quote>/;
-export const XML_VERBATIM = new RegExp(
-    `<verbatim\\s+name\\s*=\\s*(?:${XML_ATTR_VAL.source})\\s*>` +
+export const REQUEST = new RegExp(
+    `<verbatim:request\\s+name\\s*=\\s*(?:${XML_ATTR_VAL.source})\\s*>` +
     `(?<verbatim_body>[\\s\\S]*?)` +
-    `<\\/verbatim\\s*>`,
+    `</verbatim:request\\s*>`,
+);
+export const ARG_CDATA = new RegExp(
+    `<verbatim:argument\\s+name\\s*=\\s*(?:${XML_ATTR_VAL.source})\\s*>` +
+    `\\s*<!\\[CDATA\\[(?<arg_cdata_body>[\\s\\S]*?)\\]\\]>\\s*` +
+    `</verbatim:argument\\s*>`,
 );
 
 function extractArgs(str: string): Record<string, string> {
     const results: Record<string, string> = {};
-    for (const match of str.matchAll(new RegExp(XML_ARG_CDATA, 'g')))
+    for (const match of str.matchAll(new RegExp(ARG_CDATA, 'g'))) {
+        if (results[match.groups!.arg_cdata_name!] === undefined) {} else
+            throw new RequestInvalid('Duplicate argument: ' + match.groups!.arg_cdata_name!);
         results[match.groups!.arg_cdata_name!] = match.groups!.arg_cdata_body!;
+    }
     return results;
 }
 
-function extractVerbatim(str: string): [name: string, params: Record<string, string>][] {
+function extractRequests(requests: string): [name: string, params: Record<string, string>][] {
     const results: [name: string, params: Record<string, string>][] = [];
-    for (const match of str.matchAll(new RegExp(XML_VERBATIM, 'g')))
+    for (const match of requests.matchAll(new RegExp(REQUEST, 'g')))
         results.push([match.groups!.attr_val_body!, extractArgs(match.groups!.verbatim_body!)]);
     return results;
 }

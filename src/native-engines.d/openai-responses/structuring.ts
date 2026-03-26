@@ -6,8 +6,8 @@ import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
 
 export namespace Structuring {
     export type Choice<
-        fdu extends Function.Declaration.Prototype,
-        vdu extends Verbatim.Declaration.Prototype,
+        fdu extends Function.Decl.Proto,
+        vdu extends Verbatim.Decl.Proto,
     > =
         |   Structuring.Choice.TCall.FCall.Of<fdu>
         |   typeof Structuring.Choice.TCall.APPLY_PATCH
@@ -26,9 +26,9 @@ export namespace Structuring {
 
     export namespace Choice {
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-            vdm extends Verbatim.Declaration.Map.Prototype,
-        > = Structuring.Choice<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+            fdm extends Function.Decl.Map.Proto,
+            vdm extends Verbatim.Decl.Map.Proto,
+        > = Structuring.Choice<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>;
 
         export import REQUIRED = CompatibleStructuring.Choice.REQUIRED;
         export import ANYONE = CompatibleStructuring.Choice.ANYONE;

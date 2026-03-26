@@ -12,8 +12,8 @@ import type { Verbatim } from '#@/verbatim.ts';
 
 
 export class AliyunCompatibleEngine<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > extends CompatibleEngine<fdm, vdm> {
     protected toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
     protected messageCodec: MessageCodec<fdm, vdm>;
@@ -60,7 +60,7 @@ export class AliyunCompatibleEngine<
 
 export namespace AliyunCompatibleEngine {
     export interface Options<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > extends CompatibleEngine.Options<fdm, vdm> {}
 }

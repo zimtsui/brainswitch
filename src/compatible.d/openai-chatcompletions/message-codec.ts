@@ -9,14 +9,13 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 export class MessageCodec<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > {
     public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
     /**
-     * @throws {@link VerbatimCodec.ChannelNotFound}
-     * @throws {@link VerbatimCodec.InvalidSchema}
+     * @throws {@link VerbatimCodec.RequestInvalid}
      */
     public convertToAiMessage(
         message: OpenAI.ChatCompletionMessage,
@@ -89,8 +88,8 @@ export class MessageCodec<
 
 export namespace MessageCodec {
     export interface Context<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         toolCodec: OpenAIChatCompletionsToolCodec<fdm>;
         vdm: vdm;

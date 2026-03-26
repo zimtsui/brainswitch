@@ -9,8 +9,8 @@ const NOMINAL = Symbol();
 
 
 export interface Session<
-    in out fdu extends Function.Declaration.Prototype,
-    in out vdu extends Verbatim.Declaration.Prototype,
+    in out fdu extends Function.Decl.Proto,
+    in out vdu extends Verbatim.Decl.Proto,
 > extends GenericSession<
     RoleMessage.User<fdu>,
     RoleMessage.Ai<fdu, vdu>,
@@ -18,22 +18,22 @@ export interface Session<
 > {}
 export namespace Session {
     export type From<
-        fdm extends Function.Declaration.Map.Prototype,
-        vdm extends Verbatim.Declaration.Map.Prototype,
-    > = Session<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+        fdm extends Function.Decl.Map.Proto,
+        vdm extends Verbatim.Decl.Map.Proto,
+    > = Session<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>;
 
     export type ChatMessage<
-        fdu extends Function.Declaration.Prototype,
-        vdu extends Verbatim.Declaration.Prototype,
+        fdu extends Function.Decl.Proto,
+        vdu extends Verbatim.Decl.Proto,
     > = GenericSession.ChatMessage<
         RoleMessage.User<fdu>,
         RoleMessage.Ai<fdu, vdu>
     >;
     export namespace ChatMessage {
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-            vdm extends Verbatim.Declaration.Map.Prototype,
-        > = Session.ChatMessage<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+            fdm extends Function.Decl.Map.Proto,
+            vdm extends Verbatim.Decl.Map.Proto,
+        > = Session.ChatMessage<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>;
     }
 }
 
@@ -43,8 +43,8 @@ export namespace RoleMessage {
     }
 
     export class Ai<
-        in out fdu extends Function.Declaration.Prototype,
-        in out vdu extends Verbatim.Declaration.Prototype,
+        in out fdu extends Function.Decl.Proto,
+        in out vdu extends Verbatim.Decl.Proto,
     > {
         protected declare [NOMINAL]: never;
         public constructor(
@@ -90,12 +90,12 @@ export namespace RoleMessage {
             if (tcs.every(tc => tc instanceof Function.Call)) {} else throw new Error();
             return tcs;
         }
-        public getVerbatimMessages(): Verbatim.Message.Of<vdu>[] {
+        public getVerbatimMessages(): Verbatim.Request.Of<vdu>[] {
             return this.parts
                 .filter(part => part instanceof RoleMessage.Part.Text)
                 .flatMap(part => part.vms);
         }
-        public getOnlyVerbatimMessage(): Verbatim.Message.Of<vdu> {
+        public getOnlyVerbatimMessage(): Verbatim.Request.Of<vdu> {
             const vms = this.getVerbatimMessages();
             if (vms.length === 1) {} else throw new Error();
             return vms[0]!;
@@ -103,27 +103,27 @@ export namespace RoleMessage {
     }
     export namespace Ai {
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-            vdm extends Verbatim.Declaration.Map.Prototype,
-        > = RoleMessage.Ai<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+            fdm extends Function.Decl.Map.Proto,
+            vdm extends Verbatim.Decl.Map.Proto,
+        > = RoleMessage.Ai<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>;
 
         export type Part<
-            fdu extends Function.Declaration.Prototype,
-            vdu extends Verbatim.Declaration.Prototype,
+            fdu extends Function.Decl.Proto,
+            vdu extends Verbatim.Decl.Proto,
         > =
             |   RoleMessage.Part.Text<vdu>
             |   Tool.Call.Of<fdu>
         ;
         export namespace Part {
             export type From<
-                fdm extends Function.Declaration.Map.Prototype,
-                vdm extends Verbatim.Declaration.Map.Prototype,
-            > = RoleMessage.Ai.Part<Function.Declaration.From<fdm>, Verbatim.Declaration.From<vdm>>;
+                fdm extends Function.Decl.Map.Proto,
+                vdm extends Verbatim.Decl.Map.Proto,
+            > = RoleMessage.Ai.Part<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>;
         }
     }
 
     export class User<
-        in out fdu extends Function.Declaration.Prototype,
+        in out fdu extends Function.Decl.Proto,
     > {
         protected declare [NOMINAL]: never;
         public constructor(protected parts: RoleMessage.User.Part<fdu>[]) {}
@@ -143,17 +143,17 @@ export namespace RoleMessage {
     }
     export namespace User {
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-        > = RoleMessage.User<Function.Declaration.From<fdm>>;
+            fdm extends Function.Decl.Map.Proto,
+        > = RoleMessage.User<Function.Decl.From<fdm>>;
 
-        export type Part<fdu extends Function.Declaration.Prototype> =
+        export type Part<fdu extends Function.Decl.Proto> =
             |   RoleMessage.Part.Text<never>
             |   Tool.Response.Of<fdu>
         ;
         export namespace Part {
             export type From<
-                fdm extends Function.Declaration.Map.Prototype,
-            > = RoleMessage.User.Part<Function.Declaration.From<fdm>>;
+                fdm extends Function.Decl.Map.Proto,
+            > = RoleMessage.User.Part<Function.Decl.From<fdm>>;
         }
     }
 

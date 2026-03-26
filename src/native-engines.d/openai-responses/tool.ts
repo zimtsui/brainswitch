@@ -7,11 +7,11 @@ export namespace Tool {
 
     export namespace Name {
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
+            fdm extends Function.Decl.Map.Proto,
         > = Function.Name.From<fdm> | typeof Tool.APPLY_PATCH;
     }
 
-    export type Map<fdm extends Function.Declaration.Map.Prototype> = {
+    export type Map<fdm extends Function.Decl.Map.Proto> = {
         [name in Tool.Name.From<fdm>]:
             name extends typeof Tool.APPLY_PATCH
                 ? Tool.ApplyPatch
@@ -22,23 +22,23 @@ export namespace Tool {
 
 
     export namespace Call {
-        export type Of<fdu extends Function.Declaration.Prototype> =
+        export type Of<fdu extends Function.Decl.Proto> =
             |   Function.Call.Of<fdu>
             |   ApplyPatch.Call
         ;
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-        > = Call.Of<Function.Declaration.From<fdm>>;
+            fdm extends Function.Decl.Map.Proto,
+        > = Call.Of<Function.Decl.From<fdm>>;
     }
 
     export namespace Response {
-        export type Of<fdu extends Function.Declaration.Prototype> =
+        export type Of<fdu extends Function.Decl.Proto> =
             |   Function.Response.Of<fdu>
             |   ApplyPatch.Response
         ;
         export type From<
-            fdm extends Function.Declaration.Map.Prototype,
-        > = Response.Of<Function.Declaration.From<fdm>>;
+            fdm extends Function.Decl.Map.Proto,
+        > = Response.Of<Function.Decl.From<fdm>>;
     }
 
     export interface ApplyPatch {

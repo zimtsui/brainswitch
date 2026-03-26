@@ -19,8 +19,8 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 export abstract class MonolithTransport<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > extends Transport<fdm, vdm> {
     public constructor(protected ctx: MonolithTransport.Context<fdm, vdm>) {
         super();
@@ -90,7 +90,7 @@ export abstract class MonolithTransport<
             this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
             return aiMessage;
         } catch (e) {
-            if (e instanceof VerbatimCodec.ChannelNotFound || e instanceof VerbatimCodec.InvalidSchema)
+            if (e instanceof VerbatimCodec.RequestInvalid)
                 throw new ResponseInvalid('Invalid verbatim message', { cause: choice.message });
             else throw e;
         }
@@ -99,8 +99,8 @@ export abstract class MonolithTransport<
 
 export namespace MonolithTransport {
     export interface Context<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         proxyAgent?: Undici.ProxyAgent;
         apiURL: URL;

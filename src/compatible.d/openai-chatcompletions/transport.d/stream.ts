@@ -18,8 +18,8 @@ import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 export abstract class StreamTransport<
-    in out fdm extends Function.Declaration.Map.Prototype,
-    in out vdm extends Verbatim.Declaration.Map.Prototype,
+    in out fdm extends Function.Decl.Map.Proto,
+    in out vdm extends Verbatim.Decl.Map.Proto,
 > extends Transport<fdm, vdm> {
     protected client: OpenAI;
     public constructor(protected ctx: StreamTransport.Context<fdm, vdm>) {
@@ -210,7 +210,7 @@ export abstract class StreamTransport<
             this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
             return aiMessage;
         } catch (e) {
-            if (e instanceof VerbatimCodec.ChannelNotFound || e instanceof VerbatimCodec.InvalidSchema)
+            if (e instanceof VerbatimCodec.RequestInvalid)
                 throw new ResponseInvalid('Invalid verbatim message', { cause: choice.message });
             else throw e;
         }
@@ -221,8 +221,8 @@ export abstract class StreamTransport<
 
 export namespace StreamTransport {
     export interface Context<
-        in out fdm extends Function.Declaration.Map.Prototype,
-        in out vdm extends Verbatim.Declaration.Map.Prototype,
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
     > {
         inferenceParams: InferenceParams;
         providerSpec: ProviderSpec;
