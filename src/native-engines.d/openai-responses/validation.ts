@@ -29,12 +29,6 @@ export class Validator<
             if (tcs[0]! instanceof Function.Call &&  tcs[0]!.name === this.ctx.choice.name) {} else
                 throw new ResponseInvalid(`Only function call of ${this.ctx.choice.name} allowed.`);
 
-        } else if (this.ctx.choice === Tool.APPLY_PATCH) {
-            if (tcs.length) {} else throw new ResponseInvalid('Tool call required.');
-            if (tcs.length > 1) throw new ResponseInvalid('Only one tool call allowed.');
-            if (tcs[0]! instanceof Tool.ApplyPatch.Call) {} else
-                throw new ResponseInvalid('Only tool call of apply_patch allowed.');
-
         } else if (this.ctx.choice === Structuring.Choice.VRequest.REQUIRED) {
             if (vrs.length) {} else throw new ResponseInvalid('Verbatim message required.');
 
