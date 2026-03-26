@@ -22,9 +22,8 @@ export async function *agentloop<
     for (let i = 0; i < limit; i++) {
         const response = await engine.stateful(wfctx, session);
         const parts = response.getParts();
-        if (parts.every(part => part instanceof RoleMessage.Part.Text)) return response.getText();
         const pfrs: Promise<Function.Response.From<fdm>>[] = [];
-        for (const part of response.getParts()) {
+        for (const part of parts) {
             if (part instanceof RoleMessage.Part.Text) {
                 yield part.text;
             } else if (part instanceof Function.Call) {
@@ -45,7 +44,10 @@ export async function *agentloop<
             } else throw new Error();
         }
         const frs: Function.Response.From<fdm>[] = await Promise.all(pfrs);
-        engine.pushUserMessage(session, new RoleMessage.User(frs));
+        if (frs.length)
+            engine.pushUserMessage(session, new RoleMessage.User(frs));
+        else
+            return (parts.at(-1) as RoleMessage.Part.Text<Verbatim.Decl.From<vdm>>).text;
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }

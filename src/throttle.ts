@@ -4,27 +4,36 @@ import { Mutex } from '@zimtsui/coroutine-locks';
 
 export class Throttle {
     protected valve = new Mutex();
-    protected timer?: NodeJS.Timeout;
+    protected timer: NodeJS.Timeout | null = null;
     protected interval: number;
     public constructor(protected rpm: number) {
         this.interval = Math.ceil(60*1000 / this.rpm);
     }
 
     public async requests(wfctx: InferenceContext): Promise<void> {
+        if (this.interval === Number.POSITIVE_INFINITY) return;
+
         await wfctx.busy?.acquireRead();
-        wfctx.signal?.throwIfAborted();
-        const pwr = Promise.withResolvers<void>();
-        const callback = () => pwr.reject(wfctx.signal?.reason);
-        wfctx.signal?.addEventListener('abort', callback);
-        const waiting = this.valve.acquire();
         try {
-            await Promise.race([waiting, pwr.promise]);
-            this.timer = setTimeout(() => void this.valve.release(), this.interval);
-        } catch (e) {
-            waiting.then(() => this.valve.release()).catch(() => {});
-            throw e;
+            wfctx.signal?.throwIfAborted();
+
+            const waiting = this.valve.acquire()
+                .finally(() => {
+                    this.timer = setTimeout(
+                        () => {
+                            this.timer = null;
+                            void this.valve.release();
+                        },
+                        this.interval,
+                    );
+                });
+
+            await new Promise<void>((resolve, reject) => {
+                waiting.then(resolve, reject);
+                wfctx.signal?.addEventListener('abort', reject, { signal: wfctx.signal });
+            });
+
         } finally {
-            wfctx.signal?.removeEventListener('abort', callback);
             wfctx.busy?.releaseRead();
         }
     }

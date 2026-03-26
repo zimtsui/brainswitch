@@ -87,7 +87,7 @@ export abstract class MonolithTransport<
 
         try {
             const aiMessage = this.ctx.messageCodec.convertToAiMessage(choice.message);
-            this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
+            this.ctx.validator.validate(aiMessage);
             return aiMessage;
         } catch (e) {
             if (e instanceof VerbatimCodec.Request.Invalid)

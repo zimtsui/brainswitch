@@ -83,13 +83,13 @@ export namespace RoleMessage {
             if (fcs.length === 1) {} else throw new Error();
             return fcs[0]!;
         }
-        public getVerbatimMessages(): Verbatim.Request.Of<vdu>[] {
+        public getVerbatimRequests(): Verbatim.Request.Of<vdu>[] {
             return this.parts
                 .filter(part => part instanceof RoleMessage.Part.Text)
                 .flatMap(part => part.vrs);
         }
-        public getOnlyVerbatimMessage(): Verbatim.Request.Of<vdu> {
-            const vrs = this.getVerbatimMessages();
+        public getOnlyVerbatimRequest(): Verbatim.Request.Of<vdu> {
+            const vrs = this.getVerbatimRequests();
             if (vrs.length === 1) {} else throw new Error();
             return vrs[0]!;
         }

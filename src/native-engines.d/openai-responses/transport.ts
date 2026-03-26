@@ -95,7 +95,7 @@ export class Transport<
 
         try {
             const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.output);
-            this.ctx.validator.validate(aiMessage.getToolCalls(), aiMessage.getVerbatimMessages());
+            this.ctx.validator.validate(aiMessage);
             return aiMessage;
         } catch (e) {
             if (e instanceof VerbatimCodec.Request.Invalid)

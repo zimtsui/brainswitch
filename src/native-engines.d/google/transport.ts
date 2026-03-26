@@ -10,7 +10,7 @@ import { logger } from '#@/telemetry.ts';
 import type { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
 import type { ToolCodec } from '#@/api-types/google/tool-codec.ts';
 import type { Billing } from '#@/api-types/google/billing.ts';
-import type { Validator } from '#@/compatible/validation.ts';
+import type { Validator } from '#@/native-engines.d/google/validation.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import * as ChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
@@ -89,7 +89,7 @@ export class GoogleNativeTransport<
 
         try {
             const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.candidates[0].content);
-            this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
+            this.ctx.validator.validate(aiMessage);
             return aiMessage;
         } catch (e) {
             if (e instanceof VerbatimCodec.Request.Invalid)

@@ -48,34 +48,29 @@ export class GoogleNativeMessageCodec<
         content: Google.Content,
     ): RoleMessage.Ai.From<fdm, vdm> {
         if (content.parts) {} else throw new Error();
-        return new RoleMessage.Ai(content.parts.flatMap(part => {
+        const parts = content.parts.flatMap(part => {
             const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
-            let payload = false;
             if (part.text) {
-                payload = true;
                 const vrs = VerbatimCodec.Request.decode(part.text, this.ctx.vdm);
                 parts.push(new RoleMessage.Part.Text(part.text, vrs));
             }
             if (part.functionCall) {
-                payload = true;
                 parts.push(this.ctx.toolCodec.convertToFunctionCall(part.functionCall));
             }
             if (part.executableCode) {
                 if (this.ctx.codeExecution) {} else throw new ResponseInvalid('Unexpected code execution', { cause: content });
-                payload = true;
                 if (part.executableCode.code) {} else throw new Error();
                 if (part.executableCode.language) {} else throw new Error();
                 parts.push(new RoleMessage.Ai.Part.ExecutableCode(part.executableCode.code, part.executableCode.language));
             }
             if (part.codeExecutionResult) {
                 if (this.ctx.codeExecution) {} else throw new ResponseInvalid('Unexpected code execution result', { cause: content });
-                payload = true;
                 if (part.codeExecutionResult.outcome) {} else throw new Error();
                 parts.push(new RoleMessage.Ai.Part.CodeExecutionResult(part.codeExecutionResult.outcome, part.codeExecutionResult.output));
             }
-            if (payload) {} else throw new ResponseInvalid('Unknown content part', { cause: content });
             return parts;
-        }), content);
+        });
+        return new RoleMessage.Ai(parts, content);
     }
 }
 

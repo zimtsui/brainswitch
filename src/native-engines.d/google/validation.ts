@@ -1,9 +1,9 @@
 import { Structuring } from '#@/compatible/structuring.ts';
 import { Function } from '#@/function.ts';
 import { Verbatim } from '#@/verbatim.ts';
-import { RoleMessage } from '#@/compatible/session.ts';
+import { RoleMessage } from '#@/native-engines.d/google/session.ts';
 import { Validator as ChoiceValidator } from '#@/compatible/validation/choice.ts';
-import { Validator as PartsValidator } from '#@/compatible/validation/parts.ts';
+import { Validator as PartsValidator } from '#@/native-engines.d/google/validation/parts.ts';
 
 
 export class Validator<

@@ -4,7 +4,7 @@ import { Engine } from '#@/engine.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { ToolCodec } from '#@/api-types/google/tool-codec.ts';
 import { Billing } from '#@/api-types/google/billing.ts';
-import { Validator } from '#@/compatible/validation.ts';
+import { Validator } from '#@/native-engines.d/google/validation.ts';
 import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
 import { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
 import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
