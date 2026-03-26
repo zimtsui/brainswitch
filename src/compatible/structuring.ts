@@ -13,9 +13,9 @@ export namespace Structuring {
         |   typeof Structuring.Choice.FCall.REQUIRED
         |   typeof Structuring.Choice.FCall.ANYONE
 
-        |   Structuring.Choice.VMessage.Of<vdu>
-        |   typeof Structuring.Choice.VMessage.REQUIRED
-        |   typeof Structuring.Choice.VMessage.ANYONE
+        |   Structuring.Choice.VRequest.Of<vdu>
+        |   typeof Structuring.Choice.VRequest.REQUIRED
+        |   typeof Structuring.Choice.VRequest.ANYONE
 
         |   typeof Structuring.Choice.NONE
         |   typeof Structuring.Choice.AUTO
@@ -49,17 +49,17 @@ export namespace Structuring {
             export const REQUIRED = Symbol();
             export const ANYONE = Symbol();
         }
-        export class VMessage<vd extends Verbatim.Decl.Proto> {
+        export class VRequest<vd extends Verbatim.Decl.Proto> {
             protected declare [NOMINAL]: never;
             public constructor(public name: vd['name']) {}
         }
-        export namespace VMessage {
+        export namespace VRequest {
             export type Of<
                 vdu extends Verbatim.Decl.Proto,
-            > = vdu extends infer vd extends Verbatim.Decl.Proto ? Structuring.Choice.VMessage<vd> : never;
+            > = vdu extends infer vd extends Verbatim.Decl.Proto ? Structuring.Choice.VRequest<vd> : never;
             export type From<
                 vdm extends Verbatim.Decl.Map.Proto,
-            > = Structuring.Choice.VMessage.Of<Verbatim.Decl.From<vdm>>;
+            > = Structuring.Choice.VRequest.Of<Verbatim.Decl.From<vdm>>;
             export const REQUIRED = Symbol();
             export const ANYONE = Symbol();
         }

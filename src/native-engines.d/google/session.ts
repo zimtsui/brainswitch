@@ -77,12 +77,12 @@ export namespace RoleMessage {
         public getVerbatimMessages(): Verbatim.Request.Of<vdu>[] {
             return this.parts
                 .filter(part => part instanceof RoleMessage.Part.Text)
-                .flatMap(part => part.vms);
+                .flatMap(part => part.vrs);
         }
         public getOnlyVerbatimMessage(): Verbatim.Request.Of<vdu> {
-            const vms = this.getVerbatimMessages();
-            if (vms.length === 1) {} else throw new Error();
-            return vms[0]!;
+            const vrs = this.getVerbatimMessages();
+            if (vrs.length === 1) {} else throw new Error();
+            return vrs[0]!;
         }
     }
     export namespace Ai {

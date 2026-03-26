@@ -12,14 +12,14 @@ export function decode<
     const requests = extractRequests(str);
     for (const [name, args] of requests) {
         const vditem = vdm[name];
-        if (vditem) {} else throw new RequestInvalid('Channel not found: ' + name);
+        if (vditem) {} else throw new Invalid('Channel not found: ' + name);
         const options = { name, args } as Verbatim.Request.Options.Of<vdu>;
         parts.push(Verbatim.Request.create(options));
     }
     return parts;
 }
 
-export class RequestInvalid extends Error{}
+export class Invalid extends Error{}
 
 
 const XML_ATTR_VAL = /(?<attr_val_quote>['"])(?<attr_val_body>[\s\S]+?)\k<attr_val_quote>/;
@@ -38,7 +38,7 @@ function extractArgs(str: string): Record<string, string> {
     const results: Record<string, string> = {};
     for (const match of str.matchAll(new RegExp(ARG_CDATA, 'g'))) {
         if (results[match.groups!.arg_cdata_name!] === undefined) {} else
-            throw new RequestInvalid('Duplicate argument: ' + match.groups!.arg_cdata_name!);
+            throw new Invalid('Duplicate argument: ' + match.groups!.arg_cdata_name!);
         results[match.groups!.arg_cdata_name!] = match.groups!.arg_cdata_body!;
     }
     return results;

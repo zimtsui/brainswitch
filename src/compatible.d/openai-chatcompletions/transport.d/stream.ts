@@ -210,7 +210,7 @@ export abstract class StreamTransport<
             this.ctx.validator.validate(aiMessage.getFunctionCalls(), aiMessage.getVerbatimMessages());
             return aiMessage;
         } catch (e) {
-            if (e instanceof VerbatimCodec.RequestInvalid)
+            if (e instanceof VerbatimCodec.Request.Invalid)
                 throw new ResponseInvalid('Invalid verbatim message', { cause: choice.message });
             else throw e;
         }

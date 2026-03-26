@@ -22,9 +22,9 @@ export function encode<
     else if (choice instanceof Structuring.Choice.FCall)
         return { type: 'tool', name: choice.name, disable_parallel_tool_use: !parallelToolCall };
 
-    else if (choice === Structuring.Choice.VMessage.REQUIRED) return { type: 'none' };
-    else if (choice === Structuring.Choice.VMessage.ANYONE) return { type: 'none' };
-    else if (choice instanceof Structuring.Choice.VMessage) return { type: 'none' };
+    else if (choice === Structuring.Choice.VRequest.REQUIRED) return { type: 'none' };
+    else if (choice === Structuring.Choice.VRequest.ANYONE) return { type: 'none' };
+    else if (choice instanceof Structuring.Choice.VRequest) return { type: 'none' };
 
     else throw new Error('Invalid structuring choice');
 }

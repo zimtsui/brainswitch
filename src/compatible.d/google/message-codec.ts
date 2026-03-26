@@ -65,7 +65,7 @@ export class MessageCodec<
     }
 
     /**
-     * @throws {@link VerbatimCodec.RequestInvalid}
+     * @throws {@link VerbatimCodec.Request.Invalid}
      */
     public convertToAiMessage(
         content: Google.Content,
@@ -75,8 +75,8 @@ export class MessageCodec<
             const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
             if (part.functionCall || part.text) {} else throw new ResponseInvalid('Unknown content part', { cause: content });
             if (part.text) {
-                const vms = VerbatimCodec.decode(part.text, this.ctx.vdm);
-                parts.push(new RoleMessage.Part.Text(part.text, vms));
+                const vrs = VerbatimCodec.Request.decode(part.text, this.ctx.vdm);
+                parts.push(new RoleMessage.Part.Text(part.text, vrs));
             }
             if (part.functionCall) parts.push(this.ctx.toolCodec.convertToFunctionCall(part.functionCall));
             return parts;

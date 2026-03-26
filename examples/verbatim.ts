@@ -35,7 +35,7 @@ const engine = adaptor.makeCompatibleEngine<{}, vdm>({
     endpoint: 'gpt-5.4-mini',
     functionDeclarationMap: {},
     verbatimDeclarationMap: vdm,
-    structuringChoice: Structuring.Choice.VMessage.ANYONE,
+    structuringChoice: Structuring.Choice.VRequest.ANYONE,
 });
 
 const response = await engine.stateless({}, session);

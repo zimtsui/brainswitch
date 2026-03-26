@@ -65,15 +65,15 @@ export class MessageCodec<
     }
 
     /**
-     * @throws {@link VerbatimCodec.RequestInvalid}
+     * @throws {@link VerbatimCodec.Request.Invalid}
      */
     public convertToAiMessage(
         raw: Anthropic.ContentBlock[],
     ): MessageCodec.Message.Ai.From<fdm, vdm> {
         const parts = raw.flatMap((item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
             if (item.type === 'text') {
-                const vms = VerbatimCodec.decode(item.text, this.ctx.vdm);
-                return [new RoleMessage.Part.Text(item.text, vms)];
+                const vrs = VerbatimCodec.Request.decode(item.text, this.ctx.vdm);
+                return [new RoleMessage.Part.Text(item.text, vrs)];
             } else if (item.type === 'tool_use') return [this.ctx.toolCodec.convertToFunctionCall(item)];
             else if (item.type === 'thinking') return [];
             else throw new Error();

@@ -15,15 +15,15 @@ export class MessageCodec<
     public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
     /**
-     * @throws {@link VerbatimCodec.RequestInvalid}
+     * @throws {@link VerbatimCodec.Request.Invalid}
      */
     public convertToAiMessage(
         message: OpenAI.ChatCompletionMessage,
     ): RoleMessage.Ai.From<fdm, vdm> {
         const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
         if (message.content) {
-            const vms = VerbatimCodec.decode(message.content, this.ctx.vdm);
-            parts.push(new RoleMessage.Part.Text(message.content, vms));
+            const vrs = VerbatimCodec.Request.decode(message.content, this.ctx.vdm);
+            parts.push(new RoleMessage.Part.Text(message.content, vrs));
         }
         if (message.tool_calls)
             parts.push(...message.tool_calls.map(apifc => {

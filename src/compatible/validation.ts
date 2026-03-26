@@ -14,7 +14,7 @@ export class Validator<
 
     public validate(
         fcs: Function.Call.Of<fdu>[],
-        vms: Verbatim.Request.Of<vdu>[],
+        vrs: Verbatim.Request.Of<vdu>[],
     ): void {
         if (this.ctx.choice === Structuring.Choice.FCall.REQUIRED) {
             if (fcs.length) {} else throw new ResponseInvalid('Function call required.');
@@ -29,31 +29,31 @@ export class Validator<
             if (fcs[0]!.name === this.ctx.choice.name) {} else
                 throw new ResponseInvalid(`Only function call of ${this.ctx.choice.name} allowed.`);
 
-        } else if (this.ctx.choice === Structuring.Choice.VMessage.REQUIRED) {
-            if (vms.length) {} else throw new ResponseInvalid('Verbatim message required.');
+        } else if (this.ctx.choice === Structuring.Choice.VRequest.REQUIRED) {
+            if (vrs.length) {} else throw new ResponseInvalid('Verbatim message required.');
 
-        } else if (this.ctx.choice === Structuring.Choice.VMessage.ANYONE) {
-            if (vms.length) {} else throw new ResponseInvalid('Verbatim message required.');
-            if (vms.length > 1) throw new ResponseInvalid('Only one verbatim message allowed.');
+        } else if (this.ctx.choice === Structuring.Choice.VRequest.ANYONE) {
+            if (vrs.length) {} else throw new ResponseInvalid('Verbatim message required.');
+            if (vrs.length > 1) throw new ResponseInvalid('Only one verbatim message allowed.');
 
-        } else if (this.ctx.choice instanceof Structuring.Choice.VMessage) {
-            if (vms.length) {} else throw new ResponseInvalid(`Verbatim message through channel ${this.ctx.choice.name} required.`);
-            if (vms.length > 1) throw new ResponseInvalid('Only one verbatim message allowed.');
-            if (vms[0]!.name === this.ctx.choice.name) {} else
+        } else if (this.ctx.choice instanceof Structuring.Choice.VRequest) {
+            if (vrs.length) {} else throw new ResponseInvalid(`Verbatim message through channel ${this.ctx.choice.name} required.`);
+            if (vrs.length > 1) throw new ResponseInvalid('Only one verbatim message allowed.');
+            if (vrs[0]!.name === this.ctx.choice.name) {} else
                 throw new ResponseInvalid(`Only verbatim message through channel ${this.ctx.choice.name} allowed.`);
 
         } else if (this.ctx.choice === Structuring.Choice.REQUIRED) {
-            if (fcs.length + vms.length) {} else
+            if (fcs.length + vrs.length) {} else
                 throw new ResponseInvalid('Either function call or verbatim message required.');
 
         } else if (this.ctx.choice === Structuring.Choice.ANYONE) {
-            if (fcs.length + vms.length) {} else
+            if (fcs.length + vrs.length) {} else
                 throw new ResponseInvalid('Either function call or verbatim message required.');
-            if (fcs.length + vms.length > 1)
+            if (fcs.length + vrs.length > 1)
                 throw new ResponseInvalid('Only one function call or verbatim message allowed.');
 
         } else if (this.ctx.choice === Structuring.Choice.NONE) {
-            if (fcs.length + vms.length)
+            if (fcs.length + vrs.length)
                 throw new ResponseInvalid('Neither function call nor verbatim message allowed.');
 
         }

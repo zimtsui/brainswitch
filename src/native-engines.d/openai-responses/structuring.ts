@@ -14,9 +14,9 @@ export namespace Structuring {
         |   typeof Structuring.Choice.TCall.REQUIRED
         |   typeof Structuring.Choice.TCall.ANYONE
 
-        |   Structuring.Choice.VMessage.Of<vdu>
-        |   typeof Structuring.Choice.VMessage.REQUIRED
-        |   typeof Structuring.Choice.VMessage.ANYONE
+        |   Structuring.Choice.VRequest.Of<vdu>
+        |   typeof Structuring.Choice.VRequest.REQUIRED
+        |   typeof Structuring.Choice.VRequest.ANYONE
 
         |   typeof Structuring.Choice.NONE
         |   typeof Structuring.Choice.AUTO
@@ -41,7 +41,7 @@ export namespace Structuring {
             export const APPLY_PATCH = Tool.APPLY_PATCH;
         }
 
-        export import VMessage = CompatibleStructuring.Choice.VMessage;
+        export import VRequest = CompatibleStructuring.Choice.VRequest;
         export import NONE = CompatibleStructuring.Choice.NONE;
         export import AUTO = CompatibleStructuring.Choice.AUTO;
     }

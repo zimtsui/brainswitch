@@ -53,8 +53,8 @@ export class GoogleNativeMessageCodec<
             let payload = false;
             if (part.text) {
                 payload = true;
-                const vms = VerbatimCodec.decode(part.text, this.ctx.vdm);
-                parts.push(new RoleMessage.Part.Text(part.text, vms));
+                const vrs = VerbatimCodec.Request.decode(part.text, this.ctx.vdm);
+                parts.push(new RoleMessage.Part.Text(part.text, vrs));
             }
             if (part.functionCall) {
                 payload = true;

@@ -26,9 +26,9 @@ export function encode<
             },
         };
 
-    else if (choice === Structuring.Choice.VMessage.REQUIRED) return 'none';
-    else if (choice === Structuring.Choice.VMessage.ANYONE) return 'none';
-    else if (choice instanceof Structuring.Choice.VMessage) return 'none';
+    else if (choice === Structuring.Choice.VRequest.REQUIRED) return 'none';
+    else if (choice === Structuring.Choice.VRequest.ANYONE) return 'none';
+    else if (choice instanceof Structuring.Choice.VRequest) return 'none';
 
     else throw new Error();
 }

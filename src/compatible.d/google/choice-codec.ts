@@ -21,9 +21,9 @@ export function encode<
     else if (choice instanceof Structuring.Choice.FCall)
         return { mode: Google.FunctionCallingConfigMode.ANY, allowedFunctionNames: [choice.name] };
 
-    else if (choice === Structuring.Choice.VMessage.REQUIRED) return { mode: Google.FunctionCallingConfigMode.NONE };
-    else if (choice === Structuring.Choice.VMessage.ANYONE) return { mode: Google.FunctionCallingConfigMode.NONE };
-    else if (choice instanceof Structuring.Choice.VMessage) return { mode: Google.FunctionCallingConfigMode.NONE };
+    else if (choice === Structuring.Choice.VRequest.REQUIRED) return { mode: Google.FunctionCallingConfigMode.NONE };
+    else if (choice === Structuring.Choice.VRequest.ANYONE) return { mode: Google.FunctionCallingConfigMode.NONE };
+    else if (choice instanceof Structuring.Choice.VRequest) return { mode: Google.FunctionCallingConfigMode.NONE };
 
     else throw new Error('Invalid structuring choice');
 }

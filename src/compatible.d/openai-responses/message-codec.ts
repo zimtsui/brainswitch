@@ -15,7 +15,7 @@ export class MessageCodec<
     public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
     /**
-     * @throws {@link VerbatimCodec.RequestInvalid}
+     * @throws {@link VerbatimCodec.Request.Invalid}
      */
     public convertToAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
@@ -25,8 +25,8 @@ export class MessageCodec<
                 if (item.type === 'message') {
                     if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
                     const text = item.content.map(part => part.text).join('');
-                    const vms = VerbatimCodec.decode(text, this.ctx.vdm);
-                    return [new RoleMessage.Part.Text(text, vms)];
+                    const vrs = VerbatimCodec.Request.decode(text, this.ctx.vdm);
+                    return [new RoleMessage.Part.Text(text, vrs)];
                 } else if (item.type === 'function_call')
                     return [this.ctx.toolCodec.convertToFunctionCall(item)];
                 else if (item.type === 'reasoning')
