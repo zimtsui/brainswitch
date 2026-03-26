@@ -12,5 +12,4 @@ export * from '#@/endpoint-spec.ts';
 export * from '#@/agentloop.ts';
 export * from '#@/engine.ts';
 export * from '#@/compatible/engine.ts';
-export * from '#@/frontmatter.ts';
 export * from '#@/telemetry.ts';

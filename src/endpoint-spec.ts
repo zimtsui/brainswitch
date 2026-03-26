@@ -20,7 +20,7 @@ export namespace EndpointSpec {
         cachePrice: Type.Optional(Type.Number()),
         parallelToolCall: Type.Optional(Type.Boolean()),
         additionalOptions: Type.Optional(Type.Record(Type.String(), Type.Any())),
-        rpm: Type.Optional(Type.Number({ minimum: 0 })),
+        rpm: Type.Optional(Type.Number({ minimum: 1 })),
         timeout: Type.Optional(Type.Number({ minimum: 0 })),
         maxTokens: Type.Optional(Type.Number({ minimum: 0 })),
     });

@@ -33,7 +33,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map
             try {
                 return JSON.parse(apifc.function.arguments);
             } catch (e) {
-                return new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
+                throw new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
             }
         })();
         if (ajv.validate(fditem.parameters, args)) {}

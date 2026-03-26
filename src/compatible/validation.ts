@@ -2,7 +2,6 @@ import { Structuring } from '#@/compatible/structuring.ts';
 import { Function } from '#@/function.ts';
 import { Verbatim } from '#@/verbatim.ts';
 import { ResponseInvalid } from '#@/engine.ts';
-import { RoleMessage } from '#@/compatible/session.ts';
 
 
 export class Validator<

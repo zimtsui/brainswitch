@@ -6,7 +6,7 @@ import { env } from 'node:process';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { logger } from '#@/telemetry.ts';
 import { type GenericSession } from '#@/session.ts';
-import type { Verbatim } from './verbatim';
+import type { Verbatim } from '#@/verbatim.ts';
 
 
 export interface Pricing {
@@ -42,7 +42,7 @@ export abstract class Engine<
     protected abstract parallelToolCall: boolean;
 
     public constructor(options: Engine.Options<fdm, vdm>) {
-        const proxyUrl = env.https_proxy || env.HTTPS_PROXY;
+        const proxyUrl = options.proxy || env.https_proxy || env.HTTPS_PROXY;
 
         this.providerSpec = {
             baseUrl: options.baseUrl,

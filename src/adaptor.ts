@@ -8,9 +8,9 @@ import { AnthropicCompatibleEngine } from '#@/compatible/engine.d/anthropic.ts';
 import { AliyunCompatibleEngine } from '#@/compatible/engine.d/aliyun.ts';
 import { OpenAIResponsesNativeEngine } from '#@/native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from '#@/native-engines.d/google/engine.ts';
-import type { Verbatim } from './verbatim';
-import type { Structuring } from './compatible/structuring';
-import type { Structuring as OpenAIResponsesNativeStructuring } from './native-engines.d/openai-responses/structuring';
+import type { Verbatim } from '#@/verbatim.ts';
+import type { Structuring } from '#@/compatible/structuring.ts';
+import type { Structuring as OpenAIResponsesNativeStructuring } from '#@/native-engines.d/openai-responses/structuring.ts';
 
 
 export class Adaptor {
@@ -18,7 +18,7 @@ export class Adaptor {
         return new Adaptor(config);
     }
 
-    private throttles = new Map<string, Throttle>();
+    protected throttles = new Map<string, Throttle>();
     protected constructor(public config: Config) {
         for (const endpointId in this.config.brainswitch.endpoints) {
             const rpm = this.config.brainswitch.endpoints[endpointId]!.rpm ?? Number.POSITIVE_INFINITY;

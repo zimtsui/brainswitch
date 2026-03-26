@@ -3,10 +3,10 @@ import { Mutex } from '@zimtsui/coroutine-locks';
 
 
 export class Throttle {
-    private valve = new Mutex();
-    private timer?: NodeJS.Timeout;
-    private interval: number;
-    public constructor(private rpm: number) {
+    protected valve = new Mutex();
+    protected timer?: NodeJS.Timeout;
+    protected interval: number;
+    public constructor(protected rpm: number) {
         this.interval = Math.ceil(60*1000 / this.rpm);
     }
 
