@@ -37,7 +37,6 @@ export namespace Structuring {
             export const ANYONE = Symbol();
 
             export import FCall = CompatibleStructuring.Choice.FCall;
-            export const APPLY_PATCH = Tool.APPLY_PATCH;
         }
 
         export import VRequest = CompatibleStructuring.Choice.VRequest;
