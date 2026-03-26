@@ -30,7 +30,7 @@ export namespace Verbatim {
         }
         export namespace Para {
             export interface Body {
-                description?: string;
+                description: string;
                 mimeType: string;
             }
         }
@@ -53,12 +53,12 @@ export namespace Verbatim {
         export interface Body<
             in out params extends Verbatim.Decl.Params.Proto,
         > {
-            description?: string;
+            description: string;
             parameters: params;
         }
         export namespace Body {
             export interface Proto {
-                description?: string;
+                description: string;
                 parameters: Verbatim.Decl.Params.Proto;
             }
 

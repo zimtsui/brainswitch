@@ -6,21 +6,21 @@ import { config } from './config.ts';
 const fdm = {
     get_weather: {
         description: '获取指定城市的天气',
-        paraschema: Type.Object({
+        parameters: Type.Object({
             city: Type.String(),
             unit: Type.Optional(Type.Union([Type.Literal('C'), Type.Literal('F')]))
         }),
     },
     submit_result: {
         description: '提交最终结果',
-        paraschema: Type.Object({
+        parameters: Type.Object({
             weather: Type.String(),
             advice: Type.String(),
         }),
     },
-} satisfies Function.Declaration.Map.Prototype;
+} satisfies Function.Decl.Map.Proto;
 type fdm = typeof fdm;
-type fdu = Function.Declaration.From<fdm>;
+type fdu = Function.Decl.From<fdm>;
 
 // 实现函数工具
 export class Submission {

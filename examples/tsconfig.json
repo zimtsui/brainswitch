@@ -19,8 +19,16 @@
         "checkJs": true,
         "composite": true,
         "skipLibCheck": true,
+        "paths": {
+            "@zimtsui/brainswitch": ["../src/exports.ts"],
+            "@zimtsui/brainswitch/assets": ["../src/assets.ts"],
+            "@zimtsui/brainswitch/codec": ["../src/verbatim/codec.ts"],
+        }
     },
     "include": [
         "./**/*",
     ],
+    "references": [
+        { "path": "../src/tsconfig.json" },
+    ]
 }

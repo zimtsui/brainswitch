@@ -3,6 +3,8 @@
   "version": "0.0.56",
   "exports": {
     ".": "./build/exports.js",
+    "./assets": "./build/assets.js",
+    "./codec": "./build/verbatim/codec.js",
     "./openai-responses": "./build/native-engines.d/openai-responses/exports.js",
     "./google": "./build/native-engines.d/google/exports.js"
   },

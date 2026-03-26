@@ -6,6 +6,6 @@ export default {
     verbatim: {
         instruction: RoleMessage.Part.Text.paragraph(loadtext(import.meta.resolve('../assets/verbatim/instruction.md'))),
         declarations: RoleMessage.Part.Text.paragraph(loadtext(import.meta.resolve('../assets/verbatim/declarations.handlebars'))),
-        requests: RoleMessage.Part.Text.paragraph(loadtext(import.meta.resolve('../assets/verbatim/requests.handlebars'))),
+        request: RoleMessage.Part.Text.paragraph(loadtext(import.meta.resolve('../assets/verbatim/request.handlebars'))),
     },
 } as const;
