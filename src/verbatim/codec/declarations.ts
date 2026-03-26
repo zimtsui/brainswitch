@@ -24,11 +24,19 @@ namespace template {
     }
 }
 
-export function encode<vdu extends Verbatim.Decl.Proto>(
-    declarations: vdu[],
+export function encode<vdm extends Verbatim.Decl.Map.Proto>(
+    vdm: vdm,
 ): string {
+    const vds = Object.entries(vdm).map(
+        ([name, body]) => ({
+            name,
+            description: body.description,
+            parameters: body.parameters,
+        }) as Verbatim.Decl.From<vdm>,
+    );
+
     return template({
-        declarations: declarations.map(
+        declarations: vds.map(
             declaration => ({
                 name: declaration.name,
                 description: declaration.description,

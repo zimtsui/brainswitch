@@ -22,11 +22,11 @@ export namespace Verbatim {
             name: string;
         }
 
-        export type Args<parameters extends Params.Proto> = {
+        export type Args<parameters extends Verbatim.Decl.Params.Proto> = {
             [name in keyof parameters]: string;
         }
         export namespace Params {
-            export type Proto = Record<string, Para.Body>;
+            export type Proto = Record<string, Verbatim.Decl.Para.Body>;
         }
         export namespace Para {
             export interface Body {
@@ -47,7 +47,7 @@ export namespace Verbatim {
         > = Verbatim.Decl.Extract<vdm, Verbatim.Name.From<vdm>>;
 
         export namespace Map {
-            export type Proto = Record<string, Body<Verbatim.Decl.Params.Proto>>;
+            export type Proto = Record<string, Verbatim.Decl.Body<Verbatim.Decl.Params.Proto>>;
         }
 
         export interface Body<

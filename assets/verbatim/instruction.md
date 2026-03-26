@@ -4,7 +4,7 @@
 
 When a LLM outputs structured data in JSON format, if there are too many special characters in the parameters (for example, a large Markdown document containing a lot of LaTeX math formulas), the LLM is prone to make mistakes in JSON escaping.
 
-**XML Verbatim Channel** is designed to avoid escaping in structured output of large text.
+XML Verbatim Channel is designed to avoid escaping in structured output of large text.
 
 ## Declaration
 
