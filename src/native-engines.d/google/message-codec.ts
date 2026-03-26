@@ -60,13 +60,15 @@ export class GoogleNativeMessageCodec<
                 payload = true;
                 parts.push(this.ctx.toolCodec.convertToFunctionCall(part.functionCall));
             }
-            if (this.ctx.codeExecution && part.executableCode) {
+            if (part.executableCode) {
+                if (this.ctx.codeExecution) {} else throw new ResponseInvalid('Unexpected code execution', { cause: content });
                 payload = true;
                 if (part.executableCode.code) {} else throw new Error();
                 if (part.executableCode.language) {} else throw new Error();
                 parts.push(new RoleMessage.Ai.Part.ExecutableCode(part.executableCode.code, part.executableCode.language));
             }
-            if (this.ctx.codeExecution && part.codeExecutionResult) {
+            if (part.codeExecutionResult) {
+                if (this.ctx.codeExecution) {} else throw new ResponseInvalid('Unexpected code execution result', { cause: content });
                 payload = true;
                 if (part.codeExecutionResult.outcome) {} else throw new Error();
                 parts.push(new RoleMessage.Ai.Part.CodeExecutionResult(part.codeExecutionResult.outcome, part.codeExecutionResult.output));

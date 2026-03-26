@@ -37,6 +37,11 @@ export async function *agentloop<
                         text: await f.call(fnm, fc.args),
                     } as Function.Response.Options.From<fdm>);
                 })());
+            } else if (part instanceof RoleMessage.Ai.Part.ExecutableCode) {
+                yield '\n```' + part.language + '\n' + part.code + '\n```';
+            } else if (part instanceof RoleMessage.Ai.Part.CodeExecutionResult) {
+                if (part.output) yield '\n```\n' + part.output + '\n```';
+                yield part.outcome;
             } else throw new Error();
         }
         const frs: Function.Response.From<fdm>[] = await Promise.all(pfrs);

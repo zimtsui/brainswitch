@@ -10,7 +10,6 @@ export namespace Structuring {
         vdu extends Verbatim.Decl.Proto,
     > =
         |   Structuring.Choice.TCall.FCall.Of<fdu>
-        |   typeof Structuring.Choice.TCall.APPLY_PATCH
         |   typeof Structuring.Choice.TCall.REQUIRED
         |   typeof Structuring.Choice.TCall.ANYONE
 
