@@ -12,6 +12,7 @@ export class Throttle {
 
     public async requests(wfctx: InferenceContext): Promise<void> {
         await wfctx.busy?.acquireRead();
+        wfctx.signal?.throwIfAborted();
         const pwr = Promise.withResolvers<void>();
         const callback = () => pwr.reject(wfctx.signal?.reason);
         wfctx.signal?.addEventListener('abort', callback);

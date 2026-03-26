@@ -10,10 +10,13 @@ export function decode<
     type vdu = Verbatim.Decl.From<vdm>;
     const parts: Verbatim.Request.Of<vdu>[] = [];
     const requests = extractRequests(str);
-    for (const [name, args] of requests) {
-        const vditem = vdm[name];
-        if (vditem) {} else throw new Invalid('Channel not found: ' + name);
-        const options = { name, args } as Verbatim.Request.Options.Of<vdu>;
+    for (const [channelName, args] of requests) {
+        const vdbody = vdm[channelName];
+        if (vdbody) {} else throw new Invalid('Channel not found: ' + channelName);
+        for (const paramName of Object.keys(vdbody.parameters))
+            if (typeof args[paramName] === 'string') {} else
+                throw new Invalid(`Argument ${paramName} of channel ${channelName} is missing.`);
+        const options = { name: channelName, args } as Verbatim.Request.Options.Of<vdu>;
         parts.push(Verbatim.Request.create(options));
     }
     return parts;
