@@ -17,8 +17,7 @@
     "build": "tsc -b ./src/tsconfig.json",
     "clean": "rm -rf ./build",
     "docs": "rm -rf ./docs && typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts ./src/native-engines.d/*/exports.ts",
-    "docs:clean": "rm -rf ./docs",
-    "prepublishOnly": "npm run clean && npm run docs:clean && npm run build && npm run docs"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "author": "Zim",
   "repository": {
