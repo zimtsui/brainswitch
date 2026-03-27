@@ -1,11 +1,12 @@
 import { CompatibleEngine } from '../compatible-engine.ts';
 import { Function } from '../function.ts';
-import { MessageCodec } from './google/message-codec.ts';
+import * as MessageCodecModule from './google/message-codec.ts';
 import { ToolCodec } from '../api-types/google/tool-codec.ts';
 import { Billing } from '../api-types/google/billing.ts';
 import { Validator } from '../compatible-engine/validation.ts';
-import { Transport } from './google/transport.ts';
+import * as TransportModule from './google/transport.ts';
 import type { Verbatim } from '../verbatim.ts';
+import * as ChoiceCodecModule from './google/choice-codec.ts';
 
 
 
@@ -14,10 +15,10 @@ export class GoogleCompatibleEngine<
     in out vdm extends Verbatim.Decl.Map.Proto,
 > extends CompatibleEngine<fdm, vdm> {
     protected toolCodec: ToolCodec<fdm>;
-    protected messageCodec: MessageCodec<fdm, vdm>;
+    protected messageCodec: GoogleCompatibleEngine.MessageCodec<fdm, vdm>;
     protected billing: Billing;
     protected override validator: Validator.From<fdm, vdm>;
-    protected override transport: Transport<fdm, vdm>;
+    protected override transport: GoogleCompatibleEngine.Transport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: GoogleCompatibleEngine.Options<fdm, vdm>) {
@@ -27,13 +28,13 @@ export class GoogleCompatibleEngine<
         this.toolCodec = new ToolCodec({
             fdm: this.fdm,
         });
-        this.messageCodec = new MessageCodec({
+        this.messageCodec = new GoogleCompatibleEngine.MessageCodec({
             toolCodec: this.toolCodec,
             vdm: this.vdm,
         });
         this.billing = new Billing({ pricing: this.pricing });
         this.validator = new Validator({ choice: this.choice });
-        this.transport = new Transport({
+        this.transport = new GoogleCompatibleEngine.Transport({
             inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
@@ -53,4 +54,8 @@ export namespace GoogleCompatibleEngine {
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,
     > extends CompatibleEngine.Options<fdm, vdm> {}
+
+    export import Transport = TransportModule.Transport;
+    export import MessageCodec = MessageCodecModule.MessageCodec;
+    export import ChoiceCodec = ChoiceCodecModule;
 }

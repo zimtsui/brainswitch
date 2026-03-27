@@ -5,12 +5,10 @@ import type { Verbatim } from '../../verbatim.ts';
 
 
 
-export class AliyunTransport<
+export class Transport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
-> extends
-    StreamTransport<fdm, vdm>
-{
+> extends StreamTransport<fdm, vdm> {
     protected override getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
         return (delta as AliyunTransport.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
     }

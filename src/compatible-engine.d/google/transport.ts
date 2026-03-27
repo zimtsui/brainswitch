@@ -13,7 +13,7 @@ import type { Billing } from '../../api-types/google/billing.ts';
 import type { Verbatim } from '../../verbatim.ts';
 import type { Validator } from '../../compatible-engine/validation.ts';
 import type { Structuring } from '../../compatible-engine/structuring.ts';
-import * as GoogleChoiceCodec from './choice-codec.ts';
+import * as ChoiceCodec from './choice-codec.ts';
 
 
 
@@ -48,7 +48,7 @@ export class Transport<
                 functionDeclarations: tools,
             }] : undefined,
             toolConfig: tools.length ? {
-                functionCallingConfig: GoogleChoiceCodec.encode(this.ctx.choice),
+                functionCallingConfig: ChoiceCodec.encode(this.ctx.choice),
             } : undefined,
             systemInstruction,
             generationConfig: this.ctx.inferenceParams.maxTokens || this.ctx.inferenceParams.additionalOptions ? {
