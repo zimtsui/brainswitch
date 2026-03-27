@@ -30,8 +30,10 @@ export class MessageCodec<
                 if (item.content.every(part => part.type === 'output_text')) {} else
                     throw new ResponseInvalid('Refusal', { cause: output });
                 const text = item.content.map(part => part.text).join('');
-                const vrs = VerbatimCodec.Request.decode(text, this.ctx.vdm);
-                return [new RoleMessage.Part.Text(text, vrs)];
+                if (text) {
+                    const vrs = VerbatimCodec.Request.decode(text, this.ctx.vdm);
+                    return [new RoleMessage.Part.Text(text, vrs)];
+                } else return [];
             } else if (item.type === 'function_call')
                 return [this.ctx.toolCodec.decodeFunctionCall(item)];
             else if (item.type === 'reasoning')

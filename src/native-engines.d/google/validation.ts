@@ -21,9 +21,6 @@ export class Validator<
     ): void {
         const parts = message.getParts();
         if (parts.length) {} else throw new ResponseInvalid('Empty message.');
-        if (!parts.some(part => part instanceof Function.Call))
-            if (parts.at(-1) instanceof RoleMessage.Part.Text) {} else
-                throw new ResponseInvalid('The last message part must be text.');
     }
 
     public validateChoice(
