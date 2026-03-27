@@ -13,7 +13,7 @@
   },
   "type": "module",
   "scripts": {
-    "test": "rm -rf ./test/build && tsc -b ./test/src/tsconfig.json && ava ./test/build/test.js",
+    "test": "npm run build && ava ./test/build/test.ts",
     "build": "tsc -b ./src/tsconfig.json",
     "clean": "rm -rf ./build",
     "docs": "rm -rf ./docs && typedoc --tsconfig ./src/tsconfig.json ./src/exports.ts ./src/native-engines.d/*/exports.ts",

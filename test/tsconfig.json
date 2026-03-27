@@ -18,16 +18,12 @@
         "verbatimModuleSyntax": true,
         "checkJs": true,
         "composite": true,
-        "outDir": "../build",
         "skipLibCheck": true,
-        "paths": {
-            "#@/*.ts": ["../../src/*.ts"]
-        }
     },
     "include": [
         "./**/*",
     ],
     "references": [
-        { "path": "../../src/tsconfig.json" },
+        { "path": "../src/tsconfig.json" },
     ]
 }
