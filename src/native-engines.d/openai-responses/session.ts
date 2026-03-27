@@ -58,26 +58,14 @@ export namespace RoleMessage {
         public getRaw(): OpenAI.Responses.ResponseOutputItem[] {
             return this.raw;
         }
+        public allTextPart(): boolean {
+            return this.parts.every(part => part instanceof RoleMessage.Part.Text);
+        }
+        public getTextParts(): RoleMessage.Part.Text<vdu>[] {
+            return this.parts.filter(part => part instanceof RoleMessage.Part.Text);
+        }
         public getText(): string {
-            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
-        }
-        public getOnlyText(): string {
-            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
-            return this.getText();
-        }
-        public getOnlyFunctionCall(): Function.Call.Of<fdu> {
-            const tcs = this.getToolCalls();
-            if (tcs.length === 1) {} else throw new Error();
-            const tc = tcs[0]!;
-            if (tc instanceof Function.Call) {} else throw new Error();
-            return tc;
-        }
-        public getOnlyApplyPatchCall(): Tool.ApplyPatch.Call {
-            const tcs = this.getToolCalls();
-            if (tcs.length === 1) {} else throw new Error();
-            const tc = tcs[0]!;
-            if (tc instanceof Tool.ApplyPatch.Call) {} else throw new Error();
-            return tc;
+            return this.getTextParts().map(part => part.text).join('');
         }
         public getToolCalls(): Tool.Call.Of<fdu>[] {
             return this.parts.filter(part => part instanceof Function.Call || part instanceof Tool.ApplyPatch.Call);
@@ -85,15 +73,23 @@ export namespace RoleMessage {
         public getFunctionCalls(): Function.Call.Of<fdu>[] {
             return this.parts.filter(part => part instanceof Function.Call);
         }
-        public getOnlyFunctionCalls(): Function.Call.Of<fdu>[] {
-            const tcs = this.getToolCalls();
-            if (tcs.every(tc => tc instanceof Function.Call)) {} else throw new Error();
-            return tcs;
-        }
         public getVerbatimRequests(): Verbatim.Request.Of<vdu>[] {
             return this.parts
                 .filter(part => part instanceof RoleMessage.Part.Text)
                 .flatMap(part => part.vrs);
+        }
+
+        public getOnlyFunctionCall(): Function.Call.Of<fdu> {
+            const tcs = this.getToolCalls();
+            if (tcs.length === 1) {} else throw new Error();
+            const tc = tcs[0]!;
+            if (tc instanceof Function.Call) {} else throw new Error();
+            return tc;
+        }
+        public getOnlyToolCall(): Tool.Call.Of<fdu> {
+            const tcs = this.getToolCalls();
+            if (tcs.length === 1) {} else throw new Error();
+            return tcs[0]!;
         }
         public getOnlyVerbatimRequest(): Verbatim.Request.Of<vdu> {
             const vrs = this.getVerbatimRequests();

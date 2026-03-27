@@ -22,8 +22,7 @@ export async function *agentloop<
 ): AsyncGenerator<string, string, void> {
     for (let i = 0; i < limit; i++) {
         const response = await engine.stateful(wfctx, session);
-        const tcs = response.getToolCalls();
-        if (!tcs.length) return response.getOnlyText();
+        if (response.allTextPart()) return response.getText();
         const ptcs: Promise<Tool.Response.From<fdm>>[] = [];
         for (const part of response.getParts()) {
             if (part instanceof RoleMessage.Part.Text) {

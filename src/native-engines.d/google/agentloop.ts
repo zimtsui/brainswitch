@@ -21,11 +21,11 @@ export async function *agentloop<
 ): AsyncGenerator<string, string, void> {
     for (let i = 0; i < limit; i++) {
         const response = await engine.stateful(wfctx, session);
-        const parts = response.getParts();
+        if (response.allChatPart()) return response.getChatText();
         const pfrs: Promise<Function.Response.From<fdm>>[] = [];
-        for (const part of parts) {
+        for (const part of response.getParts()) {
             if (part instanceof RoleMessage.Part.Text) {
-                yield part.text;
+                yield RoleMessage.Ai.encodeChatPart(part);
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.From<fdm>;
                 const f = fnm[fc.name];
@@ -37,17 +37,13 @@ export async function *agentloop<
                     } as Function.Response.Options.From<fdm>);
                 })());
             } else if (part instanceof RoleMessage.Ai.Part.ExecutableCode) {
-                yield '\n```' + part.language + '\n' + part.code + '\n```';
+                yield RoleMessage.Ai.encodeChatPart(part);
             } else if (part instanceof RoleMessage.Ai.Part.CodeExecutionResult) {
-                if (part.output) yield '\n```\n' + part.output + '\n```';
-                yield part.outcome;
+                yield RoleMessage.Ai.encodeChatPart(part);
             } else throw new Error();
         }
         const frs: Function.Response.From<fdm>[] = await Promise.all(pfrs);
-        if (frs.length)
-            engine.pushUserMessage(session, new RoleMessage.User(frs));
-        else
-            return (parts.at(-1) as RoleMessage.Part.Text<Verbatim.Decl.From<vdm>>).text;
+        engine.pushUserMessage(session, new RoleMessage.User(frs));
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }

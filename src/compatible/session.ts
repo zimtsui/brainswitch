@@ -66,27 +66,26 @@ export namespace RoleMessage {
         public getParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
             return this.parts;
         }
-        public getText(): string {
-            return this.parts
-                .filter(part => part instanceof RoleMessage.Part.Text)
-                .map(part => part.text).join('');
+        public allTextPart(): boolean {
+            return this.parts.every(part => part instanceof RoleMessage.Part.Text);
         }
-        public getOnlyText(): string {
-            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
-            return this.getText();
+        public getTextParts(): RoleMessage.Part.Text<vdu>[] {
+            return this.parts.filter(part => part instanceof RoleMessage.Part.Text);
+        }
+        public getText(): string {
+            return this.getTextParts().map(part => part.text).join('');
         }
         public getFunctionCalls(): Function.Call.Of<fdu>[] {
             return this.parts.filter(part => part instanceof Function.Call);
         }
+        public getVerbatimRequests(): Verbatim.Request.Of<vdu>[] {
+            return this.getTextParts().flatMap(part => part.vrs);
+        }
+
         public getOnlyFunctionCall(): Function.Call.Of<fdu> {
             const fcs = this.getFunctionCalls();
             if (fcs.length === 1) {} else throw new Error();
             return fcs[0]!;
-        }
-        public getVerbatimRequests(): Verbatim.Request.Of<vdu>[] {
-            return this.parts
-                .filter(part => part instanceof RoleMessage.Part.Text)
-                .flatMap(part => part.vrs);
         }
         public getOnlyVerbatimRequest(): Verbatim.Request.Of<vdu> {
             const vrs = this.getVerbatimRequests();

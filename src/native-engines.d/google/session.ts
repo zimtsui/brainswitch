@@ -59,17 +59,45 @@ export namespace RoleMessage {
         public getRaw(): Google.Content {
             return this.raw;
         }
-        public getText(): string {
-            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
+        public allChatPart(): boolean {
+            return this.parts.every(
+                part => part instanceof RoleMessage.Part.Text ||
+                    part instanceof RoleMessage.Ai.Part.ExecutableCode ||
+                    part instanceof RoleMessage.Ai.Part.CodeExecutionResult
+            );
         }
-        public getOnlyText(): string {
-            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
-            return this.getText();
+        public getChatParts(): RoleMessage.Ai.Part<fdu, vdu>[] {
+            return this.parts.filter(
+                part => part instanceof RoleMessage.Part.Text ||
+                    part instanceof RoleMessage.Ai.Part.ExecutableCode ||
+                    part instanceof RoleMessage.Ai.Part.CodeExecutionResult
+            );
         }
-        public getOnlyFunctionCall(): Function.Call.Of<fdu> {
-            const fcs = this.getFunctionCalls();
-            if (fcs.length === 1) {} else throw new Error();
-            return fcs[0]!;
+        public static encodeChatPart<
+            fdu extends Function.Decl.Proto,
+            vdu extends Verbatim.Decl.Proto,
+        >(part: RoleMessage.Ai.Part<fdu, vdu>): string {
+            if (part instanceof RoleMessage.Part.Text)
+                return part.text;
+            else if (part instanceof RoleMessage.Ai.Part.ExecutableCode)
+                return RoleMessage.Part.Text.paragraph(
+                    '```' + part.language + '\n' + part.code + '\n```',
+                ).text;
+            else if (part instanceof RoleMessage.Ai.Part.CodeExecutionResult) {
+                const textParts: RoleMessage.Part.Text<vdu>[] = [];
+                if (part.output) textParts.push(
+                    RoleMessage.Part.Text.paragraph(
+                        '```\n' + part.output + '\n```',
+                    ),
+                );
+                textParts.push(
+                    RoleMessage.Part.Text.paragraph(part.outcome),
+                );
+                return textParts.map(part => part.text).join('');
+            } else throw new Error();
+        }
+        public getChatText(): string {
+            return this.getChatParts().map(part => RoleMessage.Ai.encodeChatPart(part)).join('');
         }
         public getFunctionCalls(): Function.Call.Of<fdu>[] {
             return this.parts.filter(part => part instanceof Function.Call);
@@ -78,6 +106,12 @@ export namespace RoleMessage {
             return this.parts
                 .filter(part => part instanceof RoleMessage.Part.Text)
                 .flatMap(part => part.vrs);
+        }
+
+        public getOnlyFunctionCall(): Function.Call.Of<fdu> {
+            const fcs = this.getFunctionCalls();
+            if (fcs.length === 1) {} else throw new Error();
+            return fcs[0]!;
         }
         public getOnlyVerbatimRequest(): Verbatim.Request.Of<vdu> {
             const vrs = this.getVerbatimRequests();
