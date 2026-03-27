@@ -9,7 +9,7 @@ export * from '#@/compatible/structuring.ts';
 export * from '#@/config.ts';
 export * from '#@/inference-context.ts';
 export * from '#@/endpoint-spec.ts';
-export * from '#@/agentloop.ts';
+export * from '#@/compatible/agentloop.ts';
 export * from '#@/engine.ts';
 export * from '#@/compatible/engine.ts';
 export * from '#@/telemetry.ts';
