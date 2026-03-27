@@ -13,7 +13,6 @@ import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
 import * as ChoiceCodec from '#@/compatible.d/openai-chatcompletions/choice-codec.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -105,113 +104,117 @@ export abstract class StreamTransport<
         return completion;
     }
 
-    public async fetchRaw(
-        wfctx: InferenceContext, session: Session.From<fdm, vdm>, signal?: AbortSignal,
+    public override async fetch(
+        wfctx: InferenceContext,
+        session: Session.From<fdm, vdm>,
+        signal?: AbortSignal,
     ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
-        const params = this.makeParams(session);
-        logger.message.trace(params);
+        try {
+            await this.ctx.throttle.requests(wfctx);
 
-        await this.ctx.throttle.requests(wfctx);
+            // Prepare request
+            const params = this.makeParams(session);
+            logger.message.trace(params);
 
-        const stream = await this.client.chat.completions.create(params, { signal });
-        let stock: OpenAI.ChatCompletionChunk | null = null;
-        let thoughts: string | null = null, thinking = false;
+            // Send request
+            const stream = await this.client.chat.completions.create(params, { signal });
 
-        for await (const chunk of stream) {
-            stock ??= {
-                id: chunk.id,
-                created: chunk.created,
-                model: chunk.model,
-                choices: [],
-                object: 'chat.completion.chunk',
-            };
+            // Get response
+            let stock: OpenAI.ChatCompletionChunk | null = null;
+            let thoughts: string | null = null, thinking = false;
+            for await (const chunk of stream) {
+                stock ??= {
+                    id: chunk.id,
+                    created: chunk.created,
+                    model: chunk.model,
+                    choices: [],
+                    object: 'chat.completion.chunk',
+                };
 
-            // choice
-            const deltaChoice = chunk.choices[0];
-            if (deltaChoice) {
-                if (!stock.choices.length)
-                    stock.choices.push({
-                        index: 0,
-                        finish_reason: null,
-                        delta: {},
-                    });
+                // choice
+                const deltaChoice = chunk.choices[0];
+                if (deltaChoice) {
+                    if (!stock.choices.length)
+                        stock.choices.push({
+                            index: 0,
+                            finish_reason: null,
+                            delta: {},
+                        });
 
-                // thoughts
-                const deltaThoughts = this.getDeltaThoughts(deltaChoice.delta);
-                if (deltaThoughts) {
-                    if (!thinking) {
-                        thinking = true;
-                        logger.inference.trace('<think>\n');
+                    // thoughts
+                    const deltaThoughts = this.getDeltaThoughts(deltaChoice.delta);
+                    if (deltaThoughts) {
+                        if (!thinking) {
+                            thinking = true;
+                            logger.inference.trace('<think>\n');
+                        }
+                        logger.inference.trace(deltaThoughts);
+                        thoughts ??= '';
+                        thoughts += deltaThoughts;
                     }
-                    logger.inference.trace(deltaThoughts);
-                    thoughts ??= '';
-                    thoughts += deltaThoughts;
-                }
 
-                // content
-                if (deltaChoice.delta.content) {
-                    if (thinking) {
-                        thinking = false;
-                        logger.inference.trace('\n</think>\n');
+                    // content
+                    if (deltaChoice.delta.content) {
+                        if (thinking) {
+                            thinking = false;
+                            logger.inference.trace('\n</think>\n');
+                        }
+                        logger.inference.debug(deltaChoice.delta.content);
+                        stock.choices[0]!.delta.content ??= '';
+                        stock.choices[0]!.delta.content! += deltaChoice.delta.content;
                     }
-                    logger.inference.debug(deltaChoice.delta.content);
-                    stock.choices[0]!.delta.content ??= '';
-                    stock.choices[0]!.delta.content! += deltaChoice.delta.content;
-                }
 
-                // function calls
-                if (deltaChoice.delta.tool_calls) {
-                    if (thinking) {
-                        thinking = false;
-                        logger.inference.trace('\n</think>\n');
-                    }
-                    stock.choices[0]!.delta.tool_calls ??= [];
-                    for (const deltaToolCall of deltaChoice.delta.tool_calls) {
-                        const toolCalls = stock.choices[0]!.delta.tool_calls!;
-                        toolCalls[deltaToolCall.index] ??= { index: deltaToolCall.index };
-                        toolCalls[deltaToolCall.index]!.id ??= deltaToolCall.id;
-                        if (deltaToolCall.function) {
-                            toolCalls[deltaToolCall.index]!.function ??= {};
-                            toolCalls[deltaToolCall.index]!.function!.name ??= deltaToolCall.function.name;
-                            if (deltaToolCall.function.arguments) {
-                                toolCalls[deltaToolCall.index]!.function!.arguments ??= '';
-                                toolCalls[deltaToolCall.index]!.function!.arguments! += deltaToolCall.function?.arguments || '';
+                    // function calls
+                    if (deltaChoice.delta.tool_calls) {
+                        if (thinking) {
+                            thinking = false;
+                            logger.inference.trace('\n</think>\n');
+                        }
+                        stock.choices[0]!.delta.tool_calls ??= [];
+                        for (const deltaToolCall of deltaChoice.delta.tool_calls) {
+                            const toolCalls = stock.choices[0]!.delta.tool_calls!;
+                            toolCalls[deltaToolCall.index] ??= { index: deltaToolCall.index };
+                            toolCalls[deltaToolCall.index]!.id ??= deltaToolCall.id;
+                            if (deltaToolCall.function) {
+                                toolCalls[deltaToolCall.index]!.function ??= {};
+                                toolCalls[deltaToolCall.index]!.function!.name ??= deltaToolCall.function.name;
+                                if (deltaToolCall.function.arguments) {
+                                    toolCalls[deltaToolCall.index]!.function!.arguments ??= '';
+                                    toolCalls[deltaToolCall.index]!.function!.arguments! += deltaToolCall.function?.arguments || '';
+                                }
                             }
                         }
                     }
+
+                    // finish reason
+                    stock.choices[0]!.finish_reason ??= deltaChoice.finish_reason;
                 }
 
-                // finish reason
-                stock.choices[0]!.finish_reason ??= deltaChoice.finish_reason;
+                // usage
+                stock.usage ??= chunk.usage;
             }
 
-            // usage
-            stock.usage ??= chunk.usage;
-        }
+            // Validate response
+            if (stock) {} else throw new Error();
+            const completion = this.convertCompletionStockToCompletion(stock);
 
-        if (stock) {} else throw new Error();
-        const completion = this.convertCompletionStockToCompletion(stock);
+            const choice = completion.choices[0];
+            if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
+            if (choice.message.content) logger.inference.debug('\n');
 
-        const choice = completion.choices[0];
-        if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
-        if (choice.message.content) logger.inference.debug('\n');
+            this.handleFinishReason(completion, choice.finish_reason);
 
-        this.handleFinishReason(completion, choice.finish_reason);
+            if (completion.usage) {} else throw new Error();
+            const cost = this.ctx.billing.charge(completion.usage);
 
-        if (completion.usage) {} else throw new Error();
-        const cost = this.ctx.billing.charge(completion.usage);
+            if (choice.message.tool_calls) logger.message.debug(choice.message.tool_calls);
+            logger.message.debug(completion.usage);
+            wfctx.cost?.(cost);
 
-        if (choice.message.tool_calls) logger.message.debug(choice.message.tool_calls);
-        logger.message.debug(completion.usage);
-        wfctx.cost?.(cost);
-
-        try {
-            const aiMessage = this.ctx.messageCodec.decodeAiMessage(choice.message);
-            this.ctx.validator.validate(aiMessage);
-            return aiMessage;
+            return this.ctx.messageCodec.decodeAiMessage(choice.message);
         } catch (e) {
-            if (e instanceof VerbatimCodec.Request.Invalid)
-                throw new ResponseInvalid('Invalid verbatim message', { cause: choice.message });
+            if (e instanceof OpenAI.APIError)
+                throw new ResponseInvalid(undefined, { cause: e });
             else throw e;
         }
     }

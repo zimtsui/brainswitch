@@ -17,8 +17,8 @@ export class OpenAIResponsesCompatibleEngine<
     protected toolCodec: ToolCodec<fdm>;
     protected messageCodec: MessageCodec<fdm, vdm>;
     protected billing: Billing;
-    protected validator: Validator.From<fdm, vdm>;
-    protected transport: Transport<fdm, vdm>;
+    protected override validator: Validator.From<fdm, vdm>;
+    protected override transport: Transport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: OpenAIResponsesCompatibleEngine.Options<fdm, vdm>) {
@@ -45,13 +45,6 @@ export class OpenAIResponsesCompatibleEngine<
         });
     }
 
-    public override infer(
-        wfctx: InferenceContext,
-        session: Session.From<fdm, vdm>,
-        signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
-        return this.transport.fetch(wfctx, session, signal);
-    }
 }
 
 export namespace OpenAIResponsesCompatibleEngine {

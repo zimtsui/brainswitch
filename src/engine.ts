@@ -7,6 +7,9 @@ import { type InferenceContext } from '#@/inference-context.ts';
 import { logger } from '#@/telemetry.ts';
 import { type GenericSession } from '#@/session.ts';
 import type { Verbatim } from '#@/verbatim.ts';
+import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import type { Validator } from '#@/validation.ts';
+import type { Transport } from '#@/transport.ts';
 
 
 export interface Pricing {
@@ -40,6 +43,8 @@ export abstract class Engine<
     public vdm: vdm;
     protected throttle: Throttle;
     protected abstract parallelToolCall: boolean;
+    protected abstract validator: Validator.From<fdm, vdm, aim>;
+    protected abstract transport: Transport<userm, aim, devm, session>;
 
     public constructor(options: Engine.Options<fdm, vdm>) {
         const proxyUrl = options.proxy || env.https_proxy || env.HTTPS_PROXY;
@@ -69,11 +74,22 @@ export abstract class Engine<
         this.throttle = options.throttle;
     }
 
-    protected abstract infer(
+    protected async infer(
         wfctx: InferenceContext,
         session: session,
         signal?: AbortSignal,
-    ): Promise<aim>;
+    ): Promise<aim> {
+        try {
+            const aiMessage = await this.transport.fetch(wfctx, session, signal);
+            this.validator.validateParts(aiMessage);
+            this.validator.validateChoice(aiMessage);
+            return aiMessage;
+        } catch (e) {
+            if (e instanceof VerbatimCodec.Request.Invalid)
+                throw new ResponseInvalid('Invalid verbatim message', { cause: e });
+            else throw e;
+        }
+    }
 
     /**
      * @throws {@link UserAbortion} 用户中止
@@ -143,7 +159,7 @@ export namespace Engine {
 }
 
 export class ResponseInvalid extends Error {}
-export class UserAbortion {}
+export class UserAbortion extends Error {}
 export class InferenceTimeout extends Error {}
 
 

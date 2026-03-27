@@ -15,12 +15,18 @@ import type { Verbatim } from '#@/verbatim.ts';
 import * as ChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import type { Transport as GenericTransport } from '#@/transport.ts';
 
 
 
 export class GoogleNativeTransport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
+> implements GenericTransport<
+    RoleMessage.User.From<fdm>,
+    RoleMessage.Ai.From<fdm, vdm>,
+    RoleMessage.Developer,
+    Session.From<fdm, vdm>
 > {
     protected apiURL: URL;
 
@@ -87,15 +93,7 @@ export class GoogleNativeTransport<
         if (response.usageMetadata) {} else throw new ResponseInvalid('Usage metadata missing', { cause: response });
         wfctx.cost?.(this.ctx.billing.charge(response.usageMetadata));
 
-        try {
-            const aiMessage = this.ctx.messageCodec.decodeAiMessage(response.candidates[0].content);
-            this.ctx.validator.validate(aiMessage);
-            return aiMessage;
-        } catch (e) {
-            if (e instanceof VerbatimCodec.Request.Invalid)
-                throw new ResponseInvalid('Invalid verbatim message', { cause: response.candidates[0].content });
-            else throw e;
-        }
+        return this.ctx.messageCodec.decodeAiMessage(response.candidates[0].content);
     }
 }
 

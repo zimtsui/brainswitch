@@ -13,12 +13,17 @@ import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/openai-responses/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import type { Transport as GenericTransport } from '#@/transport.ts';
 
 
 export class Transport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
+> implements GenericTransport<
+    RoleMessage.User.From<fdm>,
+    RoleMessage.Ai.From<fdm, vdm>,
+    RoleMessage.Developer,
+    Session.From<fdm, vdm>
 > {
     protected apiURL: URL;
 
@@ -53,60 +58,49 @@ export class Transport<
                 logger.message.debug(item);
     }
 
-    protected async fetchRaw(
-        wfctx: InferenceContext,
-        session: Session.From<fdm, vdm>,
-        signal?: AbortSignal,
-    ): Promise<MessageCodec.Message.Ai.From<fdm, vdm>> {
-        const params = this.makeParams(session);
-        logger.message.trace(params);
-
-        await this.ctx.throttle.requests(wfctx);
-        const res = await Undici.fetch(
-            this.apiURL,
-            {
-                method: 'POST',
-                headers: new Headers({
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.ctx.providerSpec.apiKey}`,
-                }),
-                body: JSON.stringify(params),
-                dispatcher: this.ctx.providerSpec.proxyAgent,
-                signal,
-            },
-        );
-        if (res.ok) {} else throw new Error(undefined, { cause: res });
-        const response = await res.json() as OpenAI.Responses.Response;
-        logger.message.trace(response);
-        if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
-            throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-        if (response.status === 'completed') {}
-        else throw new ResponseInvalid('Abnormal response status', { cause: response });
-
-        this.logAiMessage(response.output);
-
-        if (response.usage) {} else throw new Error();
-        logger.message.debug(response.usage);
-        wfctx.cost?.(this.ctx.billing.charge(response.usage));
-
-        try {
-            const aiMessage = this.ctx.messageCodec.decodeAiMessage(response.output);
-            this.ctx.validator.validate(aiMessage);
-            return aiMessage;
-        } catch (e) {
-            if (e instanceof VerbatimCodec.Request.Invalid)
-                throw new ResponseInvalid('Invalid verbatim message', { cause: response.output });
-            else throw e;
-        }
-    }
-
     public async fetch(
         wfctx: InferenceContext,
         session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         try {
-            return await this.fetchRaw(wfctx, session, signal);
+            await this.ctx.throttle.requests(wfctx);
+
+            // Prepare request
+            const params = this.makeParams(session);
+            logger.message.trace(params);
+
+            // Send request
+            const res = await Undici.fetch(
+                this.apiURL,
+                {
+                    method: 'POST',
+                    headers: new Headers({
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.ctx.providerSpec.apiKey}`,
+                    }),
+                    body: JSON.stringify(params),
+                    dispatcher: this.ctx.providerSpec.proxyAgent,
+                    signal,
+                },
+            );
+
+            // Get response
+            if (res.ok) {} else throw new Error(undefined, { cause: res });
+            const response = await res.json() as OpenAI.Responses.Response;
+            logger.message.trace(response);
+
+            // Validate response
+            if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
+                throw new ResponseInvalid('Token limit exceeded.', { cause: response });
+            if (response.status === 'completed') {}
+            else throw new ResponseInvalid('Abnormal response status', { cause: response });
+            if (response.usage) {} else throw new Error();
+            this.logAiMessage(response.output);
+            logger.message.debug(response.usage);
+            wfctx.cost?.(this.ctx.billing.charge(response.usage));
+
+            return this.ctx.messageCodec.decodeAiMessage(response.output);
         } catch (e) {
             if (e instanceof OpenAI.APIError)
                 throw new ResponseInvalid(undefined, { cause: e });

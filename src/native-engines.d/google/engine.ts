@@ -10,7 +10,6 @@ import { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-cod
 import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import { Structuring } from '#@/compatible/structuring.ts';
-import { Validator as CompatibleValidator } from '#@/compatible/validation.ts';
 
 
 export class GoogleNativeEngine<
@@ -34,8 +33,8 @@ export class GoogleNativeEngine<
     protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
     protected messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
     protected billing: Billing;
-    protected validator: Validator.From<fdm, vdm>;
-    protected transport: GoogleNativeTransport<fdm, vdm>;
+    protected override validator: Validator.From<fdm, vdm>;
+    protected override transport: GoogleNativeTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
     public constructor(options: GoogleNativeEngine.Options<fdm, vdm>) {

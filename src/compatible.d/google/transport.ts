@@ -15,12 +15,18 @@ import type { Validator } from '#@/compatible/validation.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
 import * as GoogleChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import type { Transport as GenericTransport } from '#@/transport.ts';
 
 
 
 export class Transport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
+> implements GenericTransport<
+    RoleMessage.User.From<fdm>,
+    RoleMessage.Ai.From<fdm, vdm>,
+    RoleMessage.Developer,
+    Session.From<fdm, vdm>
 > {
     protected apiURL: URL;
     public constructor(protected ctx: Transport.Context<fdm, vdm>) {
@@ -34,10 +40,9 @@ export class Transport<
     ): Promise<RoleMessage.Ai<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>> {
         await this.ctx.throttle.requests(wfctx);
 
+        // Prepare request body
         const systemInstruction = session.developerMessage && this.ctx.messageCodec.encodeDeveloperMessage(session.developerMessage);
         const contents = this.ctx.messageCodec.encodeChatMessages(session.chatMessages);
-
-
         const tools = this.ctx.toolCodec.encodeFunctionDeclarationMap(this.ctx.fdm);
         const reqbody: RestfulRequest = {
             contents,
@@ -53,9 +58,9 @@ export class Transport<
                 ...this.ctx.inferenceParams.additionalOptions,
             } : undefined,
         };
-
         logger.message.trace(reqbody);
 
+        // Send request
         const res = await Undici.fetch(this.apiURL, {
             method: 'POST',
             headers: new Headers({
@@ -66,36 +71,27 @@ export class Transport<
             dispatcher: this.ctx.providerSpec.proxyAgent,
             signal,
         });
-        logger.message.trace(res);
+
+        // Get response
         if (res.ok) {} else throw new Error(undefined, { cause: res });
         const response = await res.json() as Google.GenerateContentResponse;
+        logger.message.trace(response);
 
+        // Validate response
         if (response.candidates?.[0]?.content?.parts?.length) {} else throw new ResponseInvalid('Content missing', { cause: response });
         if (response.candidates[0].finishReason === Google.FinishReason.MAX_TOKENS)
             throw new ResponseInvalid('Token limit exceeded.', { cause: response });
         if (response.candidates[0].finishReason === Google.FinishReason.STOP) {}
         else throw new ResponseInvalid('Abnormal finish reason', { cause: response });
-
-
+        if (response.usageMetadata) {} else throw new ResponseInvalid('Usage metadata missing', { cause: response });
         for (const part of response.candidates[0].content.parts) {
             if (part.text) logger.inference.debug(part.text);
             if (part.functionCall) logger.message.debug(part.functionCall);
         }
-
-        if (response.usageMetadata) {} else throw new ResponseInvalid('Usage metadata missing', { cause: response });
         wfctx.cost?.(this.ctx.billing.charge(response.usageMetadata));
 
-        try {
-            const aiMessage = this.ctx.messageCodec.decodeAiMessage(response.candidates[0].content);
-            this.ctx.validator.validate(aiMessage);
-            return aiMessage;
-        } catch (e) {
-            if (e instanceof VerbatimCodec.Request.Invalid)
-                throw new ResponseInvalid('Invalid verbatim message', { cause: response.candidates[0].content });
-            else throw e;
-        }
+        return this.ctx.messageCodec.decodeAiMessage(response.candidates[0].content);
     }
-
 
 }
 

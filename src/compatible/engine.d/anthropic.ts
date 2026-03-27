@@ -44,14 +44,6 @@ export class AnthropicCompatibleEngine<
             validator: this.validator,
         });
     }
-
-    public override infer(
-        wfctx: InferenceContext,
-        session: Session.From<fdm, vdm>,
-        signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
-        return this.transport.fetch(wfctx, session, signal);
-    }
 }
 
 export namespace AnthropicCompatibleEngine {

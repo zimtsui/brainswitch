@@ -3,20 +3,20 @@ import { Function } from '#@/function.ts';
 import { Verbatim } from '#@/verbatim.ts';
 import { RoleMessage } from '#@/native-engines.d/openai-responses/session.ts';
 import { ResponseInvalid } from '#@/engine.ts';
-import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
+import type { Validator as GenericValidator } from '#@/validation.ts';
 
 
 
 export class Validator<
     in out fdu extends Function.Decl.Proto,
     in out vdu extends Verbatim.Decl.Proto,
-> {
+> implements GenericValidator<fdu, vdu, RoleMessage.Ai<fdu, vdu>> {
     public constructor(protected ctx: Validator.Context<fdu, vdu>) {}
 
-    public validateChoice(
-        tcs: Tool.Call.Of<fdu>[],
-        vrs: Verbatim.Request.Of<vdu>[],
-    ): void {
+    public validateChoice(message: RoleMessage.Ai<fdu, vdu>): void {
+        const tcs = message.getFunctionCalls();
+        const vrs = message.getVerbatimRequests();
+
         if (this.ctx.choice === Structuring.Choice.TCall.REQUIRED) {
             if (tcs.length) {} else throw new ResponseInvalid('Tool call required.');
 
@@ -65,15 +65,6 @@ export class Validator<
     ): void {
         const parts = message.getParts();
         if (parts.length) {} else throw new ResponseInvalid('Empty message.');
-    }
-
-    public validate(
-        message: RoleMessage.Ai<fdu, vdu>,
-    ): void {
-        this.validateParts(message);
-        const fcs = message.getFunctionCalls();
-        const vrs = message.getVerbatimRequests();
-        this.validateChoice(fcs, vrs);
     }
 }
 

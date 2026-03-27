@@ -1,6 +1,6 @@
 import { RoleMessage, type Session } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
-import type OpenAI from 'openai';
+import OpenAI from 'openai';
 import { Transport } from '#@/compatible.d/openai-chatcompletions/transport.ts';
 import { type InferenceContext } from '#@/inference-context.ts';
 import * as Undici from 'undici';
@@ -14,7 +14,6 @@ import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/openai-chatcompletions/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
 
 
 
@@ -49,49 +48,53 @@ export abstract class MonolithTransport<
         };
     }
 
-    protected override async fetchRaw(
+    public override async fetch(
         wfctx: InferenceContext,
         session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
-        const params = this.makeParams(session);
-        logger.message.trace(params);
-
-        await this.ctx.throttle.requests(wfctx);
-        const res = await Undici.fetch(this.ctx.apiURL, {
-            method: 'POST',
-            headers: new Headers({
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.ctx.apiKey}`,
-            }),
-            body: JSON.stringify(params),
-            dispatcher: this.ctx.proxyAgent,
-            signal,
-        });
-        if (res.ok) {} else throw new Error(undefined, { cause: res });
-        const completion = await res.json() as OpenAI.ChatCompletion;
-        logger.message.trace(completion);
-
-        const choice = completion.choices[0];
-        if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
-
-        this.handleFinishReason(completion, choice.finish_reason);
-
-        if (completion.usage) {} else throw new Error();
-        const cost = this.ctx.billing.charge(completion.usage);
-
-        if (choice.message.content) logger.inference.debug(choice.message.content);
-        if (choice.message.tool_calls) logger.message.debug(choice.message.tool_calls);
-        logger.message.debug(completion.usage);
-        wfctx.cost?.(cost);
-
         try {
-            const aiMessage = this.ctx.messageCodec.decodeAiMessage(choice.message);
-            this.ctx.validator.validate(aiMessage);
-            return aiMessage;
+            await this.ctx.throttle.requests(wfctx);
+
+            // Prepare request
+            const params = this.makeParams(session);
+            logger.message.trace(params);
+
+            // Send request
+            const res = await Undici.fetch(this.ctx.apiURL, {
+                method: 'POST',
+                headers: new Headers({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.ctx.apiKey}`,
+                }),
+                body: JSON.stringify(params),
+                dispatcher: this.ctx.proxyAgent,
+                signal,
+            });
+
+            // Get response
+            if (res.ok) {} else throw new Error(undefined, { cause: res });
+            const completion = await res.json() as OpenAI.ChatCompletion;
+            logger.message.trace(completion);
+
+            // Validate response
+            const choice = completion.choices[0];
+            if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
+
+            this.handleFinishReason(completion, choice.finish_reason);
+
+            if (completion.usage) {} else throw new Error();
+            const cost = this.ctx.billing.charge(completion.usage);
+
+            if (choice.message.content) logger.inference.debug(choice.message.content);
+            if (choice.message.tool_calls) logger.message.debug(choice.message.tool_calls);
+            logger.message.debug(completion.usage);
+            wfctx.cost?.(cost);
+
+            return this.ctx.messageCodec.decodeAiMessage(choice.message);
         } catch (e) {
-            if (e instanceof VerbatimCodec.Request.Invalid)
-                throw new ResponseInvalid('Invalid verbatim message', { cause: choice.message });
+            if (e instanceof OpenAI.APIError)
+                throw new ResponseInvalid(undefined, { cause: e });
             else throw e;
         }
     }

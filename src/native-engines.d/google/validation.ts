@@ -4,13 +4,14 @@ import { Verbatim } from '#@/verbatim.ts';
 import { RoleMessage } from '#@/native-engines.d/google/session.ts';
 import { Validator as CompatibleValidator } from '#@/compatible/validation.ts';
 import { ResponseInvalid } from '#@/engine.ts';
+import type { Validator as GenericValidator } from '#@/validation.ts';
 
 
 
 export class Validator<
     in out fdu extends Function.Decl.Proto,
     in out vdu extends Verbatim.Decl.Proto,
-> {
+> implements GenericValidator<fdu, vdu, RoleMessage.Ai<fdu, vdu>> {
     protected compatibleValidator: CompatibleValidator<fdu, vdu>;
     public constructor(protected ctx: Validator.Context<fdu, vdu>) {
         this.compatibleValidator = new CompatibleValidator({ choice: ctx.choice });
@@ -26,13 +27,10 @@ export class Validator<
                 throw new ResponseInvalid('The last message part must be text.');
     }
 
-    public validate(
+    public validateChoice(
         message: RoleMessage.Ai<fdu, vdu>,
     ): void {
-        this.validateParts(message);
-        const fcs = message.getFunctionCalls();
-        const vrs = message.getVerbatimRequests();
-        this.compatibleValidator.validateChoice(fcs, vrs);
+        this.compatibleValidator.validateStructuring(message.getFunctionCalls(), message.getVerbatimRequests());
     }
 }
 

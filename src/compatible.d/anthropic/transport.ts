@@ -13,11 +13,17 @@ import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/anthropic/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import type { Transport as GenericTransport } from '#@/transport.ts';
 
 
 export class Transport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
+> implements GenericTransport<
+    RoleMessage.User.From<fdm>,
+    RoleMessage.Ai.From<fdm, vdm>,
+    RoleMessage.Developer,
+    Session.From<fdm, vdm>
 > {
     protected client: Anthropic;
 
@@ -50,12 +56,16 @@ export class Transport<
         session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
+        await this.ctx.throttle.requests(wfctx);
+
+        // Prepare request
         const params = this.makeParams(session);
         logger.message.trace(params);
 
-        await this.ctx.throttle.requests(wfctx);
+        // Send request
         const stream = this.client.messages.stream(params, { signal });
 
+        // Get response
         let response: Anthropic.Message | null = null;
         for await (const event of stream) {
             if (event.type === 'message_start') {
@@ -111,24 +121,17 @@ export class Transport<
                 } else throw new Error('Unknown stream event', { cause: event });
             }
         }
+
+        // Validate response
         if (response) {} else throw new Error();
         if (response.stop_reason === 'max_tokens')
             throw new ResponseInvalid('Token limit exceeded.', { cause: response });
         if (response.stop_reason === 'end_turn' || response.stop_reason === 'tool_use') {}
         else throw new ResponseInvalid('Abnormal stop reason', { cause: response });
-
         logger.message.debug(response.usage);
         wfctx.cost?.(this.ctx.billing.charge(response.usage));
 
-        try {
-            const aiMessage = this.ctx.messageCodec.decodeAiMessage(response.content);
-            this.ctx.validator.validate(aiMessage);
-            return aiMessage;
-        } catch (e) {
-            if (e instanceof VerbatimCodec.Request.Invalid)
-                throw new ResponseInvalid('Invalid verbatim message', { cause: response.content });
-            else throw e;
-        }
+        return this.ctx.messageCodec.decodeAiMessage(response.content);
     }
 }
 

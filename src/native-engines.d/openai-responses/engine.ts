@@ -31,7 +31,7 @@ export class OpenAIResponsesNativeEngine<
     protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
     protected messageCodec: MessageCodec<fdm, vdm>;
     protected billing: Billing;
-    protected validator: Validator.From<fdm, vdm>;
+    protected override validator: Validator.From<fdm, vdm>;
     protected transport: Transport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
