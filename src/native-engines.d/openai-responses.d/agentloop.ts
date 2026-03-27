@@ -28,13 +28,25 @@ export async function *agentloop<
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.From<fdm>;
                 const fn = tlm[fc.name];
-                ptcs.push((async () => {
-                    return Function.Response.of({
-                        id: fc.id,
-                        name: fc.name,
-                        text: await fn.call(tlm, fc.args),
-                    } as Function.Response.Options.From<fdm>);
-                })());
+                try {
+                    ptcs.push((async () => {
+                        return Function.Response.Successful.of({
+                            id: fc.id,
+                            name: fc.name,
+                            text: await fn.call(tlm, fc.args),
+                        } as Function.Response.Successful.Options.From<fdm>);
+                    })());
+                } catch (e) {
+                    if (e instanceof Function.Error) {} else throw e;
+                    ptcs.push((async () => {
+                        return Function.Response.Failed.of({
+                            id: fc.id,
+                            name: fc.name,
+                            error: e.message,
+                        } as Function.Response.Failed.Options.From<fdm>);
+                    })());
+                }
+
             } else if (part instanceof OpenAIResponsesNativeEngine.Tool.ApplyPatch.Call) {
                 const apc: OpenAIResponsesNativeEngine.Tool.ApplyPatch.Call = part;
                 const tl = tlm[OpenAIResponsesNativeEngine.Tool.APPLY_PATCH];

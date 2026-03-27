@@ -49,9 +49,7 @@ export class MessageCodec<
             if (part instanceof RoleMessage.Part.Text)
                 return Google.createPartFromText(part.text);
             else if (part instanceof Function.Response)
-                return {
-                    functionResponse: { id: part.id, name: part.name, response: { returnValue: part.text } },
-                };
+                return this.ctx.toolCodec.encodeFunctionResponse(part);
             else throw new Error();
         });
         return Google.createUserContent(parts);

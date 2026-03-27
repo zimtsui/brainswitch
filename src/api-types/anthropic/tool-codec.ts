@@ -41,11 +41,19 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
         fr: Function.Response.From<fdm>,
     ): Anthropic.ToolResultBlockParam {
         if (fr.id) {} else throw new Error();
-        return {
-            type: 'tool_result',
-            tool_use_id: fr.id,
-            content: fr.text,
-        };
+        if (fr instanceof Function.Response.Successful)
+            return {
+                type: 'tool_result',
+                tool_use_id: fr.id,
+                content: fr.text,
+            };
+        else if (fr instanceof Function.Response.Failed)
+            return {
+                type: 'tool_result',
+                tool_use_id: fr.id,
+                content: fr.error,
+            };
+        else throw new Error();
     }
 
     protected encodeFunctionDeclarationEntry(

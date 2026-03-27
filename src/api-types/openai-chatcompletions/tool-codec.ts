@@ -50,11 +50,19 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map
         fr: Function.Response.From<fdm>,
     ): OpenAI.ChatCompletionToolMessageParam {
         if (fr.id) {} else throw new Error();
-        return {
-            role: 'tool',
-            tool_call_id: fr.id,
-            content: fr.text,
-        };
+        if (fr instanceof Function.Response.Successful)
+            return {
+                role: 'tool',
+                tool_call_id: fr.id,
+                content: fr.text,
+            };
+        else if (fr instanceof Function.Response.Failed)
+            return {
+                role: 'tool',
+                tool_call_id: fr.id,
+                content: fr.error,
+            };
+        else throw new Error();
     }
 
     protected encodeFunctionDeclarationEntry(

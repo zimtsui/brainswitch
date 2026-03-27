@@ -27,13 +27,24 @@ export async function *agentloop<
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.From<fdm>;
                 const f = fnm[fc.name];
-                pfrs.push((async () => {
-                    return Function.Response.of({
-                        id: fc.id,
-                        name: fc.name,
-                        text: await f.call(fnm, fc.args),
-                    } as Function.Response.Options.From<fdm>);
-                })());
+                try {
+                    pfrs.push((async () => {
+                        return Function.Response.Successful.of({
+                            id: fc.id,
+                            name: fc.name,
+                            text: await f.call(fnm, fc.args),
+                        } as Function.Response.Successful.Options.From<fdm>);
+                    })());
+                } catch (e) {
+                    if (e instanceof Function.Error) {} else throw e;
+                    pfrs.push((async () => {
+                        return Function.Response.Failed.of({
+                            id: fc.id,
+                            name: fc.name,
+                            error: e.message,
+                        } as Function.Response.Failed.Options.From<fdm>);
+                    })());
+                }
             } else throw new Error();
         }
         const frs: Function.Response.From<fdm>[] = await Promise.all(pfrs);

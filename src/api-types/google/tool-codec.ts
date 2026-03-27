@@ -63,6 +63,16 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
         } as Function.Call.Options.From<fdm>);
     }
 
+    public encodeFunctionResponse(
+        fr: Function.Response.From<fdm>,
+    ): Google.Part {
+        if (fr instanceof Function.Response.Successful) return {
+            functionResponse: { id: fr.id, name: fr.name, response: { output: fr.text } },
+        }; else if (fr instanceof Function.Response.Failed) return {
+            functionResponse: { id: fr.id, name: fr.name, response: { error: fr.error } },
+        }; else throw new Error();
+    }
+
 }
 
 

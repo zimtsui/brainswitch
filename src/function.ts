@@ -125,20 +125,12 @@ export namespace Function {
 
     }
 
-    export class Response<in out fd extends Function.Decl.Proto> {
-        protected declare [NOMINAL]: never;
+    export abstract class Response<in out fd extends Function.Decl.Proto> {
         public id?: string;
         public name: fd['name'];
-        public text: string;
         protected constructor(fr: Omit<Function.Response<fd>, never>) {
             this.id = fr.id;
             this.name = fr.name;
-            this.text = fr.text;
-        }
-        public static of<fdu extends Function.Decl.Proto>(
-            fr: Function.Response.Options.Of<fdu>,
-        ): Function.Response.Of<fdu> {
-            return new Function.Response(fr) as Function.Response.Of<fdu>;
         }
     }
     export namespace Response {
@@ -149,18 +141,74 @@ export namespace Function {
             fdm extends Function.Decl.Map.Proto,
         > = Function.Response.Of<Function.Decl.From<fdm>>;
 
-        export type Options<fd extends Function.Decl.Proto> = Omit<Function.Response<fd>, never>;
-        export namespace Options {
+        export class Successful<in out fd extends Function.Decl.Proto> extends Function.Response<fd> {
+            protected declare [NOMINAL]: never;
+            public text: string;
+            protected constructor(fr: Function.Response.Successful.Options<fd>) {
+                super(fr);
+                this.text = fr.text;
+            }
+            public static of<fdu extends Function.Decl.Proto>(
+                fr: Function.Response.Successful.Options.Of<fdu>,
+            ): Function.Response.Successful.Of<fdu> {
+                return new Function.Response.Successful(fr) as Function.Response.Successful.Of<fdu>;
+            }
+        }
+        export namespace Successful {
             export type Of<
                 fdu extends Function.Decl.Proto,
-            > = fdu extends infer fd extends Function.Decl.Proto ? Options<fd> : never;
+            > = fdu extends infer fd extends Function.Decl.Proto ? Function.Response.Successful<fd> : never;
             export type From<
                 fdm extends Function.Decl.Map.Proto,
-            > = Function.Response.Options.Of<Function.Decl.From<fdm>>;
+            > = Function.Response.Successful.Of<Function.Decl.From<fdm>>;
+
+            export type Options<fd extends Function.Decl.Proto> = Omit<Function.Response.Successful<fd>, never>;
+            export namespace Options {
+                export type Of<
+                    fdu extends Function.Decl.Proto,
+                > = fdu extends infer fd extends Function.Decl.Proto ? Options<fd> : never;
+                export type From<
+                    fdm extends Function.Decl.Map.Proto,
+                > = Function.Response.Successful.Options.Of<Function.Decl.From<fdm>>;
+            }
         }
+
+        export class Failed<in out fd extends Function.Decl.Proto> extends Function.Response<fd> {
+            protected declare [NOMINAL]: never;
+            public error: string;
+            protected constructor(fr: Function.Response.Failed.Options<fd>) {
+                super(fr);
+                this.error = fr.error;
+            }
+            public static of<fdu extends Function.Decl.Proto>(
+                fr: Function.Response.Failed.Options.Of<fdu>,
+            ): Function.Response.Failed.Of<fdu> {
+                return new Function.Response.Failed(fr) as Function.Response.Failed.Of<fdu>;
+            }
+        }
+        export namespace Failed {
+            export type Options<fd extends Function.Decl.Proto> = Omit<Function.Response.Failed<fd>, never>;
+            export namespace Options {
+                export type Of<
+                    fdu extends Function.Decl.Proto,
+                > = fdu extends infer fd extends Function.Decl.Proto ? Options<fd> : never;
+                export type From<
+                    fdm extends Function.Decl.Map.Proto,
+                > = Function.Response.Failed.Options.Of<Function.Decl.From<fdm>>;
+            }
+            export type Of<
+                fdu extends Function.Decl.Proto,
+            > = fdu extends infer fd extends Function.Decl.Proto ? Function.Response.Failed<fd> : never;
+            export type From<
+                fdm extends Function.Decl.Map.Proto,
+            > = Function.Response.Failed.Of<Function.Decl.From<fdm>>;
+        }
+
     }
 
     export type Map<fdm extends Function.Decl.Map.Proto> = {
         [name in Function.Name.From<fdm>]: Function<Function.Decl.Extract<fdm, name>>;
     };
+
+    export class Error extends globalThis.Error {}
 }

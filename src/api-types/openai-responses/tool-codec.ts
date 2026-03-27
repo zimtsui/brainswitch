@@ -16,11 +16,19 @@ export class ToolCodec<
         fr: Function.Response.From<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
         if (fr.id) {} else throw new Error();
-        return {
-            type: 'function_call_output',
-            call_id: fr.id,
-            output: fr.text,
-        };
+        if (fr instanceof Function.Response.Successful)
+            return {
+                type: 'function_call_output',
+                call_id: fr.id,
+                output: fr.text,
+            };
+        else if (fr instanceof Function.Response.Failed)
+            return {
+                type: 'function_call_output',
+                call_id: fr.id,
+                output: fr.error,
+            };
+        else throw new Error();
     }
 
     protected encodeFunctionDeclarationEntry(
