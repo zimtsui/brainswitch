@@ -41,4 +41,4 @@ const engine = adaptor.makeCompatibleEngine<{}, vdm>({
 });
 
 const response = await engine.stateless({}, session);
-console.log(response.getOnlyVerbatimMessage().args.command);
+console.log(response.getOnlyVerbatimRequest().args.command);
