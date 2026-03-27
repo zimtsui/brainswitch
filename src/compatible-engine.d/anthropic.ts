@@ -1,13 +1,11 @@
-import { CompatibleEngine } from '../../compatible-engine.ts';
-import { RoleMessage, type Session } from '../session.ts';
-import { Function } from '../../function.ts';
-import { type InferenceContext } from '../../inference-context.ts';
-import { ToolCodec } from '../../api-types/anthropic/tool-codec.ts';
-import { Billing } from '../../api-types/anthropic/billing.ts';
-import { Validator } from '../validation.ts';
-import { MessageCodec } from '../../compatible.d/anthropic/message-codec.ts';
-import { Transport } from '../../compatible.d/anthropic/transport.ts';
-import type { Verbatim } from '../../verbatim.ts';
+import { CompatibleEngine } from '../compatible-engine.ts';
+import { Function } from '../function.ts';
+import { ToolCodec } from '../api-types/anthropic/tool-codec.ts';
+import { Billing } from '../api-types/anthropic/billing.ts';
+import { Validator } from '../compatible-engine/validation.ts';
+import { MessageCodec } from '../compatible.d/anthropic/message-codec.ts';
+import { Transport } from '../compatible.d/anthropic/transport.ts';
+import type { Verbatim } from '../verbatim.ts';
 
 
 export class AnthropicCompatibleEngine<
