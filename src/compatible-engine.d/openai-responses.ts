@@ -3,8 +3,8 @@ import { Function } from '../function.ts';
 import { ToolCodec } from '../api-types/openai-responses/tool-codec.ts';
 import { Billing } from '../api-types/openai-responses/billing.ts';
 import { Validator } from '../compatible-engine/validation.ts';
-import { MessageCodec } from '../compatible.d/openai-responses/message-codec.ts';
-import { Transport } from '../compatible.d/openai-responses/transport.ts';
+import { MessageCodec } from './openai-responses/message-codec.ts';
+import { Transport } from './openai-responses/transport.ts';
 import type { Verbatim } from '../verbatim.ts';
 
 

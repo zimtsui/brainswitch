@@ -3,8 +3,8 @@ import { Function } from '../function.ts';
 import { ToolCodec } from '../api-types/anthropic/tool-codec.ts';
 import { Billing } from '../api-types/anthropic/billing.ts';
 import { Validator } from '../compatible-engine/validation.ts';
-import { MessageCodec } from '../compatible.d/anthropic/message-codec.ts';
-import { Transport } from '../compatible.d/anthropic/transport.ts';
+import { MessageCodec } from './anthropic/message-codec.ts';
+import { Transport } from './anthropic/transport.ts';
 import type { Verbatim } from '../verbatim.ts';
 
 

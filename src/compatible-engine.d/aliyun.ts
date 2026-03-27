@@ -1,10 +1,10 @@
 import { Function } from '../function.ts';
 import { CompatibleEngine } from '../compatible-engine.ts';
 import { OpenAIChatCompletionsToolCodec } from '../api-types/openai-chatcompletions/tool-codec.ts';
-import { MessageCodec } from '../compatible.d/openai-chatcompletions/message-codec.ts';
+import { MessageCodec } from './openai-chatcompletions/message-codec.ts';
 import { OpenAIChatCompletionsBilling } from '../api-types/openai-chatcompletions/billing.ts';
 import { Validator } from '../compatible-engine/validation.ts';
-import { AliyunTransport } from '../compatible.d/aliyun/transport.ts';
+import { AliyunTransport } from './aliyun/transport.ts';
 import type { Verbatim } from '../verbatim.ts';
 
 

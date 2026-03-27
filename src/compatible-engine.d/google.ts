@@ -1,10 +1,10 @@
 import { CompatibleEngine } from '../compatible-engine.ts';
 import { Function } from '../function.ts';
-import { MessageCodec } from '../compatible.d/google/message-codec.ts';
+import { MessageCodec } from './google/message-codec.ts';
 import { ToolCodec } from '../api-types/google/tool-codec.ts';
 import { Billing } from '../api-types/google/billing.ts';
 import { Validator } from '../compatible-engine/validation.ts';
-import { Transport } from '../compatible.d/google/transport.ts';
+import { Transport } from './google/transport.ts';
 import type { Verbatim } from '../verbatim.ts';
 
 

@@ -4,7 +4,7 @@ import { Engine } from '../../engine.ts';
 import { type InferenceContext } from '../../inference-context.ts';
 import { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
 import { Billing } from '../../api-types/openai-responses/billing.ts';
-import { MessageCodec as CompatibleMessageCodec } from '../../compatible.d/openai-responses/message-codec.ts';
+import { MessageCodec as CompatibleMessageCodec } from '../../compatible-engine.d/openai-responses/message-codec.ts';
 import { MessageCodec } from './message-codec.ts';
 import { Validator } from './validation.ts';
 import { Transport } from './transport.ts';

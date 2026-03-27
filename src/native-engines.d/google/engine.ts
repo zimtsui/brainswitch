@@ -5,7 +5,7 @@ import { type InferenceContext } from '../../inference-context.ts';
 import { ToolCodec } from '../../api-types/google/tool-codec.ts';
 import { Billing } from '../../api-types/google/billing.ts';
 import { Validator } from './validation.ts';
-import { MessageCodec as CompatibleMessageCodec } from '../../compatible.d/google/message-codec.ts';
+import { MessageCodec as CompatibleMessageCodec } from '../../compatible-engine.d/google/message-codec.ts';
 import { GoogleNativeMessageCodec } from './message-codec.ts';
 import { GoogleNativeTransport } from './transport.ts';
 import type { Verbatim } from '../../verbatim.ts';

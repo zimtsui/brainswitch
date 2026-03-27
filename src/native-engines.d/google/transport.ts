@@ -12,7 +12,7 @@ import type { ToolCodec } from '../../api-types/google/tool-codec.ts';
 import type { Billing } from '../../api-types/google/billing.ts';
 import type { Validator } from './validation.ts';
 import type { Verbatim } from '../../verbatim.ts';
-import * as ChoiceCodec from '../../compatible.d/google/choice-codec.ts';
+import * as ChoiceCodec from '../../compatible-engine.d/google/choice-codec.ts';
 import type { Structuring } from '../../compatible-engine/structuring.ts';
 import type { Engine } from '../../engine.ts';
 
