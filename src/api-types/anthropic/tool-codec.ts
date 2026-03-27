@@ -21,9 +21,10 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
     ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.name];
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
+        if (typeof apifc.input === 'string') {} else throw new Error();
         const args = (() => {
             try {
-                return JSON.parse(apifc.input as string);
+                return JSON.parse(apifc.input);
             } catch {
                 throw new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
             }

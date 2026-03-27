@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import type { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
 import type { Verbatim } from '../../verbatim.ts';
 import * as VerbatimCodec from '../../verbatim/codec.ts';
+import { ResponseInvalid } from '../../engine.ts';
 
 const NOMINAL = Symbol();
 
@@ -23,7 +24,8 @@ export class MessageCodec<
         const parts = output.flatMap(
             (item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
                 if (item.type === 'message') {
-                    if (item.content.every(part => part.type === 'output_text')) {} else throw new Error();
+                    if (item.content.every(part => part.type === 'output_text')) {} else
+                        throw new ResponseInvalid('Refusal', { cause: output });
                     const text = item.content.map(part => part.text).join('');
                     const vrs = VerbatimCodec.Request.decode(text, this.ctx.vdm);
                     return [new RoleMessage.Part.Text(text, vrs)];
