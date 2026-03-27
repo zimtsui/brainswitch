@@ -54,13 +54,13 @@ export abstract class StreamTransport<
         };
     }
 
-    public convertToFunctionCallFromDelta(
+    public convertFromDeltaToolCall(
         apifc: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall,
-    ): Function.Call.From<fdm> {
+    ) {
         if (apifc.id) {} else throw new Error();
         if (apifc.function?.name) {} else throw new Error();
         if (apifc.function?.arguments) {} else throw new Error();
-        return this.ctx.toolCodec.decodeFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
+        return apifc as OpenAI.ChatCompletionMessageFunctionToolCall;
     }
 
     public convertCompletionStockToCompletion(
@@ -81,19 +81,7 @@ export abstract class StreamTransport<
                     role: 'assistant',
                     content: stockChoice.delta.content ?? null,
                     tool_calls: stockChoice.delta.tool_calls?.map(
-                        apifc => {
-                            if (apifc.id) {} else throw new Error();
-                            if (apifc.function?.name) {} else throw new Error();
-                            if (apifc.function?.arguments) {} else throw new Error();
-                            return {
-                                id: apifc.id,
-                                function: {
-                                    name: apifc.function.name,
-                                    arguments: apifc.function.arguments,
-                                },
-                                type: 'function',
-                            };
-                        },
+                        apifc => this.convertFromDeltaToolCall(apifc),
                     ),
                     refusal: stockChoice.delta.refusal ?? null,
                 },
