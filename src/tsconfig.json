@@ -15,7 +15,7 @@
         "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true,
         "resolveJsonModule": true,
-        "verbatimModuleSyntax": true,
+        // "verbatimModuleSyntax": true,
         "checkJs": true,
         "composite": true,
         "outDir": "../build",

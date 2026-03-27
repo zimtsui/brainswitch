@@ -1,5 +1,5 @@
 import { Function } from '../function.ts';
-import { type GenericSession } from '../engine/session.ts';
+import { Engine } from '../engine.ts';
 import { Verbatim } from '../verbatim.ts';
 
 const NOMINAL = Symbol();
@@ -8,7 +8,7 @@ const NOMINAL = Symbol();
 export interface Session<
     in out fdu extends Function.Decl.Proto,
     in out vdu extends Verbatim.Decl.Proto,
-> extends GenericSession<
+> extends Engine.Session<
     RoleMessage.User<fdu>,
     RoleMessage.Ai<fdu, vdu>,
     RoleMessage.Developer
@@ -25,7 +25,7 @@ export namespace Session {
     export type ChatMessage<
         fdu extends Function.Decl.Proto,
         vdu extends Verbatim.Decl.Proto,
-    > = GenericSession.ChatMessage<
+    > = Engine.Session.ChatMessage<
         RoleMessage.User<fdu>,
         RoleMessage.Ai<fdu, vdu>
     >;

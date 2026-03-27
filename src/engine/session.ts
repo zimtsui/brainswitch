@@ -1,10 +1,10 @@
 
 
-export interface GenericSession<userm, aim, devm> {
-    chatMessages: GenericSession.ChatMessage<userm, aim>[];
+export interface Session<userm, aim, devm> {
+    chatMessages: Session.ChatMessage<userm, aim>[];
     developerMessage?: devm;
 }
 
-export namespace GenericSession {
+export namespace Session {
     export type ChatMessage<userm, aim> = userm | aim;
 }

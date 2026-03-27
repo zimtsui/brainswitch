@@ -5,7 +5,7 @@ import { ProxyAgent } from 'undici';
 import { env } from 'node:process';
 import { type InferenceContext } from './inference-context.ts';
 import { logger } from './telemetry.ts';
-import { type GenericSession } from './engine/session.ts';
+import * as SessionModule from './engine/session.ts';
 import type { Verbatim } from './verbatim.ts';
 import * as VerbatimCodec from './verbatim/codec.ts';
 import type { Validator } from './engine/validation.ts';
@@ -33,7 +33,7 @@ export abstract class Engine<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
     userm, aim, devm,
-    session extends GenericSession<userm, aim, devm>,
+    session extends Engine.Session<userm, aim, devm>,
 > {
     protected providerSpec: ProviderSpec;
     protected inferenceParams: InferenceParams;
@@ -156,6 +156,9 @@ export namespace Engine {
         verbatimDeclarationMap: vdm;
         parallelToolCall?: boolean;
     }
+
+
+    export import Session = SessionModule.Session;
 }
 
 export class ResponseInvalid extends Error {}
