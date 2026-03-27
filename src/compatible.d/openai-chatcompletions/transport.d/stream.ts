@@ -36,7 +36,7 @@ export abstract class StreamTransport<
     protected makeParams(
         session: Session.From<fdm, vdm>,
     ): OpenAI.ChatCompletionCreateParamsStreaming {
-        const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
+        const tools = this.ctx.toolCodec.encodeFunctionDeclarationMap(this.ctx.fdm);
         return {
             model: this.ctx.inferenceParams.model,
             messages: [
@@ -61,7 +61,7 @@ export abstract class StreamTransport<
         if (apifc.id) {} else throw new Error();
         if (apifc.function?.name) {} else throw new Error();
         if (apifc.function?.arguments) {} else throw new Error();
-        return this.ctx.toolCodec.convertToFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
+        return this.ctx.toolCodec.decodeFunctionCall(apifc as OpenAI.ChatCompletionMessageFunctionToolCall);
     }
 
     public convertCompletionStockToCompletion(

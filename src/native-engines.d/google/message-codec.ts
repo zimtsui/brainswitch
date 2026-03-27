@@ -55,7 +55,7 @@ export class GoogleNativeMessageCodec<
                 parts.push(new RoleMessage.Part.Text(part.text, vrs));
             }
             if (part.functionCall) {
-                parts.push(this.ctx.toolCodec.convertToFunctionCall(part.functionCall));
+                parts.push(this.ctx.toolCodec.decodeFunctionCall(part.functionCall));
             }
             if (part.executableCode) {
                 if (this.ctx.codeExecution) {} else throw new ResponseInvalid('Unexpected code execution', { cause: content });

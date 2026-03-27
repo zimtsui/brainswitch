@@ -32,12 +32,13 @@ export class Transport<
         session: Session<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>> {
+        await this.ctx.throttle.requests(wfctx);
+
         const systemInstruction = session.developerMessage && this.ctx.messageCodec.encodeDeveloperMessage(session.developerMessage);
         const contents = this.ctx.messageCodec.encodeChatMessages(session.chatMessages);
 
-        await this.ctx.throttle.requests(wfctx);
 
-        const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
+        const tools = this.ctx.toolCodec.encodeFunctionDeclarationMap(this.ctx.fdm);
         const reqbody: RestfulRequest = {
             contents,
             tools: tools.length ? [{

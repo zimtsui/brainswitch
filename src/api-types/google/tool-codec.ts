@@ -10,7 +10,7 @@ const ajv = new Ajv();
 export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
     public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
-    public convertFromFunctionCall(
+    public encodeFunctionCall(
         fc: Function.Call.From<fdm>,
     ): Google.FunctionCall {
         return {
@@ -20,12 +20,12 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
         };
     }
 
-    public convertFromFunctionDeclarationMap(fdm: fdm): Google.FunctionDeclaration[] {
+    public encodeFunctionDeclarationMap(fdm: fdm): Google.FunctionDeclaration[] {
         const fdentries = Object.entries(fdm) as Function.Decl.Entry.From<fdm>[];
-        return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
+        return fdentries.map(fdentry => this.encodeFunctionDeclarationEntry(fdentry));
     }
 
-    protected convertFromFunctionDeclarationEntry(
+    protected encodeFunctionDeclarationEntry(
         fdentry: Function.Decl.Entry.From<fdm>,
     ): Google.FunctionDeclaration {
         const json = JSON.stringify(fdentry[1].parameters);
@@ -48,7 +48,7 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
         };
     }
 
-    public convertToFunctionCall(
+    public decodeFunctionCall(
         googlefc: Google.FunctionCall,
     ): Function.Call.From<fdm> {
         if (googlefc.name) {} else throw new Error();

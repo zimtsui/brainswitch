@@ -28,7 +28,7 @@ export class MessageCodec<
         if (message.tool_calls)
             parts.push(...message.tool_calls.map(apifc => {
                 if (apifc.type === 'function') {} else throw new Error();
-                return this.ctx.toolCodec.convertToFunctionCall(apifc);
+                return this.ctx.toolCodec.decodeFunctionCall(apifc);
             }));
         if (parts.length) {} else throw new ResponseInvalid('Content or tool calls not found in Response', { cause: message });
         return new RoleMessage.Ai(parts);
@@ -49,7 +49,7 @@ export class MessageCodec<
         if (textParts.length && !frs.length)
             return [{ role: 'user', content: textParts.map(part => ({ type: 'text', text: part.text })) }];
         else if (!textParts.length && frs.length)
-            return frs.map(fr => this.ctx.toolCodec.convertFromFunctionResponse(fr));
+            return frs.map(fr => this.ctx.toolCodec.encodeFunctionResponse(fr));
         else throw new Error();
     }
 
@@ -62,7 +62,7 @@ export class MessageCodec<
         return {
             role: 'assistant',
             content: textParts.length ? textParts.map(part => part.text).join('') : undefined,
-            tool_calls: fcParts.length ? fcParts.map(fc => this.ctx.toolCodec.convertFromFunctionCall(fc)) : undefined,
+            tool_calls: fcParts.length ? fcParts.map(fc => this.ctx.toolCodec.encodeFunctionCall(fc)) : undefined,
         };
     }
 

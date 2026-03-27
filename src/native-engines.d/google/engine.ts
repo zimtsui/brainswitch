@@ -10,6 +10,7 @@ import { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-cod
 import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import { Structuring } from '#@/compatible/structuring.ts';
+import { Validator as CompatibleValidator } from '#@/compatible/validation.ts';
 
 
 export class GoogleNativeEngine<

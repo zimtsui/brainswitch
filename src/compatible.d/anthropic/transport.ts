@@ -32,7 +32,7 @@ export class Transport<
     protected makeParams(
         session: Session.From<fdm, vdm>,
     ): Anthropic.MessageCreateParamsStreaming {
-        const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
+        const tools = this.ctx.toolCodec.encodeFunctionDeclarationMap(this.ctx.fdm);
         return {
             model: this.ctx.inferenceSpec.model,
             stream: true,

@@ -24,7 +24,7 @@ export class MessageCodec<
                     text: part.text,
                 } satisfies Anthropic.TextBlockParam;
             else if (part instanceof Function.Response)
-                return this.ctx.toolCodec.convertFromFunctionResponse(part);
+                return this.ctx.toolCodec.encodeFunctionResponse(part);
             else throw new Error();
         });
     }
@@ -42,7 +42,7 @@ export class MessageCodec<
                         text: part.text,
                     } satisfies Anthropic.TextBlockParam;
                 else if (part instanceof Function.Call)
-                    return this.ctx.toolCodec.convertFromFunctionCall(part);
+                    return this.ctx.toolCodec.encodeFunctionCall(part);
                 else throw new Error();
             });
         }
@@ -74,7 +74,7 @@ export class MessageCodec<
             if (item.type === 'text') {
                 const vrs = VerbatimCodec.Request.decode(item.text, this.ctx.vdm);
                 return [new RoleMessage.Part.Text(item.text, vrs)];
-            } else if (item.type === 'tool_use') return [this.ctx.toolCodec.convertToFunctionCall(item)];
+            } else if (item.type === 'tool_use') return [this.ctx.toolCodec.decodeFunctionCall(item)];
             else if (item.type === 'thinking') return [];
             else throw new Error();
         });

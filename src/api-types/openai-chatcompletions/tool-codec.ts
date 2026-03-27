@@ -10,7 +10,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map
     public constructor(protected ctx: OpenAIChatCompletionsToolCodec.Context<fdm>) {}
 
 
-    public convertFromFunctionCall(
+    public encodeFunctionCall(
         fc: Function.Call.From<fdm>,
     ): OpenAI.ChatCompletionMessageToolCall {
         if (fc.id) {} else throw new Error();
@@ -24,7 +24,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map
         };
     }
 
-    public convertToFunctionCall(
+    public decodeFunctionCall(
         apifc: OpenAI.ChatCompletionMessageFunctionToolCall,
     ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.function.name];
@@ -46,7 +46,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map
     }
 
 
-    public convertFromFunctionResponse(
+    public encodeFunctionResponse(
         fr: Function.Response.From<fdm>,
     ): OpenAI.ChatCompletionToolMessageParam {
         if (fr.id) {} else throw new Error();
@@ -57,7 +57,7 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map
         };
     }
 
-    protected convertFromFunctionDeclarationEntry(
+    protected encodeFunctionDeclarationEntry(
         fdentry: Function.Decl.Entry.From<fdm>,
     ): OpenAI.ChatCompletionTool {
         return {
@@ -71,9 +71,9 @@ export class OpenAIChatCompletionsToolCodec<in out fdm extends Function.Decl.Map
         };
     }
 
-    public convertFromFunctionDeclarationMap(fdm: fdm): OpenAI.ChatCompletionTool[] {
+    public encodeFunctionDeclarationMap(fdm: fdm): OpenAI.ChatCompletionTool[] {
         const fdentries = Object.entries(fdm) as Function.Decl.Entry.From<fdm>[];
-        return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
+        return fdentries.map(fdentry => this.encodeFunctionDeclarationEntry(fdentry));
     }
 
 

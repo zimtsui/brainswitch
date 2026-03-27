@@ -38,7 +38,7 @@ export class GoogleNativeTransport<
 
         await this.ctx.throttle.requests(wfctx);
 
-        const functionDeclarations = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
+        const functionDeclarations = this.ctx.toolCodec.encodeFunctionDeclarationMap(this.ctx.fdm);
         const tools: Google.Tool[] = [];
         if (functionDeclarations.length) tools.push({ functionDeclarations });
         if (this.ctx.urlContext) tools.push({ urlContext: {} });

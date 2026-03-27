@@ -10,13 +10,13 @@ const ajv = new Ajv();
 export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
     public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
-    public convertFromFunctionCall(
+    public encodeFunctionCall(
         fc: Function.Call.From<fdm>,
     ): Anthropic.ToolUseBlock {
         throw new Error('Anthropic compatible engine requires native function calls.');
     }
 
-    public convertToFunctionCall(
+    public decodeFunctionCall(
         apifc: Anthropic.ToolUseBlock,
     ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.name];
@@ -37,7 +37,7 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
         } as Function.Call.Options.From<fdm>);
     }
 
-    public convertFromFunctionResponse(
+    public encodeFunctionResponse(
         fr: Function.Response.From<fdm>,
     ): Anthropic.ToolResultBlockParam {
         if (fr.id) {} else throw new Error();
@@ -48,7 +48,7 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
         };
     }
 
-    protected convertFromFunctionDeclarationEntry(
+    protected encodeFunctionDeclarationEntry(
         fdentry: Function.Decl.Entry.From<fdm>,
     ): Anthropic.Tool {
         return {
@@ -58,12 +58,12 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
         };
     }
 
-    public convertFromFunctionDeclarationMap(
+    public encodeFunctionDeclarationMap(
         fdm: fdm,
     ): Anthropic.Tool[] {
         const fdentries = Object.entries(fdm) as Function.Decl.Entry.From<fdm>[];
 
-        return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
+        return fdentries.map(fdentry => this.encodeFunctionDeclarationEntry(fdentry));
     }
 
 }

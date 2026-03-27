@@ -33,7 +33,7 @@ export abstract class MonolithTransport<
     protected makeParams(
         session: Session.From<fdm, vdm>,
     ): OpenAI.ChatCompletionCreateParamsNonStreaming {
-        const tools = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
+        const tools = this.ctx.toolCodec.encodeFunctionDeclarationMap(this.ctx.fdm);
         return {
             model: this.ctx.model,
             stream: false,

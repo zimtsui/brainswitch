@@ -2,31 +2,37 @@ import { Structuring } from '#@/compatible/structuring.ts';
 import { Function } from '#@/function.ts';
 import { Verbatim } from '#@/verbatim.ts';
 import { RoleMessage } from '#@/native-engines.d/google/session.ts';
-import { Validator as ChoiceValidator } from '#@/compatible/validation/choice.ts';
-import { Validator as PartsValidator } from '#@/native-engines.d/google/validation/parts.ts';
+import { Validator as CompatibleValidator } from '#@/compatible/validation.ts';
+import { ResponseInvalid } from '#@/engine.ts';
+
 
 
 export class Validator<
     in out fdu extends Function.Decl.Proto,
     in out vdu extends Verbatim.Decl.Proto,
 > {
-    protected choiceValidator: ChoiceValidator<fdu, vdu>;
-    protected partsValidator: PartsValidator<fdu, vdu>;
-
+    protected compatibleValidator: CompatibleValidator<fdu, vdu>;
     public constructor(protected ctx: Validator.Context<fdu, vdu>) {
-        this.choiceValidator = new ChoiceValidator({
-            choice: ctx.choice,
-        });
-        this.partsValidator = new PartsValidator();
+        this.compatibleValidator = new CompatibleValidator({ choice: ctx.choice });
+    }
+
+    public validateParts(
+        message: RoleMessage.Ai<fdu, vdu>,
+    ): void {
+        const parts = message.getParts();
+        if (parts.length) {} else throw new ResponseInvalid('Empty message.');
+        if (!parts.some(part => part instanceof Function.Call))
+            if (parts.at(-1) instanceof RoleMessage.Part.Text) {} else
+                throw new ResponseInvalid('The last message part must be text.');
     }
 
     public validate(
         message: RoleMessage.Ai<fdu, vdu>,
     ): void {
-        this.partsValidator.validate(message);
+        this.validateParts(message);
         const fcs = message.getFunctionCalls();
         const vrs = message.getVerbatimRequests();
-        this.choiceValidator.validate(fcs, vrs);
+        this.compatibleValidator.validateChoice(fcs, vrs);
     }
 }
 

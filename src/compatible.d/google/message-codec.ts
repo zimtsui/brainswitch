@@ -78,7 +78,7 @@ export class MessageCodec<
                 const vrs = VerbatimCodec.Request.decode(part.text, this.ctx.vdm);
                 parts.push(new RoleMessage.Part.Text(part.text, vrs));
             }
-            if (part.functionCall) parts.push(this.ctx.toolCodec.convertToFunctionCall(part.functionCall));
+            if (part.functionCall) parts.push(this.ctx.toolCodec.decodeFunctionCall(part.functionCall));
             return parts;
         }), content);
     }
