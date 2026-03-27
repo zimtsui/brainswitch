@@ -1,15 +1,15 @@
-import { Function } from '../../function.ts';
-import { RoleMessage, type Session } from './session.ts';
-import { Engine } from '../../engine.ts';
-import { type InferenceContext } from '../../inference-context.ts';
-import { ToolCodec } from '../../api-types/google/tool-codec.ts';
-import { Billing } from '../../api-types/google/billing.ts';
-import { Validator } from './validation.ts';
-import { MessageCodec as CompatibleMessageCodec } from '../../compatible-engine.d/google/message-codec.ts';
-import { GoogleNativeMessageCodec } from './message-codec.ts';
-import { GoogleNativeTransport } from './transport.ts';
-import type { Verbatim } from '../../verbatim.ts';
-import { Structuring } from '../../compatible-engine/structuring.ts';
+import { Function } from '../function.ts';
+import * as SessionModule from './google/session.ts';
+import { Engine } from '../engine.ts';
+import { type InferenceContext } from '../inference-context.ts';
+import { ToolCodec } from '../api-types/google/tool-codec.ts';
+import { Billing } from '../api-types/google/billing.ts';
+import * as ValidationModule from './google/validation.ts';
+import { MessageCodec as CompatibleMessageCodec } from '../compatible-engine.d/google/message-codec.ts';
+import { GoogleNativeMessageCodec } from './google/message-codec.ts';
+import { GoogleNativeTransport } from './google/transport.ts';
+import type { Verbatim } from '../verbatim.ts';
+import { Structuring } from '../compatible-engine/structuring.ts';
 
 
 export class GoogleNativeEngine<
@@ -18,10 +18,10 @@ export class GoogleNativeEngine<
 > extends
     Engine<
         fdm, vdm,
-        RoleMessage.User.From<fdm>,
-        RoleMessage.Ai.From<fdm, vdm>,
-        RoleMessage.Developer,
-        Session.From<fdm, vdm>
+        GoogleNativeEngine.RoleMessage.User.From<fdm>,
+        GoogleNativeEngine.RoleMessage.Ai.From<fdm, vdm>,
+        GoogleNativeEngine.RoleMessage.Developer,
+        GoogleNativeEngine.Session.From<fdm, vdm>
     >
 {
     protected choice: Structuring.Choice.From<fdm, vdm>;
@@ -33,7 +33,7 @@ export class GoogleNativeEngine<
     protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
     protected messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
     protected billing: Billing;
-    protected override validator: Validator.From<fdm, vdm>;
+    protected override validator: GoogleNativeEngine.Validator.From<fdm, vdm>;
     protected override transport: GoogleNativeTransport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
@@ -60,7 +60,7 @@ export class GoogleNativeEngine<
             vdm: this.vdm,
         });
         this.billing = new Billing({ pricing: this.pricing });
-        this.validator = new Validator({ choice: this.choice });
+        this.validator = new GoogleNativeEngine.Validator({ choice: this.choice });
         this.transport = new GoogleNativeTransport({
             inferenceParams: this.inferenceParams,
             providerSpec: this.providerSpec,
@@ -79,16 +79,16 @@ export class GoogleNativeEngine<
 
     protected override infer(
         wfctx: InferenceContext,
-        session: Session.From<fdm, vdm>,
+        session: GoogleNativeEngine.Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
+    ): Promise<GoogleNativeEngine.RoleMessage.Ai.From<fdm, vdm>> {
         return this.transport.fetch(wfctx, session, signal);
     }
 
     public override appendUserMessage(
-        session: Session.From<fdm, vdm>,
-        message: RoleMessage.User.From<fdm>,
-    ): Session.From<fdm, vdm> {
+        session: GoogleNativeEngine.Session.From<fdm, vdm>,
+        message: GoogleNativeEngine.RoleMessage.User.From<fdm>,
+    ): GoogleNativeEngine.Session.From<fdm, vdm> {
         return {
             developerMessage: session.developerMessage,
             chatMessages: [...session.chatMessages, message],
@@ -96,9 +96,9 @@ export class GoogleNativeEngine<
     }
 
     public override pushUserMessage(
-        session: Session.From<fdm, vdm>,
-        message: RoleMessage.User.From<fdm>,
-    ): Session.From<fdm, vdm> {
+        session: GoogleNativeEngine.Session.From<fdm, vdm>,
+        message: GoogleNativeEngine.RoleMessage.User.From<fdm>,
+    ): GoogleNativeEngine.Session.From<fdm, vdm> {
         session.chatMessages.push(message);
         return session;
     }
@@ -114,4 +114,8 @@ export namespace GoogleNativeEngine {
         urlContext?: boolean;
         googleSearch?: boolean;
     }
+
+    export import Session = SessionModule.Session;
+    export import RoleMessage = SessionModule.RoleMessage;
+    export import Validator = ValidationModule.Validator;
 }

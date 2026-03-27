@@ -1,8 +1,9 @@
-import { RoleMessage, type Session } from './compatible-engine/session.ts';
 import { Function } from './function.ts';
 import { Engine } from './engine.ts';
 import type { Verbatim } from './verbatim.ts';
-import { Structuring } from './compatible-engine/structuring.ts';
+import * as StructuringModule from './compatible-engine/structuring.ts';
+import * as ValidationModule from './compatible-engine/validation.ts';
+import * as SessionModule from './compatible-engine/session.ts';
 
 
 
@@ -12,23 +13,23 @@ export abstract class CompatibleEngine<
 > extends
     Engine<
         fdm, vdm,
-        RoleMessage.User.From<fdm>,
-        RoleMessage.Ai.From<fdm, vdm>,
-        RoleMessage.Developer,
-        Session.From<fdm, vdm>
+        CompatibleEngine.RoleMessage.User.From<fdm>,
+        CompatibleEngine.RoleMessage.Ai.From<fdm, vdm>,
+        CompatibleEngine.RoleMessage.Developer,
+        CompatibleEngine.Session.From<fdm, vdm>
     >
 {
-    protected choice: Structuring.Choice.From<fdm, vdm>;
+    protected choice: CompatibleEngine.Structuring.Choice.From<fdm, vdm>;
 
     public constructor(options: CompatibleEngine.Options<fdm, vdm>) {
         super(options);
-        this.choice = options.structuringChoice ?? Structuring.Choice.AUTO;
+        this.choice = options.structuringChoice ?? CompatibleEngine.Structuring.Choice.AUTO;
     }
 
     public override appendUserMessage(
-        session: Session.From<fdm, vdm>,
-        message: RoleMessage.User.From<fdm>,
-    ): Session.From<fdm, vdm> {
+        session: CompatibleEngine.Session.From<fdm, vdm>,
+        message: CompatibleEngine.RoleMessage.User.From<fdm>,
+    ): CompatibleEngine.Session.From<fdm, vdm> {
         return {
             developerMessage: session.developerMessage,
             chatMessages: [...session.chatMessages, message],
@@ -36,9 +37,9 @@ export abstract class CompatibleEngine<
     }
 
     public override pushUserMessage(
-        session: Session.From<fdm, vdm>,
-        message: RoleMessage.User.From<fdm>,
-    ): Session.From<fdm, vdm> {
+        session: CompatibleEngine.Session.From<fdm, vdm>,
+        message: CompatibleEngine.RoleMessage.User.From<fdm>,
+    ): CompatibleEngine.Session.From<fdm, vdm> {
         session.chatMessages.push(message);
         return session;
     }
@@ -49,6 +50,11 @@ export namespace CompatibleEngine {
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,
     > extends Engine.Options<fdm, vdm> {
-        structuringChoice?: Structuring.Choice.From<fdm, vdm>;
+        structuringChoice?: CompatibleEngine.Structuring.Choice.From<fdm, vdm>;
     }
+
+    export import Session = SessionModule.Session;
+    export import RoleMessage = SessionModule.RoleMessage;
+    export import Validator = ValidationModule.Validator;
+    export import Structuring = StructuringModule.Structuring;
 }

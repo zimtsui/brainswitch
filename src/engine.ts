@@ -95,7 +95,7 @@ export abstract class Engine<
      * @throws {@link UserAbortion} 用户中止
      * @throws {@link InferenceTimeout} 推理超时
      * @throws {@link ResponseInvalid} 模型抽风
-     * @throws {TypeError} 网络故障
+     * @throws {@link NetworkError} 网络故障
      */
     public async stateless(
         wfctx: InferenceContext,
@@ -113,7 +113,7 @@ export abstract class Engine<
                 if (wfctx.signal?.aborted) throw new UserAbortion();                                // 用户中止
                 else if (signalTimeout?.aborted) e = new InferenceTimeout(undefined, { cause: e }); // 推理超时
                 else if (e instanceof ResponseInvalid) {}			                                // 模型抽风
-                else if (e instanceof TypeError) {}         		                                // 网络故障
+                else if (e instanceof NetworkError) {}         		                                // 网络故障
                 else throw e;
                 if (retry < 3) logger.message.warn(e); else throw e;
             }
@@ -166,6 +166,7 @@ export namespace Engine {
 export class ResponseInvalid extends Error {}
 export class UserAbortion extends Error {}
 export class InferenceTimeout extends Error {}
+export class NetworkError extends Error {}
 
 
 declare global {

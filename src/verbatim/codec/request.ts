@@ -13,9 +13,14 @@ export function decode<
     for (const [channelName, args] of requests) {
         const vdbody = vdm[channelName];
         if (vdbody) {} else throw new Invalid('Channel not found: ' + channelName);
-        for (const paramName of Object.keys(vdbody.parameters))
-            if (typeof args[paramName] === 'string') {} else
+        const paramNames = Object.keys(vdbody.parameters);
+        const argNames = Object.keys(args);
+        for (const paramName of paramNames)
+            if (argNames.includes(paramName)) {} else
                 throw new Invalid(`Argument ${paramName} of channel ${channelName} is missing.`);
+        for (const argName of argNames)
+            if (paramNames.includes(argName)) {} else
+                throw new Invalid(`Argument ${argName} is not defined in channel ${channelName}.`);
         const options = { name: channelName, args } as Verbatim.Request.Options.Of<vdu>;
         parts.push(Verbatim.Request.create(options));
     }
@@ -40,9 +45,9 @@ const ARG_CDATA = new RegExp(
 function extractArgs(str: string): Record<string, string> {
     const results: Record<string, string> = {};
     for (const match of str.matchAll(new RegExp(ARG_CDATA, 'g'))) {
-        if (results[match.groups!.arg_cdata_name!] === undefined) {} else
-            throw new Invalid('Duplicate argument: ' + match.groups!.arg_cdata_name!);
-        results[match.groups!.arg_cdata_name!] = match.groups!.arg_cdata_body!;
+        if (results[match.groups!.attr_val_body!] === undefined) {} else
+            throw new Invalid('Duplicate argument: ' + match.groups!.attr_val_body!);
+        results[match.groups!.attr_val_body!] = match.groups!.arg_cdata_body!;
     }
     return results;
 }
