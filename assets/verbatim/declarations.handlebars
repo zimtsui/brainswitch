@@ -1,10 +1,10 @@
 {{#each declarations}}
-<verbatim:declaration name="{{{this.name}}}">
-    <verbatim:description>{{{this.description}}}</verbatim:description>
+<verbatim:declaration name="{{this.name}}">
+    <verbatim:description>{{this.description}}</verbatim:description>
     {{#each this.parameters}}
-    <verbatim:parameter name="{{{this.name}}}">
-        <verbatim:description>{{{this.description}}}</verbatim:description>
-        <verbatim:mime-type>{{{this.mimeType}}}</verbatim:mime-type>
+    <verbatim:parameter name="{{this.name}}">
+        <verbatim:description>{{this.description}}</verbatim:description>
+        <verbatim:mime-type>{{this.mimeType}}</verbatim:mime-type>
     </verbatim:parameter>
     {{/each}}
 </verbatim:declaration>
