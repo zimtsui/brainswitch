@@ -1,5 +1,5 @@
 import test from 'ava';
-import * as VerbatimCodec from '../../build/verbatim/codec.js';
+import * as VerbatimCodec from '../build/verbatim/codec.js';
 
 
 const verbatimDeclarationMap = {

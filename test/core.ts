@@ -1,11 +1,11 @@
 import test from 'ava';
 import { Type } from '@sinclair/typebox';
-import { Adaptor } from '../../build/adaptor.js';
-import { Throttle } from '../../build/throttle.js';
-import { OpenAIResponsesCompatibleEngine } from '../../build/compatible-engine.d/openai-responses.js';
-import { GoogleCompatibleEngine } from '../../build/compatible-engine.d/google.js';
-import { OpenAIResponsesNativeEngine } from '../../build/native-engines.d/openai-responses.js';
-import { GoogleNativeEngine } from '../../build/native-engines.d/google.js';
+import { Adaptor } from '../build/adaptor.js';
+import { Throttle } from '../build/throttle.js';
+import { OpenAIResponsesCompatibleEngine } from '../build/compatible-engine.d/openai-responses.js';
+import { GoogleCompatibleEngine } from '../build/compatible-engine.d/google.js';
+import { OpenAIResponsesNativeEngine } from '../build/native-engines.d/openai-responses.js';
+import { GoogleNativeEngine } from '../build/native-engines.d/google.js';
 
 
 const functionDeclarationMap = {

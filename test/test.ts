@@ -1,2 +1,2 @@
-import './core.js';
-import './verbatim-codec.js';
+import './core.ts';
+import './verbatim-codec.ts';
