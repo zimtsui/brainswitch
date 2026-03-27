@@ -8,8 +8,8 @@ import { logger } from './telemetry.ts';
 import * as SessionModule from './engine/session.ts';
 import type { Verbatim } from './verbatim.ts';
 import * as VerbatimCodec from './verbatim/codec.ts';
-import type { Validator } from './engine/validation.ts';
-import type { Transport } from './engine/transport.ts';
+import * as ValidationModule from './engine/validation.ts';
+import * as TransportModule from './engine/transport.ts';
 
 
 export interface Pricing {
@@ -43,8 +43,8 @@ export abstract class Engine<
     public vdm: vdm;
     protected throttle: Throttle;
     protected abstract parallelToolCall: boolean;
-    protected abstract validator: Validator.From<fdm, vdm, aim>;
-    protected abstract transport: Transport<userm, aim, devm, session>;
+    protected abstract validator: Engine.Validator.From<fdm, vdm, aim>;
+    protected abstract transport: Engine.Transport<userm, aim, devm, session>;
 
     public constructor(options: Engine.Options<fdm, vdm>) {
         const proxyUrl = options.proxy || env.https_proxy || env.HTTPS_PROXY;
@@ -159,6 +159,8 @@ export namespace Engine {
 
 
     export import Session = SessionModule.Session;
+    export import Validator = ValidationModule.Validator;
+    export import Transport = TransportModule.Transport;
 }
 
 export class ResponseInvalid extends Error {}

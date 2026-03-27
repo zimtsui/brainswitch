@@ -14,15 +14,14 @@ import type { Verbatim } from '../../verbatim.ts';
 import type { Validator } from '../../compatible/validation.ts';
 import type { Structuring } from '../../compatible/structuring.ts';
 import * as GoogleChoiceCodec from './choice-codec.ts';
-import * as VerbatimCodec from '../../verbatim/codec.ts';
-import type { Transport as GenericTransport } from '../../engine/transport.ts';
+import type { Engine } from '../../engine.ts';
 
 
 
 export class Transport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
-> implements GenericTransport<
+> implements Engine.Transport<
     RoleMessage.User.From<fdm>,
     RoleMessage.Ai.From<fdm, vdm>,
     RoleMessage.Developer,
@@ -35,9 +34,9 @@ export class Transport<
 
     public async fetch(
         wfctx: InferenceContext,
-        session: Session<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>,
+        session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
-    ): Promise<RoleMessage.Ai<Function.Decl.From<fdm>, Verbatim.Decl.From<vdm>>> {
+    ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
         await this.ctx.throttle.requests(wfctx);
 
         // Prepare request body

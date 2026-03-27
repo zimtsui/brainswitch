@@ -4,14 +4,14 @@ import { Verbatim } from '../../verbatim.ts';
 import { RoleMessage } from './session.ts';
 import { Validator as CompatibleValidator } from '../../compatible/validation.ts';
 import { ResponseInvalid } from '../../engine.ts';
-import type { Validator as GenericValidator } from '../../engine/validation.ts';
+import type { Engine } from '../../engine.ts';
 
 
 
 export class Validator<
     in out fdu extends Function.Decl.Proto,
     in out vdu extends Verbatim.Decl.Proto,
-> implements GenericValidator<fdu, vdu, RoleMessage.Ai<fdu, vdu>> {
+> implements Engine.Validator<fdu, vdu, RoleMessage.Ai<fdu, vdu>> {
     protected compatibleValidator: CompatibleValidator<fdu, vdu>;
     public constructor(protected ctx: Validator.Context<fdu, vdu>) {
         this.compatibleValidator = new CompatibleValidator({ choice: ctx.choice });

@@ -4,14 +4,14 @@ import { Function } from '../../function.ts';
 import OpenAI from 'openai';
 import type { InferenceContext } from '../../inference-context.ts';
 import type { Verbatim } from '../../verbatim.ts';
-import type { Transport as GenericTransport } from '../../engine/transport.ts';
+import type { Engine } from '../../engine.ts';
 
 
 
 export abstract class Transport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
-> implements GenericTransport<
+> implements Engine.Transport<
     RoleMessage.User.From<fdm>,
     RoleMessage.Ai.From<fdm, vdm>,
     RoleMessage.Developer,

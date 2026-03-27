@@ -12,14 +12,13 @@ import type { Verbatim } from '../../verbatim.ts';
 import { Validator } from '../../compatible/validation.ts';
 import * as ChoiceCodec from './choice-codec.ts';
 import type { Structuring } from '../../compatible/structuring.ts';
-import * as VerbatimCodec from '../../verbatim/codec.ts';
-import type { Transport as GenericTransport } from '../../engine/transport.ts';
+import type { Engine } from '../../engine.ts';
 
 
 export class Transport<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
-> implements GenericTransport<
+> implements Engine.Transport<
     RoleMessage.User.From<fdm>,
     RoleMessage.Ai.From<fdm, vdm>,
     RoleMessage.Developer,
