@@ -3,7 +3,7 @@ import { Mutex } from '@zimtsui/coroutine-locks';
 
 
 export class Throttle {
-    protected valve = new Mutex();
+    protected valve = Mutex.release();
     protected timer: NodeJS.Timeout | null = null;
     protected interval: number;
     public constructor(protected rpm: number) {
@@ -40,6 +40,6 @@ export class Throttle {
 
     public throw(e: Error) {
         if (this.timer) clearTimeout(this.timer);
-        this.valve.throw(e);
+        this.valve.unblock(e);
     }
 }
