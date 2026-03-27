@@ -1,7 +1,7 @@
 import { RoleMessage as CompatibleRoleMessage } from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import * as Google from '@google/genai';
-import type { GenericSession } from '#@/session.ts';
+import type { GenericSession } from '#@/engine/session.ts';
 import { Verbatim } from '#@/verbatim.ts';
 
 const NOMINAL = Symbol();

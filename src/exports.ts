@@ -1,6 +1,6 @@
 export * from '#@/adaptor.ts';
 export * from '#@/throttle.ts';
-export * from '#@/session.ts';
+export * from '#@/engine/session.ts';
 export * from '#@/compatible/session.ts';
 export * from '#@/compatible/engine.ts';
 export * from '#@/function.ts';

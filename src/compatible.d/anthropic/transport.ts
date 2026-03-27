@@ -13,7 +13,7 @@ import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/anthropic/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
-import type { Transport as GenericTransport } from '#@/transport.ts';
+import type { Transport as GenericTransport } from '#@/engine/transport.ts';
 
 
 export class Transport<

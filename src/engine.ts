@@ -5,11 +5,11 @@ import { ProxyAgent } from 'undici';
 import { env } from 'node:process';
 import { type InferenceContext } from '#@/inference-context.ts';
 import { logger } from '#@/telemetry.ts';
-import { type GenericSession } from '#@/session.ts';
+import { type GenericSession } from '#@/engine/session.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
-import type { Validator } from '#@/validation.ts';
-import type { Transport } from '#@/transport.ts';
+import type { Validator } from '#@/engine/validation.ts';
+import type { Transport } from '#@/engine/transport.ts';
 
 
 export interface Pricing {

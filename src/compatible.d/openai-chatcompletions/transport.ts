@@ -4,7 +4,7 @@ import { Function } from '#@/function.ts';
 import OpenAI from 'openai';
 import type { InferenceContext } from '#@/inference-context.ts';
 import type { Verbatim } from '#@/verbatim.ts';
-import type { Transport as GenericTransport } from '#@/transport.ts';
+import type { Transport as GenericTransport } from '#@/engine/transport.ts';
 
 
 

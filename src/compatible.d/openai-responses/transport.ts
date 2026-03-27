@@ -13,7 +13,7 @@ import type { Verbatim } from '#@/verbatim.ts';
 import { Validator } from '#@/compatible/validation.ts';
 import * as ChoiceCodec from '#@/compatible.d/openai-responses/choice-codec.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
-import type { Transport as GenericTransport } from '#@/transport.ts';
+import type { Transport as GenericTransport } from '#@/engine/transport.ts';
 
 
 export class Transport<

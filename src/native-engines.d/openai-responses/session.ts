@@ -1,7 +1,7 @@
 import { RoleMessage as CompatibleRoleMessage} from '#@/compatible/session.ts';
 import { Function } from '#@/function.ts';
 import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
-import type { GenericSession } from '#@/session.ts';
+import type { GenericSession } from '#@/engine/session.ts';
 import type { Verbatim } from '#@/verbatim.ts';
 import OpenAI from 'openai';
 

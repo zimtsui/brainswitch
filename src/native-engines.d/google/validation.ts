@@ -4,7 +4,7 @@ import { Verbatim } from '#@/verbatim.ts';
 import { RoleMessage } from '#@/native-engines.d/google/session.ts';
 import { Validator as CompatibleValidator } from '#@/compatible/validation.ts';
 import { ResponseInvalid } from '#@/engine.ts';
-import type { Validator as GenericValidator } from '#@/validation.ts';
+import type { Validator as GenericValidator } from '#@/engine/validation.ts';
 
 
 

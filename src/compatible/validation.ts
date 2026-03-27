@@ -3,7 +3,7 @@ import { Function } from '#@/function.ts';
 import { Verbatim } from '#@/verbatim.ts';
 import { RoleMessage } from '#@/compatible/session.ts';
 import { ResponseInvalid } from '#@/engine.ts';
-import type { Validator as GenericValidator } from '#@/validation.ts';
+import type { Validator as GenericValidator } from '#@/engine/validation.ts';
 
 
 

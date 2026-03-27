@@ -15,7 +15,7 @@ import type { Validator } from '#@/compatible/validation.ts';
 import type { Structuring } from '#@/compatible/structuring.ts';
 import * as GoogleChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
 import * as VerbatimCodec from '#@/verbatim/codec.ts';
-import type { Transport as GenericTransport } from '#@/transport.ts';
+import type { Transport as GenericTransport } from '#@/engine/transport.ts';
 
 
 
