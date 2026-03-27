@@ -14,7 +14,7 @@ export class MessageCodec<
 > {
     public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
-    public convertFromUserMessage(
+    public encodeUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
     ): Anthropic.ContentBlockParam[] {
         return userMessage.getParts().map(part => {
@@ -29,7 +29,7 @@ export class MessageCodec<
         });
     }
 
-    public convertFromAiMessage(
+    public encodeAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): Anthropic.ContentBlockParam[] {
         if (aiMessage instanceof MessageCodec.Message.Ai)
@@ -48,26 +48,26 @@ export class MessageCodec<
         }
     }
 
-    public convertFromDeveloperMessage(
+    public encodeDeveloperMessage(
         developerMessage: RoleMessage.Developer,
     ): Anthropic.TextBlockParam[] {
         return developerMessage.getParts().map(part => ({ type: 'text', text: part.text }));
     }
 
-    public convertFromChatMessage(
+    public encodeChatMessage(
         chatMessage: Session.ChatMessage.From<fdm, vdm>,
     ): Anthropic.MessageParam {
         if (chatMessage instanceof RoleMessage.User)
-            return { role: 'user', content: this.convertFromUserMessage(chatMessage) };
+            return { role: 'user', content: this.encodeUserMessage(chatMessage) };
         else if (chatMessage instanceof RoleMessage.Ai)
-            return { role: 'assistant', content: this.convertFromAiMessage(chatMessage) };
+            return { role: 'assistant', content: this.encodeAiMessage(chatMessage) };
         else throw new Error();
     }
 
     /**
      * @throws {@link VerbatimCodec.Request.Invalid}
      */
-    public convertToAiMessage(
+    public decodeAiMessage(
         raw: Anthropic.ContentBlock[],
     ): MessageCodec.Message.Ai.From<fdm, vdm> {
         const parts = raw.flatMap((item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {

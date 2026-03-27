@@ -33,8 +33,8 @@ export class GoogleNativeTransport<
         session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
-        const systemInstruction = session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage);
-        const contents = this.ctx.messageCodec.convertFromChatMessages(session.chatMessages);
+        const systemInstruction = session.developerMessage && this.ctx.messageCodec.encodeDeveloperMessage(session.developerMessage);
+        const contents = this.ctx.messageCodec.encodeChatMessages(session.chatMessages);
 
         await this.ctx.throttle.requests(wfctx);
 
@@ -88,7 +88,7 @@ export class GoogleNativeTransport<
         wfctx.cost?.(this.ctx.billing.charge(response.usageMetadata));
 
         try {
-            const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.candidates[0].content);
+            const aiMessage = this.ctx.messageCodec.decodeAiMessage(response.candidates[0].content);
             this.ctx.validator.validate(aiMessage);
             return aiMessage;
         } catch (e) {

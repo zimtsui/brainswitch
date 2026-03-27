@@ -17,7 +17,7 @@ export class MessageCodec<
     /**
      * @throws {@link VerbatimCodec.Request.Invalid}
      */
-    public convertToAiMessage(
+    public decodeAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
     ): MessageCodec.Message.Ai.From<fdm, vdm> {
         const parts = output.flatMap(
@@ -37,7 +37,7 @@ export class MessageCodec<
         return new MessageCodec.Message.Ai(parts, output);
     }
 
-    public convertFromFunctionCall(
+    public encodeFunctionCall(
         fc: Function.Call.From<fdm>,
     ): OpenAI.Responses.ResponseFunctionToolCall {
         if (fc.id) {} else throw new Error();
@@ -49,7 +49,7 @@ export class MessageCodec<
         };
     }
 
-    public convertFromUserMessage(
+    public encodeUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
     ): OpenAI.Responses.ResponseInput {
         return userMessage.getParts().map(part => {
@@ -65,7 +65,7 @@ export class MessageCodec<
         });
     }
 
-    public convertFromAiMessage(
+    public encodeAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseInput {
         if (aiMessage instanceof MessageCodec.Message.Ai)
@@ -78,23 +78,23 @@ export class MessageCodec<
                         content: part.text,
                     } satisfies OpenAI.Responses.EasyInputMessage;
                 else if (part instanceof Function.Call)
-                    return this.convertFromFunctionCall(part);
+                    return this.encodeFunctionCall(part);
                 else throw new Error();
             });
         }
     }
 
-    public convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): string {
-        return developerMessage.getOnlyText();
+    public encodeDeveloperMessage(developerMessage: RoleMessage.Developer): string {
+        return developerMessage.getText();
     }
 
-    public convertFromChatMessage(
+    public encodeChatMessage(
         chatMessage: Session.ChatMessage.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseInput {
         if (chatMessage instanceof RoleMessage.User)
-            return this.convertFromUserMessage(chatMessage);
+            return this.encodeUserMessage(chatMessage);
         else if (chatMessage instanceof RoleMessage.Ai)
-            return this.convertFromAiMessage(chatMessage);
+            return this.encodeAiMessage(chatMessage);
         else throw new Error();
     }
 }

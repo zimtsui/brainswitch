@@ -36,8 +36,8 @@ export class Transport<
             model: this.ctx.inferenceParams.model,
             include: ['reasoning.encrypted_content'],
             store: false,
-            input: session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.convertFromChatMessage(chatMessage)),
-            instructions: session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage),
+            input: session.chatMessages.flatMap(chatMessage => this.ctx.messageCodec.encodeChatMessage(chatMessage)),
+            instructions: session.developerMessage && this.ctx.messageCodec.encodeDeveloperMessage(session.developerMessage),
             tools: tools.length ? tools : undefined,
             tool_choice: tools.length ? ChoiceCodec.encode(this.ctx.choice) : undefined,
             parallel_tool_calls: tools.length ? this.ctx.parallelToolCall : undefined,
@@ -94,7 +94,7 @@ export class Transport<
         logger.message.debug(response.usage);
 
         try {
-            const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.output);
+            const aiMessage = this.ctx.messageCodec.decodeAiMessage(response.output);
             this.ctx.validator.validate(aiMessage);
             return aiMessage;
         } catch (e) {

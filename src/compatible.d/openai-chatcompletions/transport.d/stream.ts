@@ -40,8 +40,8 @@ export abstract class StreamTransport<
         return {
             model: this.ctx.inferenceParams.model,
             messages: [
-                ...(session.developerMessage ? this.ctx.messageCodec.convertFromRoleMessage(session.developerMessage) : []),
-                ...this.ctx.messageCodec.convertFromRoleMessages(session.chatMessages),
+                ...(session.developerMessage ? this.ctx.messageCodec.encodeRoleMessage(session.developerMessage) : []),
+                ...this.ctx.messageCodec.encodeRoleMessages(session.chatMessages),
             ],
             tools: tools.length ? tools : undefined,
             tool_choice: tools.length ? ChoiceCodec.encode(this.ctx.choice) : undefined,
@@ -206,7 +206,7 @@ export abstract class StreamTransport<
         wfctx.cost?.(cost);
 
         try {
-            const aiMessage = this.ctx.messageCodec.convertToAiMessage(choice.message);
+            const aiMessage = this.ctx.messageCodec.decodeAiMessage(choice.message);
             this.ctx.validator.validate(aiMessage);
             return aiMessage;
         } catch (e) {

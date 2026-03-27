@@ -14,7 +14,7 @@ export class MessageCodec<
 > {
     public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
-    public convertFromAiMessage(
+    public encodeAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): Google.Content {
         if (aiMessage instanceof MessageCodec.Message.Ai)
@@ -32,17 +32,17 @@ export class MessageCodec<
         }
     }
 
-    public convertFromChatMessages(
+    public encodeChatMessages(
         chatMessages: Session.ChatMessage.From<fdm, vdm>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
-            if (chatMessage instanceof RoleMessage.User) return this.convertFromUserMessage(chatMessage);
-            else if (chatMessage instanceof RoleMessage.Ai) return this.convertFromAiMessage(chatMessage);
+            if (chatMessage instanceof RoleMessage.User) return this.encodeUserMessage(chatMessage);
+            else if (chatMessage instanceof RoleMessage.Ai) return this.encodeAiMessage(chatMessage);
             else throw new Error();
         });
     }
 
-    public convertFromUserMessage(
+    public encodeUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
     ): Google.Content {
         const parts = userMessage.getParts().map(part => {
@@ -57,7 +57,7 @@ export class MessageCodec<
         return Google.createUserContent(parts);
     }
 
-    public convertFromDeveloperMessage(
+    public encodeDeveloperMessage(
         developerMessage: RoleMessage.Developer,
     ): Google.Content {
         const parts = developerMessage.getParts().map(part => Google.createPartFromText(part.text));
@@ -67,7 +67,7 @@ export class MessageCodec<
     /**
      * @throws {@link VerbatimCodec.Request.Invalid}
      */
-    public convertToAiMessage(
+    public decodeAiMessage(
         content: Google.Content,
     ): MessageCodec.Message.Ai.From<fdm, vdm> {
         if (content.parts) {} else throw new Error();

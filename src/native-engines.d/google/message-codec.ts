@@ -16,35 +16,35 @@ export class GoogleNativeMessageCodec<
     public constructor(protected ctx: GoogleNativeMessageCodec.Context<fdm, vdm>) {}
 
 
-    public convertFromAiMessage(
+    public encodeAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): Google.Content {
         return aiMessage.getRaw();
     }
 
-    public convertFromUserMessage(
+    public encodeUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
     ): Google.Content {
-        return this.ctx.compatibleMessageCodec.convertFromUserMessage(userMessage);
+        return this.ctx.compatibleMessageCodec.encodeUserMessage(userMessage);
     }
 
-    public convertFromDeveloperMessage(
+    public encodeDeveloperMessage(
         developerMessage: RoleMessage.Developer,
     ): Google.Content {
-        return this.ctx.compatibleMessageCodec.convertFromDeveloperMessage(developerMessage);
+        return this.ctx.compatibleMessageCodec.encodeDeveloperMessage(developerMessage);
     }
 
-    public convertFromChatMessages(
+    public encodeChatMessages(
         chatMessages: Session.ChatMessage.From<fdm, vdm>[],
     ): Google.Content[] {
         return chatMessages.map(chatMessage => {
-            if (chatMessage instanceof RoleMessage.User) return this.convertFromUserMessage(chatMessage);
-            else if (chatMessage instanceof RoleMessage.Ai) return this.convertFromAiMessage(chatMessage);
+            if (chatMessage instanceof RoleMessage.User) return this.encodeUserMessage(chatMessage);
+            else if (chatMessage instanceof RoleMessage.Ai) return this.encodeAiMessage(chatMessage);
             else throw new Error();
         });
     }
 
-    public convertToAiMessage(
+    public decodeAiMessage(
         content: Google.Content,
     ): RoleMessage.Ai.From<fdm, vdm> {
         if (content.parts) {} else throw new Error();

@@ -126,13 +126,6 @@ export namespace RoleMessage {
         public getParts(): RoleMessage.User.Part<fdu>[] {
             return this.parts;
         }
-        public getText(): string {
-            return this.parts.filter(part => part instanceof RoleMessage.Part.Text).map(part => part.text).join('');
-        }
-        public getOnlyText(): string {
-            if (this.parts.every(part => part instanceof RoleMessage.Part.Text)) {} else throw new Error();
-            return this.getText();
-        }
         public getToolResponses(): Tool.Response.Of<fdu>[] {
             return this.parts.filter(part => part instanceof Function.Response || part instanceof Tool.ApplyPatch.Response);
         }

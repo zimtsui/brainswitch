@@ -16,13 +16,13 @@ export class MessageCodec<
 > {
     public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
-    public convertFromFunctionResponse(
+    public encodeFunctionResponse(
         fr: Function.Response.From<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
         return this.ctx.toolCodec.convertFromFunctionResponse(fr);
     }
 
-    public convertToAiMessage(
+    public decodeAiMessage(
         output: OpenAI.Responses.ResponseOutputItem[],
     ): RoleMessage.Ai.From<fdm, vdm> {
         const parts = output.flatMap((item): RoleMessage.Ai.Part.From<fdm, vdm>[] => {
@@ -43,7 +43,7 @@ export class MessageCodec<
         return new RoleMessage.Ai(parts, output);
     }
 
-    public convertFromUserMessage(
+    public encodeUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
     ): OpenAI.Responses.ResponseInput {
         return userMessage.getParts().map(part => {
@@ -54,7 +54,7 @@ export class MessageCodec<
                     content: part.text,
                 } satisfies OpenAI.Responses.EasyInputMessage;
             else if (part instanceof Function.Response)
-                return this.convertFromFunctionResponse(part);
+                return this.encodeFunctionResponse(part);
             else if (part instanceof Tool.ApplyPatch.Response)
                 return {
                     type: 'apply_patch_call_output',
@@ -66,25 +66,25 @@ export class MessageCodec<
         });
     }
 
-    public convertFromAiMessage(
+    public encodeAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseInput {
         return aiMessage.getRaw();
     }
 
-    public convertFromDeveloperMessage(
+    public encodeDeveloperMessage(
         developerMessage: RoleMessage.Developer,
     ): string {
-        return this.ctx.compatibleMessageCodec.convertFromDeveloperMessage(developerMessage);
+        return this.ctx.compatibleMessageCodec.encodeDeveloperMessage(developerMessage);
     }
 
-    public convertFromChatMessage(
+    public encodeChatMessage(
         chatMessage: Session.ChatMessage.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseInput {
         if (chatMessage instanceof RoleMessage.User)
-            return this.convertFromUserMessage(chatMessage);
+            return this.encodeUserMessage(chatMessage);
         else if (chatMessage instanceof RoleMessage.Ai)
-            return this.convertFromAiMessage(chatMessage);
+            return this.encodeAiMessage(chatMessage);
         else throw new Error();
     }
 }

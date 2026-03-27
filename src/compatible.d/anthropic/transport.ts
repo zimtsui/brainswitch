@@ -36,8 +36,8 @@ export class Transport<
         return {
             model: this.ctx.inferenceSpec.model,
             stream: true,
-            messages: session.chatMessages.map(chatMessage => this.ctx.messageCodec.convertFromChatMessage(chatMessage)),
-            system: session.developerMessage && this.ctx.messageCodec.convertFromDeveloperMessage(session.developerMessage),
+            messages: session.chatMessages.map(chatMessage => this.ctx.messageCodec.encodeChatMessage(chatMessage)),
+            system: session.developerMessage && this.ctx.messageCodec.encodeDeveloperMessage(session.developerMessage),
             tools: tools.length ? tools : undefined,
             tool_choice: tools.length ? ChoiceCodec.encode(this.ctx.choice, this.ctx.parallelToolCall) : undefined,
             max_tokens: this.ctx.inferenceSpec.maxTokens ?? 64 * 1024,
@@ -121,7 +121,7 @@ export class Transport<
         wfctx.cost?.(this.ctx.billing.charge(response.usage));
 
         try {
-            const aiMessage = this.ctx.messageCodec.convertToAiMessage(response.content);
+            const aiMessage = this.ctx.messageCodec.decodeAiMessage(response.content);
             this.ctx.validator.validate(aiMessage);
             return aiMessage;
         } catch (e) {

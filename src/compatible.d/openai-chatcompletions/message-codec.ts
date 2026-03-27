@@ -17,7 +17,7 @@ export class MessageCodec<
     /**
      * @throws {@link VerbatimCodec.Request.Invalid}
      */
-    public convertToAiMessage(
+    public decodeAiMessage(
         message: OpenAI.ChatCompletionMessage,
     ): RoleMessage.Ai.From<fdm, vdm> {
         const parts: RoleMessage.Ai.Part.From<fdm, vdm>[] = [];
@@ -34,14 +34,14 @@ export class MessageCodec<
         return new RoleMessage.Ai(parts);
     }
 
-    public convertFromDeveloperMessage(developerMessage: RoleMessage.Developer): OpenAI.ChatCompletionSystemMessageParam {
+    public encodeDeveloperMessage(developerMessage: RoleMessage.Developer): OpenAI.ChatCompletionSystemMessageParam {
         return {
             role: 'system',
-            content: developerMessage.getOnlyText(),
+            content: developerMessage.getText(),
         };
     }
 
-    public convertFromUserMessage(
+    public encodeUserMessage(
         userMessage: RoleMessage.User.From<fdm>,
     ): [OpenAI.ChatCompletionUserMessageParam] | OpenAI.ChatCompletionToolMessageParam[] {
         const textParts = userMessage.getParts().filter(part => part instanceof RoleMessage.Part.Text);
@@ -53,7 +53,7 @@ export class MessageCodec<
         else throw new Error();
     }
 
-    public convertFromAiMessage(
+    public encodeAiMessage(
         aiMessage: RoleMessage.Ai.From<fdm, vdm>,
     ): OpenAI.ChatCompletionAssistantMessageParam {
         const parts = aiMessage.getParts();
@@ -66,22 +66,22 @@ export class MessageCodec<
         };
     }
 
-    public convertFromRoleMessage(
+    public encodeRoleMessage(
         roleMessage: Session.ChatMessage.From<fdm, vdm> | RoleMessage.Developer,
     ): OpenAI.ChatCompletionMessageParam[] {
         if (roleMessage instanceof RoleMessage.Developer)
-            return [this.convertFromDeveloperMessage(roleMessage)];
+            return [this.encodeDeveloperMessage(roleMessage)];
         else if (roleMessage instanceof RoleMessage.User)
-            return this.convertFromUserMessage(roleMessage);
+            return this.encodeUserMessage(roleMessage);
         else if (roleMessage instanceof RoleMessage.Ai)
-            return [this.convertFromAiMessage(roleMessage)];
+            return [this.encodeAiMessage(roleMessage)];
         else throw new Error();
     }
 
-    public convertFromRoleMessages(
+    public encodeRoleMessages(
         chatMessages: (Session.ChatMessage.From<fdm, vdm> | RoleMessage.Developer)[],
     ): OpenAI.ChatCompletionMessageParam[] {
-        return chatMessages.map(chatMessage => this.convertFromRoleMessage(chatMessage)).flat();
+        return chatMessages.map(chatMessage => this.encodeRoleMessage(chatMessage)).flat();
     }
 
 }
