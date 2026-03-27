@@ -42,13 +42,13 @@ export class Adaptor {
             throttle,
         };
         if (endpointSpec.apiType === 'openai-responses')
-            return new OpenAIResponsesCompatibleEngine<fdm, vdm>(options);
+            return new OpenAIResponsesCompatibleEngine.Instance<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'google')
-            return new GoogleCompatibleEngine<fdm, vdm>(options);
+            return new GoogleCompatibleEngine.Instance<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'aliyun')
-            return new AliyunCompatibleEngine<fdm, vdm>(options);
+            return new AliyunCompatibleEngine.Instance<fdm, vdm>(options);
         else if (endpointSpec.apiType === 'anthropic')
-            return new AnthropicCompatibleEngine<fdm, vdm>(options);
+            return new AnthropicCompatibleEngine.Instance<fdm, vdm>(options);
         else throw new Error();
     }
 
@@ -68,7 +68,7 @@ export class Adaptor {
             throttle,
             applyPatch: adaptorOptions.applyPatch,
         };
-        return new OpenAIResponsesNativeEngine(options);
+        return new OpenAIResponsesNativeEngine.Instance(options);
     }
 
     public makeGoogleNativeEngine<
@@ -90,7 +90,7 @@ export class Adaptor {
             urlContext: adaptorOptions.urlContext,
             googleSearch: adaptorOptions.googleSearch,
         };
-        return new GoogleNativeEngine(options);
+        return new GoogleNativeEngine.Instance(options);
     }
 }
 

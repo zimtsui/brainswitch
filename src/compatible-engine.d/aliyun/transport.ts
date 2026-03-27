@@ -10,12 +10,12 @@ export class Transport<
     in out vdm extends Verbatim.Decl.Map.Proto,
 > extends StreamTransport<fdm, vdm> {
     protected override getDeltaThoughts(delta: OpenAI.ChatCompletionChunk.Choice.Delta): string {
-        return (delta as AliyunTransport.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
+        return (delta as Transport.ChatCompletionChunkChoiceDelta).reasoning_content ?? '';
     }
 
 }
 
-export namespace AliyunTransport {
+export namespace Transport {
     export interface ChatCompletionChunkChoiceDelta extends OpenAI.ChatCompletionChunk.Choice.Delta {
         reasoning_content?: string;
     }

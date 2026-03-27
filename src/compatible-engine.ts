@@ -7,45 +7,47 @@ import * as SessionModule from './compatible-engine/session.ts';
 
 
 
-export abstract class CompatibleEngine<
-    in out fdm extends Function.Decl.Map.Proto,
-    in out vdm extends Verbatim.Decl.Map.Proto,
-> extends
-    Engine<
+export type CompatibleEngine<
+    fdm extends Function.Decl.Map.Proto,
+    vdm extends Verbatim.Decl.Map.Proto,
+> = CompatibleEngine.Instance<fdm, vdm>;
+export namespace CompatibleEngine {
+    export abstract class Instance<
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
+    > extends Engine.Instance<
         fdm, vdm,
         CompatibleEngine.RoleMessage.User.From<fdm>,
         CompatibleEngine.RoleMessage.Ai.From<fdm, vdm>,
         CompatibleEngine.RoleMessage.Developer,
         CompatibleEngine.Session.From<fdm, vdm>
-    >
-{
-    protected choice: CompatibleEngine.Structuring.Choice.From<fdm, vdm>;
+    > {
+        protected choice: CompatibleEngine.Structuring.Choice.From<fdm, vdm>;
 
-    public constructor(options: CompatibleEngine.Options<fdm, vdm>) {
-        super(options);
-        this.choice = options.structuringChoice ?? CompatibleEngine.Structuring.Choice.AUTO;
+        public constructor(options: CompatibleEngine.Options<fdm, vdm>) {
+            super(options);
+            this.choice = options.structuringChoice ?? CompatibleEngine.Structuring.Choice.AUTO;
+        }
+
+        public override appendUserMessage(
+            session: CompatibleEngine.Session.From<fdm, vdm>,
+            message: CompatibleEngine.RoleMessage.User.From<fdm>,
+        ): CompatibleEngine.Session.From<fdm, vdm> {
+            return {
+                developerMessage: session.developerMessage,
+                chatMessages: [...session.chatMessages, message],
+            };
+        }
+
+        public override pushUserMessage(
+            session: CompatibleEngine.Session.From<fdm, vdm>,
+            message: CompatibleEngine.RoleMessage.User.From<fdm>,
+        ): CompatibleEngine.Session.From<fdm, vdm> {
+            session.chatMessages.push(message);
+            return session;
+        }
     }
 
-    public override appendUserMessage(
-        session: CompatibleEngine.Session.From<fdm, vdm>,
-        message: CompatibleEngine.RoleMessage.User.From<fdm>,
-    ): CompatibleEngine.Session.From<fdm, vdm> {
-        return {
-            developerMessage: session.developerMessage,
-            chatMessages: [...session.chatMessages, message],
-        };
-    }
-
-    public override pushUserMessage(
-        session: CompatibleEngine.Session.From<fdm, vdm>,
-        message: CompatibleEngine.RoleMessage.User.From<fdm>,
-    ): CompatibleEngine.Session.From<fdm, vdm> {
-        session.chatMessages.push(message);
-        return session;
-    }
-}
-
-export namespace CompatibleEngine {
     export interface Options<
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,

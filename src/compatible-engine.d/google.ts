@@ -10,46 +10,50 @@ import * as ChoiceCodecModule from './google/choice-codec.ts';
 
 
 
-export class GoogleCompatibleEngine<
-    in out fdm extends Function.Decl.Map.Proto,
-    in out vdm extends Verbatim.Decl.Map.Proto,
-> extends CompatibleEngine<fdm, vdm> {
-    protected toolCodec: ToolCodec<fdm>;
-    protected messageCodec: GoogleCompatibleEngine.MessageCodec<fdm, vdm>;
-    protected billing: Billing;
-    protected override validator: Validator.From<fdm, vdm>;
-    protected override transport: GoogleCompatibleEngine.Transport<fdm, vdm>;
-    protected override parallelToolCall: boolean;
+export type GoogleCompatibleEngine<
+    fdm extends Function.Decl.Map.Proto,
+    vdm extends Verbatim.Decl.Map.Proto,
+> = GoogleCompatibleEngine.Instance<fdm, vdm>;
+export namespace GoogleCompatibleEngine {
+    export class Instance<
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
+    > extends CompatibleEngine.Instance<fdm, vdm> {
+        protected toolCodec: ToolCodec<fdm>;
+        protected messageCodec: GoogleCompatibleEngine.MessageCodec<fdm, vdm>;
+        protected billing: Billing;
+        protected override validator: Validator.From<fdm, vdm>;
+        protected override transport: GoogleCompatibleEngine.Transport<fdm, vdm>;
+        protected override parallelToolCall: boolean;
 
-    public constructor(options: GoogleCompatibleEngine.Options<fdm, vdm>) {
-        super(options);
-        this.parallelToolCall = options.parallelToolCall ?? true;
-        if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
-        this.toolCodec = new ToolCodec({
-            fdm: this.fdm,
-        });
-        this.messageCodec = new GoogleCompatibleEngine.MessageCodec({
-            toolCodec: this.toolCodec,
-            vdm: this.vdm,
-        });
-        this.billing = new Billing({ pricing: this.pricing });
-        this.validator = new Validator({ choice: this.choice });
-        this.transport = new GoogleCompatibleEngine.Transport({
-            inferenceParams: this.inferenceParams,
-            providerSpec: this.providerSpec,
-            fdm: this.fdm,
-            throttle: this.throttle,
-            choice: this.choice,
-            messageCodec: this.messageCodec,
-            toolCodec: this.toolCodec,
-            billing: this.billing,
-            validator: this.validator,
-        });
+        public constructor(options: GoogleCompatibleEngine.Options<fdm, vdm>) {
+            super(options);
+            this.parallelToolCall = options.parallelToolCall ?? true;
+            if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
+            this.toolCodec = new ToolCodec({
+                fdm: this.fdm,
+            });
+            this.messageCodec = new GoogleCompatibleEngine.MessageCodec({
+                toolCodec: this.toolCodec,
+                vdm: this.vdm,
+            });
+            this.billing = new Billing({ pricing: this.pricing });
+            this.validator = new Validator({ choice: this.choice });
+            this.transport = new GoogleCompatibleEngine.Transport({
+                inferenceParams: this.inferenceParams,
+                providerSpec: this.providerSpec,
+                fdm: this.fdm,
+                throttle: this.throttle,
+                choice: this.choice,
+                messageCodec: this.messageCodec,
+                toolCodec: this.toolCodec,
+                billing: this.billing,
+                validator: this.validator,
+            });
+        }
+
     }
 
-}
-
-export namespace GoogleCompatibleEngine {
     export interface Options<
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,

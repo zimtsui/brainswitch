@@ -9,43 +9,48 @@ import * as ChoiceCodecModule from './anthropic/choice-codec.ts';
 import type { Verbatim } from '../verbatim.ts';
 
 
-export class AnthropicCompatibleEngine<
-    in out fdm extends Function.Decl.Map.Proto,
-    in out vdm extends Verbatim.Decl.Map.Proto,
-> extends CompatibleEngine<fdm, vdm> {
-    protected toolCodec: ToolCodec<fdm>;
-    protected messageCodec: AnthropicCompatibleEngine.MessageCodec<fdm, vdm>;
-    protected billing: Billing;
-    protected validator: Validator.From<fdm, vdm>;
-    protected transport: AnthropicCompatibleEngine.Transport<fdm, vdm>;
-    protected override parallelToolCall: boolean;
 
-    public constructor(options: AnthropicCompatibleEngine.Options<fdm, vdm>) {
-        super(options);
-        this.parallelToolCall = options.parallelToolCall ?? false;
-        this.toolCodec = new ToolCodec({ fdm: this.fdm });
-        this.messageCodec = new AnthropicCompatibleEngine.MessageCodec({
-            toolCodec: this.toolCodec,
-            vdm: this.vdm,
-        });
-        this.billing = new Billing({ pricing: this.pricing });
-        this.validator = new Validator({ choice: this.choice });
-        this.transport = new AnthropicCompatibleEngine.Transport({
-            providerSpec: this.providerSpec,
-            inferenceSpec: this.inferenceParams,
-            fdm: this.fdm,
-            throttle: this.throttle,
-            choice: this.choice,
-            parallelToolCall: this.parallelToolCall,
-            messageCodec: this.messageCodec,
-            toolCodec: this.toolCodec,
-            billing: this.billing,
-            validator: this.validator,
-        });
-    }
-}
-
+export type AnthropicCompatibleEngine<
+    fdm extends Function.Decl.Map.Proto,
+    vdm extends Verbatim.Decl.Map.Proto,
+> = AnthropicCompatibleEngine.Instance<fdm, vdm>;
 export namespace AnthropicCompatibleEngine {
+    export class Instance<
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
+    > extends CompatibleEngine.Instance<fdm, vdm> {
+        protected toolCodec: ToolCodec<fdm>;
+        protected messageCodec: AnthropicCompatibleEngine.MessageCodec<fdm, vdm>;
+        protected billing: Billing;
+        protected validator: Validator.From<fdm, vdm>;
+        protected transport: AnthropicCompatibleEngine.Transport<fdm, vdm>;
+        protected override parallelToolCall: boolean;
+
+        public constructor(options: AnthropicCompatibleEngine.Options<fdm, vdm>) {
+            super(options);
+            this.parallelToolCall = options.parallelToolCall ?? false;
+            this.toolCodec = new ToolCodec({ fdm: this.fdm });
+            this.messageCodec = new AnthropicCompatibleEngine.MessageCodec({
+                toolCodec: this.toolCodec,
+                vdm: this.vdm,
+            });
+            this.billing = new Billing({ pricing: this.pricing });
+            this.validator = new Validator({ choice: this.choice });
+            this.transport = new AnthropicCompatibleEngine.Transport({
+                providerSpec: this.providerSpec,
+                inferenceSpec: this.inferenceParams,
+                fdm: this.fdm,
+                throttle: this.throttle,
+                choice: this.choice,
+                parallelToolCall: this.parallelToolCall,
+                messageCodec: this.messageCodec,
+                toolCodec: this.toolCodec,
+                billing: this.billing,
+                validator: this.validator,
+            });
+        }
+    }
+
     export interface Options<
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,

@@ -14,90 +14,93 @@ import * as MessageCodecModule from './openai-responses/message-codec.ts';
 import * as TransportModule from './openai-responses/transport.ts';
 
 
-export class OpenAIResponsesNativeEngine<
-    in out fdm extends Function.Decl.Map.Proto,
-    in out vdm extends Verbatim.Decl.Map.Proto,
-> extends
-    Engine<
+
+export type OpenAIResponsesNativeEngine<
+    fdm extends Function.Decl.Map.Proto,
+    vdm extends Verbatim.Decl.Map.Proto,
+> = OpenAIResponsesNativeEngine.Instance<fdm, vdm>;
+export namespace OpenAIResponsesNativeEngine {
+    export class Instance<
+        in out fdm extends Function.Decl.Map.Proto,
+        in out vdm extends Verbatim.Decl.Map.Proto,
+    > extends Engine.Instance<
         fdm, vdm,
         OpenAIResponsesNativeEngine.RoleMessage.User.From<fdm>,
         OpenAIResponsesNativeEngine.RoleMessage.Ai.From<fdm, vdm>,
         OpenAIResponsesNativeEngine.RoleMessage.Developer,
         OpenAIResponsesNativeEngine.Session.From<fdm, vdm>
-    >
-{
-    protected applyPatch: boolean;
-    protected choice: OpenAIResponsesNativeEngine.Structuring.Choice.From<fdm, vdm>;
+    > {
+        protected applyPatch: boolean;
+        protected choice: OpenAIResponsesNativeEngine.Structuring.Choice.From<fdm, vdm>;
 
-    protected toolCodec: ToolCodec<fdm>;
-    protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
-    protected messageCodec: OpenAIResponsesNativeEngine.MessageCodec<fdm, vdm>;
-    protected billing: Billing;
-    protected override validator: OpenAIResponsesNativeEngine.Validator.From<fdm, vdm>;
-    protected transport: OpenAIResponsesNativeEngine.Transport<fdm, vdm>;
-    protected override parallelToolCall: boolean;
+        protected toolCodec: ToolCodec<fdm>;
+        protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
+        protected messageCodec: OpenAIResponsesNativeEngine.MessageCodec<fdm, vdm>;
+        protected billing: Billing;
+        protected override validator: OpenAIResponsesNativeEngine.Validator.From<fdm, vdm>;
+        protected transport: OpenAIResponsesNativeEngine.Transport<fdm, vdm>;
+        protected override parallelToolCall: boolean;
 
-    public constructor(options: OpenAIResponsesNativeEngine.Options<fdm, vdm>) {
-        super(options);
-        this.parallelToolCall = options.parallelToolCall ?? false;
-        this.applyPatch = options.applyPatch ?? false;
-        this.choice = options.structuringChoice ?? OpenAIResponsesNativeEngine.Structuring.Choice.AUTO;
+        public constructor(options: OpenAIResponsesNativeEngine.Options<fdm, vdm>) {
+            super(options);
+            this.parallelToolCall = options.parallelToolCall ?? false;
+            this.applyPatch = options.applyPatch ?? false;
+            this.choice = options.structuringChoice ?? OpenAIResponsesNativeEngine.Structuring.Choice.AUTO;
 
-        this.toolCodec = new ToolCodec({ fdm: this.fdm });
-        this.compatibleMessageCodec = new CompatibleMessageCodec({
-            toolCodec: this.toolCodec,
-            vdm: this.vdm,
-        });
-        this.messageCodec = new OpenAIResponsesNativeEngine.MessageCodec({
-            toolCodec: this.toolCodec,
-            compatibleMessageCodec: this.compatibleMessageCodec,
-            vdm: this.vdm,
-        });
-        this.billing = new Billing({ pricing: this.pricing });
-        this.validator = new OpenAIResponsesNativeEngine.Validator({ choice: this.choice });
-        this.transport = new OpenAIResponsesNativeEngine.Transport({
-            inferenceParams: this.inferenceParams,
-            providerSpec: this.providerSpec,
-            fdm: this.fdm,
-            throttle: this.throttle,
-            choice: this.choice,
-            parallelToolCall: this.parallelToolCall,
-            applyPatch: this.applyPatch,
-            messageCodec: this.messageCodec,
-            toolCodec: this.toolCodec,
-            billing: this.billing,
-            validator: this.validator,
-        });
+            this.toolCodec = new ToolCodec({ fdm: this.fdm });
+            this.compatibleMessageCodec = new CompatibleMessageCodec({
+                toolCodec: this.toolCodec,
+                vdm: this.vdm,
+            });
+            this.messageCodec = new OpenAIResponsesNativeEngine.MessageCodec({
+                toolCodec: this.toolCodec,
+                compatibleMessageCodec: this.compatibleMessageCodec,
+                vdm: this.vdm,
+            });
+            this.billing = new Billing({ pricing: this.pricing });
+            this.validator = new OpenAIResponsesNativeEngine.Validator({ choice: this.choice });
+            this.transport = new OpenAIResponsesNativeEngine.Transport({
+                inferenceParams: this.inferenceParams,
+                providerSpec: this.providerSpec,
+                fdm: this.fdm,
+                throttle: this.throttle,
+                choice: this.choice,
+                parallelToolCall: this.parallelToolCall,
+                applyPatch: this.applyPatch,
+                messageCodec: this.messageCodec,
+                toolCodec: this.toolCodec,
+                billing: this.billing,
+                validator: this.validator,
+            });
+        }
+
+        protected override infer(
+            wfctx: InferenceContext,
+            session: OpenAIResponsesNativeEngine.Session.From<fdm, vdm>,
+            signal?: AbortSignal,
+        ): Promise<OpenAIResponsesNativeEngine.RoleMessage.Ai.From<fdm, vdm>> {
+            return this.transport.fetch(wfctx, session, signal);
+        }
+
+        public override appendUserMessage(
+            session: OpenAIResponsesNativeEngine.Session.From<fdm, vdm>,
+            message: OpenAIResponsesNativeEngine.RoleMessage.User.From<fdm>,
+        ): OpenAIResponsesNativeEngine.Session.From<fdm, vdm> {
+            return {
+                developerMessage: session.developerMessage,
+                chatMessages: [...session.chatMessages, message],
+            };
+        }
+
+        public override pushUserMessage(
+            session: OpenAIResponsesNativeEngine.Session.From<fdm, vdm>,
+            message: OpenAIResponsesNativeEngine.RoleMessage.User.From<fdm>,
+        ): OpenAIResponsesNativeEngine.Session.From<fdm, vdm> {
+            session.chatMessages.push(message);
+            return session;
+        }
     }
 
-    protected override infer(
-        wfctx: InferenceContext,
-        session: OpenAIResponsesNativeEngine.Session.From<fdm, vdm>,
-        signal?: AbortSignal,
-    ): Promise<OpenAIResponsesNativeEngine.RoleMessage.Ai.From<fdm, vdm>> {
-        return this.transport.fetch(wfctx, session, signal);
-    }
-
-    public override appendUserMessage(
-        session: OpenAIResponsesNativeEngine.Session.From<fdm, vdm>,
-        message: OpenAIResponsesNativeEngine.RoleMessage.User.From<fdm>,
-    ): OpenAIResponsesNativeEngine.Session.From<fdm, vdm> {
-        return {
-            developerMessage: session.developerMessage,
-            chatMessages: [...session.chatMessages, message],
-        };
-    }
-
-    public override pushUserMessage(
-        session: OpenAIResponsesNativeEngine.Session.From<fdm, vdm>,
-        message: OpenAIResponsesNativeEngine.RoleMessage.User.From<fdm>,
-    ): OpenAIResponsesNativeEngine.Session.From<fdm, vdm> {
-        session.chatMessages.push(message);
-        return session;
-    }
-}
-
-export namespace OpenAIResponsesNativeEngine {
     export interface Options<
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,
