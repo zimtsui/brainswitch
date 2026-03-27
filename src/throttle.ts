@@ -11,7 +11,7 @@ export class Throttle {
     }
 
     public async requests(wfctx: InferenceContext): Promise<void> {
-        if (this.interval === Number.POSITIVE_INFINITY) return;
+        if (this.interval === 0) return;
 
         await wfctx.busy?.acquireRead();
         try {
