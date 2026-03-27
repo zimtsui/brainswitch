@@ -1,9 +1,9 @@
-import { RoleMessage, type Session } from '#@/compatible/session.ts';
-import { Function } from '#@/function.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
+import { Function } from '../../function.ts';
 import Anthropic from '@anthropic-ai/sdk';
-import type { ToolCodec } from '#@/api-types/anthropic/tool-codec.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import type { ToolCodec } from '../../api-types/anthropic/tool-codec.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 const NOMINAL = Symbol();
 

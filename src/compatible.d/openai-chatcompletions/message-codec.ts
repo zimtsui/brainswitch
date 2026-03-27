@@ -1,10 +1,10 @@
-import { ResponseInvalid } from '#@/engine.ts';
-import { RoleMessage, type Session } from '#@/compatible/session.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '../../engine.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
+import { Function } from '../../function.ts';
 import OpenAI from 'openai';
-import type { OpenAIChatCompletionsToolCodec } from '#@/api-types/openai-chatcompletions/tool-codec.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import type { OpenAIChatCompletionsToolCodec } from '../../api-types/openai-chatcompletions/tool-codec.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 
 

@@ -1,5 +1,5 @@
-import { ResponseInvalid } from '#@/engine.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '../../engine.ts';
+import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import Ajv from 'ajv';
 

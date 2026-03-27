@@ -1,10 +1,10 @@
-import { ResponseInvalid } from '#@/engine.ts';
-import { RoleMessage, type Session } from '#@/compatible/session.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '../../engine.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
+import { Function } from '../../function.ts';
 import OpenAI from 'openai';
-import type { InferenceContext } from '#@/inference-context.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import type { Transport as GenericTransport } from '#@/engine/transport.ts';
+import type { InferenceContext } from '../../inference-context.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import type { Transport as GenericTransport } from '../../engine/transport.ts';
 
 
 

@@ -1,9 +1,9 @@
-import { Structuring } from '#@/compatible/structuring.ts';
-import { Function } from '#@/function.ts';
-import { Verbatim } from '#@/verbatim.ts';
-import { RoleMessage } from '#@/compatible/session.ts';
-import { ResponseInvalid } from '#@/engine.ts';
-import type { Validator as GenericValidator } from '#@/engine/validation.ts';
+import { Structuring } from './structuring.ts';
+import { Function } from '../function.ts';
+import { Verbatim } from '../verbatim.ts';
+import { RoleMessage } from './session.ts';
+import { ResponseInvalid } from '../engine.ts';
+import type { Validator as GenericValidator } from '../engine/validation.ts';
 
 
 

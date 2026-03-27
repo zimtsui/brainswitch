@@ -1,10 +1,10 @@
-import { ResponseInvalid } from '#@/engine.ts';
-import { RoleMessage, type Session } from '#@/compatible/session.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '../../engine.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
+import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
-import { type ToolCodec } from '#@/api-types/google/tool-codec.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import { type ToolCodec } from '../../api-types/google/tool-codec.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 const NOMINAL = Symbol();
 

@@ -1,13 +1,13 @@
-import { CompatibleEngine } from '#@/compatible/engine.ts';
-import { RoleMessage, type Session } from '#@/compatible/session.ts';
-import { Function } from '#@/function.ts';
-import { type InferenceContext } from '#@/inference-context.ts';
-import { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
-import { Billing } from '#@/api-types/openai-responses/billing.ts';
-import { Validator } from '#@/compatible/validation.ts';
-import { MessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
-import { Transport } from '#@/compatible.d/openai-responses/transport.ts';
-import type { Verbatim } from '#@/verbatim.ts';
+import { CompatibleEngine } from '../engine.ts';
+import { RoleMessage, type Session } from '../session.ts';
+import { Function } from '../../function.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
+import { Billing } from '../../api-types/openai-responses/billing.ts';
+import { Validator } from '../validation.ts';
+import { MessageCodec } from '../../compatible.d/openai-responses/message-codec.ts';
+import { Transport } from '../../compatible.d/openai-responses/transport.ts';
+import type { Verbatim } from '../../verbatim.ts';
 
 
 export class OpenAIResponsesCompatibleEngine<

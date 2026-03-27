@@ -1,5 +1,5 @@
-import type { Function } from '#@/function.ts';
-import type { Verbatim } from '#@/verbatim.ts';
+import type { Function } from '../function.ts';
+import type { Verbatim } from '../verbatim.ts';
 
 
 

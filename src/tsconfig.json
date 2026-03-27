@@ -20,9 +20,6 @@
         "composite": true,
         "outDir": "../build",
         "skipLibCheck": true,
-        "paths": {
-            "#@/*.ts": ["./*.ts"],
-        },
     },
     "include": [
         "./**/*",

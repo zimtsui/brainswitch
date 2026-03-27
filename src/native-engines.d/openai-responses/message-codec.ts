@@ -1,12 +1,12 @@
-import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/session.ts';
-import { Function } from '#@/function.ts';
-import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../../function.ts';
+import { Tool } from './tool.ts';
 import OpenAI from 'openai';
-import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
-import type { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import { ResponseInvalid } from '#@/engine.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import { MessageCodec as CompatibleMessageCodec } from '../../compatible.d/openai-responses/message-codec.ts';
+import type { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import { ResponseInvalid } from '../../engine.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 
 

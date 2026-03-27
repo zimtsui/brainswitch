@@ -1,21 +1,21 @@
-import { ResponseInvalid, type InferenceParams as InferenceParams, type Pricing, type ProviderSpec } from '#@/engine.ts';
-import { RoleMessage, type Session } from '#@/compatible/session.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid, type InferenceParams as InferenceParams, type Pricing, type ProviderSpec } from '../../engine.ts';
+import { RoleMessage, type Session } from '../../compatible/session.ts';
+import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';
-import { type InferenceContext } from '#@/inference-context.ts';
-import type { RestfulRequest } from '#@/api-types/google/restful-request.ts';
-import { Throttle } from '#@/throttle.ts';
-import { logger } from '#@/telemetry.ts';
-import type { MessageCodec } from '#@/compatible.d/google/message-codec.ts';
-import type { ToolCodec } from '#@/api-types/google/tool-codec.ts';
-import type { Billing } from '#@/api-types/google/billing.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import type { Validator } from '#@/compatible/validation.ts';
-import type { Structuring } from '#@/compatible/structuring.ts';
-import * as GoogleChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
-import type { Transport as GenericTransport } from '#@/engine/transport.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import type { RestfulRequest } from '../../api-types/google/restful-request.ts';
+import { Throttle } from '../../throttle.ts';
+import { logger } from '../../telemetry.ts';
+import type { MessageCodec } from './message-codec.ts';
+import type { ToolCodec } from '../../api-types/google/tool-codec.ts';
+import type { Billing } from '../../api-types/google/billing.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import type { Validator } from '../../compatible/validation.ts';
+import type { Structuring } from '../../compatible/structuring.ts';
+import * as GoogleChoiceCodec from './choice-codec.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
+import type { Transport as GenericTransport } from '../../engine/transport.ts';
 
 
 

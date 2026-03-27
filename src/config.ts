@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { EndpointSpec } from '#@/endpoint-spec.ts';
+import { EndpointSpec } from './endpoint-spec.ts';
 import { type Static } from '@sinclair/typebox';
 
 

@@ -1,15 +1,15 @@
-import { Function } from '#@/function.ts';
-import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
-import { Engine } from '#@/engine.ts';
-import { type InferenceContext } from '#@/inference-context.ts';
-import { ToolCodec } from '#@/api-types/google/tool-codec.ts';
-import { Billing } from '#@/api-types/google/billing.ts';
-import { Validator } from '#@/native-engines.d/google/validation.ts';
-import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
-import { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
-import { GoogleNativeTransport } from '#@/native-engines.d/google/transport.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import { Structuring } from '#@/compatible/structuring.ts';
+import { Function } from '../../function.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Engine } from '../../engine.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import { ToolCodec } from '../../api-types/google/tool-codec.ts';
+import { Billing } from '../../api-types/google/billing.ts';
+import { Validator } from './validation.ts';
+import { MessageCodec as CompatibleMessageCodec } from '../../compatible.d/google/message-codec.ts';
+import { GoogleNativeMessageCodec } from './message-codec.ts';
+import { GoogleNativeTransport } from './transport.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import { Structuring } from '../../compatible/structuring.ts';
 
 
 export class GoogleNativeEngine<

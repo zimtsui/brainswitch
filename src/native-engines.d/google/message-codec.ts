@@ -1,11 +1,11 @@
-import { ResponseInvalid } from '#@/engine.ts';
-import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid } from '../../engine.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
-import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/google/message-codec.ts';
-import type { ToolCodec } from '#@/api-types/google/tool-codec.ts';
-import { Verbatim } from '#@/verbatim.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import { MessageCodec as CompatibleMessageCodec } from '../../compatible.d/google/message-codec.ts';
+import type { ToolCodec } from '../../api-types/google/tool-codec.ts';
+import { Verbatim } from '../../verbatim.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 
 

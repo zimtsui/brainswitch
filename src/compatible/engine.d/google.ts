@@ -1,11 +1,11 @@
-import { CompatibleEngine } from '#@/compatible/engine.ts';
-import { Function } from '#@/function.ts';
-import { MessageCodec } from '#@/compatible.d/google/message-codec.ts';
-import { ToolCodec } from '#@/api-types/google/tool-codec.ts';
-import { Billing } from '#@/api-types/google/billing.ts';
-import { Validator } from '#@/compatible/validation.ts';
-import { Transport } from '#@/compatible.d/google/transport.ts';
-import type { Verbatim } from '#@/verbatim.ts';
+import { CompatibleEngine } from '../engine.ts';
+import { Function } from '../../function.ts';
+import { MessageCodec } from '../../compatible.d/google/message-codec.ts';
+import { ToolCodec } from '../../api-types/google/tool-codec.ts';
+import { Billing } from '../../api-types/google/billing.ts';
+import { Validator } from '../validation.ts';
+import { Transport } from '../../compatible.d/google/transport.ts';
+import type { Verbatim } from '../../verbatim.ts';
 
 
 

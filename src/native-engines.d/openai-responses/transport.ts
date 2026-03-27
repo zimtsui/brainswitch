@@ -1,19 +1,19 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '#@/engine.ts';
-import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/session.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../../function.ts';
 import OpenAI from 'openai';
 import * as Undici from 'undici';
-import { type InferenceContext } from '#@/inference-context.ts';
-import { Throttle } from '#@/throttle.ts';
-import { logger } from '#@/telemetry.ts';
-import type { MessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
-import type { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
-import type { Billing } from '#@/api-types/openai-responses/billing.ts';
-import type { Validator } from '#@/native-engines.d/openai-responses/validation.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import * as ChoiceCodec from '#@/native-engines.d/openai-responses/choice-codec.ts';
-import { Structuring } from '#@/native-engines.d/openai-responses/structuring.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import { Throttle } from '../../throttle.ts';
+import { logger } from '../../telemetry.ts';
+import type { MessageCodec } from './message-codec.ts';
+import type { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
+import type { Billing } from '../../api-types/openai-responses/billing.ts';
+import type { Validator } from './validation.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import * as ChoiceCodec from './choice-codec.ts';
+import { Structuring } from './structuring.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 
 

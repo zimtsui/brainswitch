@@ -1,6 +1,6 @@
-import { Structuring } from '#@/compatible/structuring.ts';
-import type { Function } from '#@/function.ts';
-import type { Verbatim } from '#@/verbatim.ts';
+import { Structuring } from '../../compatible/structuring.ts';
+import type { Function } from '../../function.ts';
+import type { Verbatim } from '../../verbatim.ts';
 import * as Google from '@google/genai';
 
 

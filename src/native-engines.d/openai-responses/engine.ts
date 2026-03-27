@@ -1,15 +1,15 @@
-import { Function } from '#@/function.ts';
-import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/session.ts';
-import { Engine } from '#@/engine.ts';
-import { type InferenceContext } from '#@/inference-context.ts';
-import { ToolCodec } from '#@/api-types/openai-responses/tool-codec.ts';
-import { Billing } from '#@/api-types/openai-responses/billing.ts';
-import { MessageCodec as CompatibleMessageCodec } from '#@/compatible.d/openai-responses/message-codec.ts';
-import { MessageCodec } from '#@/native-engines.d/openai-responses/message-codec.ts';
-import { Validator } from '#@/native-engines.d/openai-responses/validation.ts';
-import { Transport } from '#@/native-engines.d/openai-responses/transport.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import { Structuring } from '#@/native-engines.d/openai-responses/structuring.ts';
+import { Function } from '../../function.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Engine } from '../../engine.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
+import { Billing } from '../../api-types/openai-responses/billing.ts';
+import { MessageCodec as CompatibleMessageCodec } from '../../compatible.d/openai-responses/message-codec.ts';
+import { MessageCodec } from './message-codec.ts';
+import { Validator } from './validation.ts';
+import { Transport } from './transport.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import { Structuring } from './structuring.ts';
 
 
 export class OpenAIResponsesNativeEngine<

@@ -1,2 +1,2 @@
-export * as Declarations from '#@/verbatim/codec/declarations.ts';
-export * as Request from '#@/verbatim/codec/request.ts';
+export * as Declarations from './codec/declarations.ts';
+export * as Request from './codec/request.ts';

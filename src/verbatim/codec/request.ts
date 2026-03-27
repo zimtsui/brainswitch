@@ -1,4 +1,4 @@
-import { Verbatim } from '#@/verbatim.ts';
+import { Verbatim } from '../../verbatim.ts';
 
 
 /**

@@ -1,8 +1,8 @@
-import { RoleMessage, type Session } from '#@/compatible/session.ts';
-import { Function } from '#@/function.ts';
-import { Engine } from '#@/engine.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import { Structuring } from '#@/compatible/structuring.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../function.ts';
+import { Engine } from '../engine.ts';
+import type { Verbatim } from '../verbatim.ts';
+import { Structuring } from './structuring.ts';
 
 
 

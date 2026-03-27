@@ -1,4 +1,4 @@
-import type { Pricing } from '#@/engine.ts';
+import type { Pricing } from '../../engine.ts';
 import OpenAI from 'openai';
 
 

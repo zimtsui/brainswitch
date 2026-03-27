@@ -1,7 +1,7 @@
-import { Function } from '#@/function.ts';
-import { StreamTransport } from '#@/compatible.d/openai-chatcompletions/transport.d/stream.ts';
+import { Function } from '../../function.ts';
+import { StreamTransport } from '../openai-chatcompletions/transport.d/stream.ts';
 import OpenAI from 'openai';
-import type { Verbatim } from '#@/verbatim.ts';
+import type { Verbatim } from '../../verbatim.ts';
 
 
 

@@ -1,6 +1,6 @@
-import { Function } from '#@/function.ts';
-import { type GenericSession } from '#@/engine/session.ts';
-import { Verbatim } from '#@/verbatim.ts';
+import { Function } from '../function.ts';
+import { type GenericSession } from '../engine/session.ts';
+import { Verbatim } from '../verbatim.ts';
 
 const NOMINAL = Symbol();
 

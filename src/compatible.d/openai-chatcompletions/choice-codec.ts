@@ -1,7 +1,7 @@
-import type { Function } from '#@/function.ts';
-import type { Verbatim } from '#@/verbatim.ts';
+import type { Function } from '../../function.ts';
+import type { Verbatim } from '../../verbatim.ts';
 import OpenAI from 'openai';
-import { Structuring } from '#@/compatible/structuring.ts';
+import { Structuring } from '../../compatible/structuring.ts';
 
 
 export function encode<

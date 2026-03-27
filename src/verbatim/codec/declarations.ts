@@ -1,6 +1,6 @@
-import { Verbatim } from '#@/verbatim.ts';
+import { Verbatim } from '../../verbatim.ts';
 import Handlebars from 'handlebars';
-import Assets from '#@/assets.ts';
+import Assets from '../../assets.ts';
 
 
 const template = Handlebars.compile<template.Input>(Assets.verbatim.declarations);

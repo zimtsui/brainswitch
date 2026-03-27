@@ -1,5 +1,5 @@
-import { type InferenceContext } from '#@/inference-context.ts';
-import type { GenericSession } from '#@/engine/session.ts';
+import { type InferenceContext } from '../inference-context.ts';
+import type { GenericSession } from './session.ts';
 
 
 

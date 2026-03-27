@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import type { Pricing } from '#@/engine.ts';
+import type { Pricing } from '../../engine.ts';
 
 
 export class Billing {

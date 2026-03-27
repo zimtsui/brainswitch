@@ -1,21 +1,21 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '#@/engine.ts';
-import { RoleMessage, type Session } from '#@/native-engines.d/google/session.ts';
-import { Function } from '#@/function.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import * as Undici from 'undici';
-import { type InferenceContext } from '#@/inference-context.ts';
-import type { RestfulRequest } from '#@/api-types/google/restful-request.ts';
-import { Throttle } from '#@/throttle.ts';
-import { logger } from '#@/telemetry.ts';
-import type { GoogleNativeMessageCodec } from '#@/native-engines.d/google/message-codec.ts';
-import type { ToolCodec } from '#@/api-types/google/tool-codec.ts';
-import type { Billing } from '#@/api-types/google/billing.ts';
-import type { Validator } from '#@/native-engines.d/google/validation.ts';
-import type { Verbatim } from '#@/verbatim.ts';
-import * as ChoiceCodec from '#@/compatible.d/google/choice-codec.ts';
-import type { Structuring } from '#@/compatible/structuring.ts';
-import * as VerbatimCodec from '#@/verbatim/codec.ts';
-import type { Transport as GenericTransport } from '#@/engine/transport.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import type { RestfulRequest } from '../../api-types/google/restful-request.ts';
+import { Throttle } from '../../throttle.ts';
+import { logger } from '../../telemetry.ts';
+import type { GoogleNativeMessageCodec } from './message-codec.ts';
+import type { ToolCodec } from '../../api-types/google/tool-codec.ts';
+import type { Billing } from '../../api-types/google/billing.ts';
+import type { Validator } from './validation.ts';
+import type { Verbatim } from '../../verbatim.ts';
+import * as ChoiceCodec from '../../compatible.d/google/choice-codec.ts';
+import type { Structuring } from '../../compatible/structuring.ts';
+import * as VerbatimCodec from '../../verbatim/codec.ts';
+import type { Transport as GenericTransport } from '../../engine/transport.ts';
 
 
 

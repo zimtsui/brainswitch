@@ -8,10 +8,6 @@
     "./openai-responses": "./build/native-engines.d/openai-responses/exports.js",
     "./google": "./build/native-engines.d/google/exports.js"
   },
-  "imports": {
-    "#@/*.ts": "./build/*.js"
-  },
-  "description": "",
   "engines": {
     "node": ">=22"
   },

@@ -1,10 +1,10 @@
-import { type InferenceContext } from '#@/inference-context.ts';
-import { RoleMessage, type Session } from '#@/native-engines.d/openai-responses/session.ts';
-import { Function } from '#@/function.ts';
-import { Tool } from '#@/native-engines.d/openai-responses/tool.ts';
-import { OpenAIResponsesNativeEngine } from '#@/native-engines.d/openai-responses/engine.ts';
-import * as CompatibleAgentloopModule from '#@/compatible/agentloop.ts';
-import type { Verbatim } from '#@/verbatim.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import { RoleMessage, type Session } from './session.ts';
+import { Function } from '../../function.ts';
+import { Tool } from './tool.ts';
+import { OpenAIResponsesNativeEngine } from './engine.ts';
+import * as CompatibleAgentloopModule from '../../compatible/agentloop.ts';
+import type { Verbatim } from '../../verbatim.ts';
 
 
 /**
