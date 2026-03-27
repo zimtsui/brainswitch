@@ -19,7 +19,7 @@ export class MessageCodec<
     public encodeFunctionResponse(
         fr: Function.Response.From<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
-        return this.ctx.toolCodec.convertFromFunctionResponse(fr);
+        return this.ctx.toolCodec.encodeFunctionResponse(fr);
     }
 
     public decodeAiMessage(
@@ -33,7 +33,7 @@ export class MessageCodec<
                 const vrs = VerbatimCodec.Request.decode(text, this.ctx.vdm);
                 return [new RoleMessage.Part.Text(text, vrs)];
             } else if (item.type === 'function_call')
-                return [this.ctx.toolCodec.convertToFunctionCall(item)];
+                return [this.ctx.toolCodec.decodeFunctionCall(item)];
             else if (item.type === 'reasoning')
                 return [];
             else if (item.type === 'apply_patch_call')

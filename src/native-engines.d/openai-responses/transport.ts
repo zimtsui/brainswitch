@@ -30,7 +30,7 @@ export class Transport<
     protected makeParams(
         session: Session.From<fdm, vdm>,
     ): OpenAI.Responses.ResponseCreateParamsNonStreaming {
-        const tools: OpenAI.Responses.Tool[] = this.ctx.toolCodec.convertFromFunctionDeclarationMap(this.ctx.fdm);
+        const tools: OpenAI.Responses.Tool[] = this.ctx.toolCodec.encodeFunctionDeclarationMap(this.ctx.fdm);
         if (this.ctx.applyPatch) tools.push({ type: 'apply_patch' });
         return {
             model: this.ctx.inferenceParams.model,

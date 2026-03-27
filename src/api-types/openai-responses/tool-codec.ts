@@ -12,7 +12,7 @@ export class ToolCodec<
 > {
     public constructor(protected ctx: ToolCodec.Context<fdm>) {}
 
-    public convertFromFunctionResponse(
+    public encodeFunctionResponse(
         fr: Function.Response.From<fdm>,
     ): OpenAI.Responses.ResponseInputItem.FunctionCallOutput {
         if (fr.id) {} else throw new Error();
@@ -23,7 +23,7 @@ export class ToolCodec<
         };
     }
 
-    protected convertFromFunctionDeclarationEntry(
+    protected encodeFunctionDeclarationEntry(
         fdentry: Function.Decl.Entry.From<fdm>,
     ): OpenAI.Responses.FunctionTool {
         return {
@@ -35,12 +35,12 @@ export class ToolCodec<
         };
     }
 
-    public convertFromFunctionDeclarationMap(fdm: fdm): OpenAI.Responses.FunctionTool[] {
+    public encodeFunctionDeclarationMap(fdm: fdm): OpenAI.Responses.FunctionTool[] {
         const fdentries = Object.entries(fdm) as Function.Decl.Entry.From<fdm>[];
-        return fdentries.map(fdentry => this.convertFromFunctionDeclarationEntry(fdentry));
+        return fdentries.map(fdentry => this.encodeFunctionDeclarationEntry(fdentry));
     }
 
-    public convertToFunctionCall(
+    public decodeFunctionCall(
         apifc: OpenAI.Responses.ResponseFunctionToolCall,
     ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.name];
@@ -59,6 +59,18 @@ export class ToolCodec<
             name: apifc.name,
             args,
         } as Function.Call.Options.From<fdm>);
+    }
+
+    public encodeFunctionCall(
+        fc: Function.Call.From<fdm>,
+    ): OpenAI.Responses.ResponseFunctionToolCall {
+        if (fc.id) {} else throw new Error();
+        return {
+            type: 'function_call',
+            call_id: fc.id,
+            name: fc.name,
+            arguments: JSON.stringify(fc.args),
+        };
     }
 }
 

@@ -28,25 +28,13 @@ export class MessageCodec<
                     const vrs = VerbatimCodec.Request.decode(text, this.ctx.vdm);
                     return [new RoleMessage.Part.Text(text, vrs)];
                 } else if (item.type === 'function_call')
-                    return [this.ctx.toolCodec.convertToFunctionCall(item)];
+                    return [this.ctx.toolCodec.decodeFunctionCall(item)];
                 else if (item.type === 'reasoning')
                     return [];
                 else throw new Error();
             },
         );
         return new MessageCodec.Message.Ai(parts, output);
-    }
-
-    public encodeFunctionCall(
-        fc: Function.Call.From<fdm>,
-    ): OpenAI.Responses.ResponseFunctionToolCall {
-        if (fc.id) {} else throw new Error();
-        return {
-            type: 'function_call',
-            call_id: fc.id,
-            name: fc.name,
-            arguments: JSON.stringify(fc.args),
-        };
     }
 
     public encodeUserMessage(
@@ -60,7 +48,7 @@ export class MessageCodec<
                     content: part.text,
                 } satisfies OpenAI.Responses.EasyInputMessage;
             else if (part instanceof Function.Response)
-                return this.ctx.toolCodec.convertFromFunctionResponse(part);
+                return this.ctx.toolCodec.encodeFunctionResponse(part);
             else throw new Error();
         });
     }
@@ -78,7 +66,7 @@ export class MessageCodec<
                         content: part.text,
                     } satisfies OpenAI.Responses.EasyInputMessage;
                 else if (part instanceof Function.Call)
-                    return this.encodeFunctionCall(part);
+                    return this.ctx.toolCodec.encodeFunctionCall(part);
                 else throw new Error();
             });
         }
