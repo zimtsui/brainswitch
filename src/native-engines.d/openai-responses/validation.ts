@@ -14,7 +14,7 @@ export class Validator<
     public constructor(protected ctx: Validator.Context<fdu, vdu>) {}
 
     public validateChoice(message: RoleMessage.Ai<fdu, vdu>): void {
-        const tcs = message.getFunctionCalls();
+        const tcs = message.getToolCalls();
         const vrs = message.getVerbatimRequests();
 
         if (this.ctx.choice === Structuring.Choice.TCall.REQUIRED) {
