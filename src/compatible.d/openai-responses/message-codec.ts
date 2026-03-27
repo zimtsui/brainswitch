@@ -1,4 +1,4 @@
-import { RoleMessage, type Session } from '../../compatible/session.ts';
+import { RoleMessage, type Session } from '../../compatible-engine/session.ts';
 import { Function } from '../../function.ts';
 import OpenAI from 'openai';
 import type { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';

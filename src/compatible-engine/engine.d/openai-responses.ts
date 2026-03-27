@@ -1,15 +1,16 @@
-import { CompatibleEngine } from '../engine.ts';
+import { CompatibleEngine } from '../../compatible-engine.ts';
+import { RoleMessage, type Session } from '../session.ts';
 import { Function } from '../../function.ts';
-import { MessageCodec } from '../../compatible.d/google/message-codec.ts';
-import { ToolCodec } from '../../api-types/google/tool-codec.ts';
-import { Billing } from '../../api-types/google/billing.ts';
+import { type InferenceContext } from '../../inference-context.ts';
+import { ToolCodec } from '../../api-types/openai-responses/tool-codec.ts';
+import { Billing } from '../../api-types/openai-responses/billing.ts';
 import { Validator } from '../validation.ts';
-import { Transport } from '../../compatible.d/google/transport.ts';
+import { MessageCodec } from '../../compatible.d/openai-responses/message-codec.ts';
+import { Transport } from '../../compatible.d/openai-responses/transport.ts';
 import type { Verbatim } from '../../verbatim.ts';
 
 
-
-export class GoogleCompatibleEngine<
+export class OpenAIResponsesCompatibleEngine<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
 > extends CompatibleEngine<fdm, vdm> {
@@ -20,13 +21,10 @@ export class GoogleCompatibleEngine<
     protected override transport: Transport<fdm, vdm>;
     protected override parallelToolCall: boolean;
 
-    public constructor(options: GoogleCompatibleEngine.Options<fdm, vdm>) {
+    public constructor(options: OpenAIResponsesCompatibleEngine.Options<fdm, vdm>) {
         super(options);
-        this.parallelToolCall = options.parallelToolCall ?? true;
-        if (this.parallelToolCall) {} else throw new Error('Parallel tool calling is required by Google engine.');
-        this.toolCodec = new ToolCodec({
-            fdm: this.fdm,
-        });
+        this.parallelToolCall = options.parallelToolCall ?? false;
+        this.toolCodec = new ToolCodec({ fdm: this.fdm });
         this.messageCodec = new MessageCodec({
             toolCodec: this.toolCodec,
             vdm: this.vdm,
@@ -34,11 +32,12 @@ export class GoogleCompatibleEngine<
         this.billing = new Billing({ pricing: this.pricing });
         this.validator = new Validator({ choice: this.choice });
         this.transport = new Transport({
-            inferenceParams: this.inferenceParams,
+            inferenceSpec: this.inferenceParams,
             providerSpec: this.providerSpec,
             fdm: this.fdm,
             throttle: this.throttle,
             choice: this.choice,
+            parallelToolCall: this.parallelToolCall,
             messageCodec: this.messageCodec,
             toolCodec: this.toolCodec,
             billing: this.billing,
@@ -48,7 +47,7 @@ export class GoogleCompatibleEngine<
 
 }
 
-export namespace GoogleCompatibleEngine {
+export namespace OpenAIResponsesCompatibleEngine {
     export interface Options<
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,

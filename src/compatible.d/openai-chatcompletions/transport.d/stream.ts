@@ -1,4 +1,4 @@
-import { RoleMessage, type Session } from '../../../compatible/session.ts';
+import { RoleMessage, type Session } from '../../../compatible-engine/session.ts';
 import { Function } from '../../../function.ts';
 import OpenAI from 'openai';
 import { Transport } from '../transport.ts';
@@ -10,8 +10,8 @@ import type { OpenAIChatCompletionsToolCodec } from '../../../api-types/openai-c
 import { Throttle } from '../../../throttle.ts';
 import { type MessageCodec } from '../message-codec.ts';
 import type { Verbatim } from '../../../verbatim.ts';
-import { Validator } from '../../../compatible/validation.ts';
-import type { Structuring } from '../../../compatible/structuring.ts';
+import { Validator } from '../../../compatible-engine/validation.ts';
+import type { Structuring } from '../../../compatible-engine/structuring.ts';
 import * as ChoiceCodec from '../choice-codec.ts';
 
 

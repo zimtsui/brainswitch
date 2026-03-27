@@ -3,7 +3,7 @@ import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
 import { Tool } from './tool.ts';
 import { OpenAIResponsesNativeEngine } from './engine.ts';
-import * as CompatibleAgentloopModule from '../../compatible/agentloop.ts';
+import * as CompatibleAgentloopModule from '../../compatible-engine/agentloop.ts';
 import type { Verbatim } from '../../verbatim.ts';
 
 

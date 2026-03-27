@@ -9,7 +9,7 @@ import { MessageCodec as CompatibleMessageCodec } from '../../compatible.d/googl
 import { GoogleNativeMessageCodec } from './message-codec.ts';
 import { GoogleNativeTransport } from './transport.ts';
 import type { Verbatim } from '../../verbatim.ts';
-import { Structuring } from '../../compatible/structuring.ts';
+import { Structuring } from '../../compatible-engine/structuring.ts';
 
 
 export class GoogleNativeEngine<

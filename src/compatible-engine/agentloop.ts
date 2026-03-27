@@ -1,7 +1,7 @@
 import { type InferenceContext } from '../inference-context.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../function.ts';
-import { type CompatibleEngine } from './engine.ts';
+import { type CompatibleEngine } from '../compatible-engine.ts';
 import type { Verbatim } from '../verbatim.ts';
 
 

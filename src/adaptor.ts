@@ -1,15 +1,15 @@
 import { Config } from './config.ts';
 import { Function } from './function.ts';
-import { type CompatibleEngine } from './compatible/engine.ts';
+import { type CompatibleEngine } from './compatible-engine.ts';
 import { Throttle } from './throttle.ts';
-import { GoogleCompatibleEngine } from './compatible/engine.d/google.ts';
-import { OpenAIResponsesCompatibleEngine } from './compatible/engine.d/openai-responses.ts';
-import { AnthropicCompatibleEngine } from './compatible/engine.d/anthropic.ts';
-import { AliyunCompatibleEngine } from './compatible/engine.d/aliyun.ts';
+import { GoogleCompatibleEngine } from './compatible-engine/engine.d/google.ts';
+import { OpenAIResponsesCompatibleEngine } from './compatible-engine/engine.d/openai-responses.ts';
+import { AnthropicCompatibleEngine } from './compatible-engine/engine.d/anthropic.ts';
+import { AliyunCompatibleEngine } from './compatible-engine/engine.d/aliyun.ts';
 import { OpenAIResponsesNativeEngine } from './native-engines.d/openai-responses/engine.ts';
 import { GoogleNativeEngine } from './native-engines.d/google/engine.ts';
 import type { Verbatim } from './verbatim.ts';
-import type { Structuring } from './compatible/structuring.ts';
+import type { Structuring } from './compatible-engine/structuring.ts';
 import type { Structuring as OpenAIResponsesNativeStructuring } from './native-engines.d/openai-responses/structuring.ts';
 
 

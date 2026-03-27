@@ -1,4 +1,4 @@
-import { Structuring as CompatibleStructuring } from '../../compatible/structuring.ts';
+import { Structuring as CompatibleStructuring } from '../../compatible-engine/structuring.ts';
 import type { Function } from '../../function.ts';
 import type { Verbatim } from '../../verbatim.ts';
 import { Tool } from './tool.ts';

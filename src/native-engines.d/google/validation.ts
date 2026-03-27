@@ -1,8 +1,8 @@
-import { Structuring } from '../../compatible/structuring.ts';
+import { Structuring } from '../../compatible-engine/structuring.ts';
 import { Function } from '../../function.ts';
 import { Verbatim } from '../../verbatim.ts';
 import { RoleMessage } from './session.ts';
-import { Validator as CompatibleValidator } from '../../compatible/validation.ts';
+import { Validator as CompatibleValidator } from '../../compatible-engine/validation.ts';
 import { ResponseInvalid } from '../../engine.ts';
 import type { Engine } from '../../engine.ts';
 

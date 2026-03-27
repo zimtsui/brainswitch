@@ -1,5 +1,5 @@
 import { ResponseInvalid } from '../../engine.ts';
-import { RoleMessage, type Session } from '../../compatible/session.ts';
+import { RoleMessage, type Session } from '../../compatible-engine/session.ts';
 import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import { type ToolCodec } from '../../api-types/google/tool-codec.ts';

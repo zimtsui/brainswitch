@@ -1,4 +1,4 @@
-import { RoleMessage as CompatibleRoleMessage } from '../../compatible/session.ts';
+import { RoleMessage as CompatibleRoleMessage } from '../../compatible-engine/session.ts';
 import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
 import type { Engine } from '../../engine.ts';
