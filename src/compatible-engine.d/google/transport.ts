@@ -1,4 +1,4 @@
-import { ResponseInvalid, type InferenceParams as InferenceParams, type Pricing, type ProviderSpec } from '../../engine.ts';
+import { Engine, NetworkError, ResponseInvalid, type InferenceParams as InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { RoleMessage, type Session } from '../../compatible-engine/session.ts';
 import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
@@ -14,7 +14,6 @@ import type { Verbatim } from '../../verbatim.ts';
 import type { Validator } from '../../compatible-engine/validation.ts';
 import type { Structuring } from '../../compatible-engine/structuring.ts';
 import * as GoogleChoiceCodec from './choice-codec.ts';
-import type { Engine } from '../../engine.ts';
 
 
 
@@ -69,6 +68,10 @@ export class Transport<
             body: JSON.stringify(reqbody),
             dispatcher: this.ctx.providerSpec.proxyAgent,
             signal,
+        }).catch(e => {
+            if (e instanceof TypeError)
+                throw new NetworkError(undefined, { cause: e });
+            else throw e;
         });
 
         // Get response

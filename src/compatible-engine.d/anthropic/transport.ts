@@ -1,4 +1,4 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
+import { NetworkError, ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { RoleMessage, type Session } from '../../compatible-engine/session.ts';
 import { Function } from '../../function.ts';
 import Anthropic from '@anthropic-ai/sdk';
@@ -66,59 +66,65 @@ export class Transport<
 
         // Get response
         let response: Anthropic.Message | null = null;
-        for await (const event of stream) {
-            if (event.type === 'message_start') {
-                logger.message.trace(event);
-                response = structuredClone(event.message);
-            } else {
-                if (response) {} else throw new Error();
-                if (event.type === 'message_delta') {
+        try {
+            for await (const event of stream) {
+                if (event.type === 'message_start') {
                     logger.message.trace(event);
-                    response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
-                    response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
-                    response.usage.input_tokens = event.usage.input_tokens ?? response.usage.input_tokens;
-                    response.usage.output_tokens = event.usage.output_tokens;
-                    response.usage.cache_read_input_tokens = event.usage.cache_read_input_tokens ?? response.usage.cache_read_input_tokens;
-                    response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
-                    response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
-                } else if (event.type === 'message_stop') {
-                    logger.message.trace(event);
-                } else if (event.type === 'content_block_start') {
-                    logger.message.trace(event);
-                    const contentBlock = structuredClone(event.content_block);
-                    response.content.push(contentBlock);
-                    if (contentBlock.type === 'tool_use') contentBlock.input = '';
-                } else if (event.type === 'content_block_delta') {
-                    const contentBlock = response.content[event.index];
-                    if (event.delta.type === 'text_delta') {
-                        logger.inference.debug(event.delta.text);
-                        if (contentBlock?.type === 'text') {} else throw new Error();
-                        contentBlock.text += event.delta.text;
-                    } else if (event.delta.type === 'thinking_delta') {
-                        logger.inference.trace(event.delta.thinking);
-                        if (contentBlock?.type === 'thinking') {} else throw new Error();
-                        contentBlock.thinking += event.delta.thinking;
-                    } else if (event.delta.type === 'signature_delta') {
-                        if (contentBlock?.type === 'thinking') {} else throw new Error();
-                        contentBlock.signature += event.delta.signature;
-                    } else if (event.delta.type === 'input_json_delta') {
-                        logger.inference.trace(event.delta.partial_json);
-                        if (contentBlock?.type === 'tool_use') {} else throw new Error();
-                        if (typeof contentBlock.input === 'string') {} else throw new Error();
-                        contentBlock.input += event.delta.partial_json;
-                    } else throw new Error('Unknown type of content block delta', { cause: event.delta });
-                } else if (event.type === 'content_block_stop') {
-                    const contentBlock = response.content[event.index];
-                    if (contentBlock?.type === 'text') logger.inference.debug('\n');
-                    else if (contentBlock?.type === 'thinking') logger.inference.trace('\n');
-                    else if (contentBlock?.type === 'tool_use') logger.inference.debug('\n');
-                    logger.message.trace(event);
-                    if (contentBlock?.type === 'tool_use') {
-                        if (typeof contentBlock.input === 'string') {} else throw new Error();
-                        logger.message.debug(contentBlock);
-                    }
-                } else throw new Error('Unknown stream event', { cause: event });
+                    response = structuredClone(event.message);
+                } else {
+                    if (response) {} else throw new Error();
+                    if (event.type === 'message_delta') {
+                        logger.message.trace(event);
+                        response.stop_sequence = event.delta.stop_sequence ?? response.stop_sequence;
+                        response.stop_reason = event.delta.stop_reason ?? response.stop_reason;
+                        response.usage.input_tokens = event.usage.input_tokens ?? response.usage.input_tokens;
+                        response.usage.output_tokens = event.usage.output_tokens;
+                        response.usage.cache_read_input_tokens = event.usage.cache_read_input_tokens ?? response.usage.cache_read_input_tokens;
+                        response.usage.cache_creation_input_tokens = event.usage.cache_creation_input_tokens ?? response.usage.cache_creation_input_tokens;
+                        response.usage.server_tool_use = event.usage.server_tool_use ?? response.usage.server_tool_use;
+                    } else if (event.type === 'message_stop') {
+                        logger.message.trace(event);
+                    } else if (event.type === 'content_block_start') {
+                        logger.message.trace(event);
+                        const contentBlock = structuredClone(event.content_block);
+                        response.content.push(contentBlock);
+                        if (contentBlock.type === 'tool_use') contentBlock.input = '';
+                    } else if (event.type === 'content_block_delta') {
+                        const contentBlock = response.content[event.index];
+                        if (event.delta.type === 'text_delta') {
+                            logger.inference.debug(event.delta.text);
+                            if (contentBlock?.type === 'text') {} else throw new Error();
+                            contentBlock.text += event.delta.text;
+                        } else if (event.delta.type === 'thinking_delta') {
+                            logger.inference.trace(event.delta.thinking);
+                            if (contentBlock?.type === 'thinking') {} else throw new Error();
+                            contentBlock.thinking += event.delta.thinking;
+                        } else if (event.delta.type === 'signature_delta') {
+                            if (contentBlock?.type === 'thinking') {} else throw new Error();
+                            contentBlock.signature += event.delta.signature;
+                        } else if (event.delta.type === 'input_json_delta') {
+                            logger.inference.trace(event.delta.partial_json);
+                            if (contentBlock?.type === 'tool_use') {} else throw new Error();
+                            if (typeof contentBlock.input === 'string') {} else throw new Error();
+                            contentBlock.input += event.delta.partial_json;
+                        } else throw new Error('Unknown type of content block delta', { cause: event.delta });
+                    } else if (event.type === 'content_block_stop') {
+                        const contentBlock = response.content[event.index];
+                        if (contentBlock?.type === 'text') logger.inference.debug('\n');
+                        else if (contentBlock?.type === 'thinking') logger.inference.trace('\n');
+                        else if (contentBlock?.type === 'tool_use') logger.inference.debug('\n');
+                        logger.message.trace(event);
+                        if (contentBlock?.type === 'tool_use') {
+                            if (typeof contentBlock.input === 'string') {} else throw new Error();
+                            logger.message.debug(contentBlock);
+                        }
+                    } else throw new Error('Unknown stream event', { cause: event });
+                }
             }
+        } catch (e) {
+            if (e instanceof TypeError)
+                throw new NetworkError(undefined, { cause: e });
+            else throw e;
         }
 
         // Validate response

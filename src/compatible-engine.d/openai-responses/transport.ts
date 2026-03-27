@@ -1,4 +1,4 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
+import { NetworkError, ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { RoleMessage, type Session } from '../../compatible-engine/session.ts';
 import { Function } from '../../function.ts';
 import OpenAI from 'openai';
@@ -83,7 +83,11 @@ export class Transport<
                     dispatcher: this.ctx.providerSpec.proxyAgent,
                     signal,
                 },
-            );
+            ).catch(e => {
+                if (e instanceof TypeError)
+                    throw new NetworkError(undefined, { cause: e });
+                else throw e;
+            });
 
             // Get response
             if (res.ok) {} else throw new Error(undefined, { cause: res });

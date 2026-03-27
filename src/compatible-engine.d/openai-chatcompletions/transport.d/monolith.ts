@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 import { Transport } from '../transport.ts';
 import { type InferenceContext } from '../../../inference-context.ts';
 import * as Undici from 'undici';
-import { ResponseInvalid } from '../../../engine.ts';
+import { ResponseInvalid, NetworkError } from '../../../engine.ts';
 import { logger } from '../../../telemetry.ts';
 import type { OpenAIChatCompletionsBilling } from '../../../api-types/openai-chatcompletions/billing.ts';
 import type { OpenAIChatCompletionsToolCodec } from '../../../api-types/openai-chatcompletions/tool-codec.ts';
@@ -70,6 +70,10 @@ export abstract class MonolithTransport<
                 body: JSON.stringify(params),
                 dispatcher: this.ctx.proxyAgent,
                 signal,
+            }).catch(e => {
+                if (e instanceof TypeError)
+                    throw new NetworkError(undefined, { cause: e });
+                else throw e;
             });
 
             // Get response

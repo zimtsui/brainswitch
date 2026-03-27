@@ -3,7 +3,7 @@ import { Function } from '../../../function.ts';
 import OpenAI from 'openai';
 import { Transport } from '../transport.ts';
 import { type InferenceContext } from '../../../inference-context.ts';
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../../engine.ts';
+import { ResponseInvalid, type InferenceParams, type ProviderSpec, NetworkError } from '../../../engine.ts';
 import { logger } from '../../../telemetry.ts';
 import type { OpenAIChatCompletionsBilling } from '../../../api-types/openai-chatcompletions/billing.ts';
 import type { OpenAIChatCompletionsToolCodec } from '../../../api-types/openai-chatcompletions/tool-codec.ts';
@@ -109,77 +109,83 @@ export abstract class StreamTransport<
 
             // Get response
             let stock: OpenAI.ChatCompletionChunk | null = null;
-            let thoughts: string | null = null, thinking = false;
-            for await (const chunk of stream) {
-                stock ??= {
-                    id: chunk.id,
-                    created: chunk.created,
-                    model: chunk.model,
-                    choices: [],
-                    object: 'chat.completion.chunk',
-                };
+            try {
+                let thoughts: string | null = null, thinking = false;
+                for await (const chunk of stream) {
+                    stock ??= {
+                        id: chunk.id,
+                        created: chunk.created,
+                        model: chunk.model,
+                        choices: [],
+                        object: 'chat.completion.chunk',
+                    };
 
-                // choice
-                const deltaChoice = chunk.choices[0];
-                if (deltaChoice) {
-                    if (!stock.choices.length)
-                        stock.choices.push({
-                            index: 0,
-                            finish_reason: null,
-                            delta: {},
-                        });
+                    // choice
+                    const deltaChoice = chunk.choices[0];
+                    if (deltaChoice) {
+                        if (!stock.choices.length)
+                            stock.choices.push({
+                                index: 0,
+                                finish_reason: null,
+                                delta: {},
+                            });
 
-                    // thoughts
-                    const deltaThoughts = this.getDeltaThoughts(deltaChoice.delta);
-                    if (deltaThoughts) {
-                        if (!thinking) {
-                            thinking = true;
-                            logger.inference.trace('<think>\n');
+                        // thoughts
+                        const deltaThoughts = this.getDeltaThoughts(deltaChoice.delta);
+                        if (deltaThoughts) {
+                            if (!thinking) {
+                                thinking = true;
+                                logger.inference.trace('<think>\n');
+                            }
+                            logger.inference.trace(deltaThoughts);
+                            thoughts ??= '';
+                            thoughts += deltaThoughts;
                         }
-                        logger.inference.trace(deltaThoughts);
-                        thoughts ??= '';
-                        thoughts += deltaThoughts;
-                    }
 
-                    // content
-                    if (deltaChoice.delta.content) {
-                        if (thinking) {
-                            thinking = false;
-                            logger.inference.trace('\n</think>\n');
+                        // content
+                        if (deltaChoice.delta.content) {
+                            if (thinking) {
+                                thinking = false;
+                                logger.inference.trace('\n</think>\n');
+                            }
+                            logger.inference.debug(deltaChoice.delta.content);
+                            stock.choices[0]!.delta.content ??= '';
+                            stock.choices[0]!.delta.content! += deltaChoice.delta.content;
                         }
-                        logger.inference.debug(deltaChoice.delta.content);
-                        stock.choices[0]!.delta.content ??= '';
-                        stock.choices[0]!.delta.content! += deltaChoice.delta.content;
-                    }
 
-                    // function calls
-                    if (deltaChoice.delta.tool_calls) {
-                        if (thinking) {
-                            thinking = false;
-                            logger.inference.trace('\n</think>\n');
-                        }
-                        stock.choices[0]!.delta.tool_calls ??= [];
-                        for (const deltaToolCall of deltaChoice.delta.tool_calls) {
-                            const toolCalls = stock.choices[0]!.delta.tool_calls!;
-                            toolCalls[deltaToolCall.index] ??= { index: deltaToolCall.index };
-                            toolCalls[deltaToolCall.index]!.id ??= deltaToolCall.id;
-                            if (deltaToolCall.function) {
-                                toolCalls[deltaToolCall.index]!.function ??= {};
-                                toolCalls[deltaToolCall.index]!.function!.name ??= deltaToolCall.function.name;
-                                if (deltaToolCall.function.arguments) {
-                                    toolCalls[deltaToolCall.index]!.function!.arguments ??= '';
-                                    toolCalls[deltaToolCall.index]!.function!.arguments! += deltaToolCall.function?.arguments || '';
+                        // function calls
+                        if (deltaChoice.delta.tool_calls) {
+                            if (thinking) {
+                                thinking = false;
+                                logger.inference.trace('\n</think>\n');
+                            }
+                            stock.choices[0]!.delta.tool_calls ??= [];
+                            for (const deltaToolCall of deltaChoice.delta.tool_calls) {
+                                const toolCalls = stock.choices[0]!.delta.tool_calls!;
+                                toolCalls[deltaToolCall.index] ??= { index: deltaToolCall.index };
+                                toolCalls[deltaToolCall.index]!.id ??= deltaToolCall.id;
+                                if (deltaToolCall.function) {
+                                    toolCalls[deltaToolCall.index]!.function ??= {};
+                                    toolCalls[deltaToolCall.index]!.function!.name ??= deltaToolCall.function.name;
+                                    if (deltaToolCall.function.arguments) {
+                                        toolCalls[deltaToolCall.index]!.function!.arguments ??= '';
+                                        toolCalls[deltaToolCall.index]!.function!.arguments! += deltaToolCall.function?.arguments || '';
+                                    }
                                 }
                             }
                         }
+
+                        // finish reason
+                        stock.choices[0]!.finish_reason ??= deltaChoice.finish_reason;
                     }
 
-                    // finish reason
-                    stock.choices[0]!.finish_reason ??= deltaChoice.finish_reason;
+                    // usage
+                    stock.usage ??= chunk.usage;
                 }
-
-                // usage
-                stock.usage ??= chunk.usage;
+            } catch (e) {
+                if (e instanceof TypeError)
+                    throw new NetworkError(undefined, { cause: e });
+                else throw e;
             }
 
             // Validate response
