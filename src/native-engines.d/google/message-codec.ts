@@ -9,11 +9,11 @@ import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 
 
-export class GoogleNativeMessageCodec<
+export class MessageCodec<
     in out fdm extends Function.Decl.Map.Proto,
     in out vdm extends Verbatim.Decl.Map.Proto,
 > {
-    public constructor(protected ctx: GoogleNativeMessageCodec.Context<fdm, vdm>) {}
+    public constructor(protected ctx: MessageCodec.Context<fdm, vdm>) {}
 
 
     public encodeAiMessage(
@@ -74,7 +74,7 @@ export class GoogleNativeMessageCodec<
     }
 }
 
-export namespace GoogleNativeMessageCodec {
+export namespace MessageCodec {
     export interface Context<
         in out fdm extends Function.Decl.Map.Proto,
         in out vdm extends Verbatim.Decl.Map.Proto,

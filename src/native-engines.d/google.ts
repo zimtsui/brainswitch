@@ -6,7 +6,7 @@ import { ToolCodec } from '../api-types/google/tool-codec.ts';
 import { Billing } from '../api-types/google/billing.ts';
 import * as ValidationModule from './google/validation.ts';
 import { MessageCodec as CompatibleMessageCodec } from '../compatible-engine.d/google/message-codec.ts';
-import { GoogleNativeMessageCodec } from './google/message-codec.ts';
+import * as MessageCodecModule from './google/message-codec.ts';
 import { GoogleNativeTransport } from './google/transport.ts';
 import type { Verbatim } from '../verbatim.ts';
 import { Structuring } from '../compatible-engine/structuring.ts';
@@ -31,7 +31,7 @@ export class GoogleNativeEngine<
 
     protected toolCodec: ToolCodec<fdm>;
     protected compatibleMessageCodec: CompatibleMessageCodec<fdm, vdm>;
-    protected messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
+    protected messageCodec: GoogleNativeEngine.MessageCodec<fdm, vdm>;
     protected billing: Billing;
     protected override validator: GoogleNativeEngine.Validator.From<fdm, vdm>;
     protected override transport: GoogleNativeTransport<fdm, vdm>;
@@ -53,7 +53,7 @@ export class GoogleNativeEngine<
             toolCodec: this.toolCodec,
             vdm: this.vdm,
         });
-        this.messageCodec = new GoogleNativeMessageCodec({
+        this.messageCodec = new GoogleNativeEngine.MessageCodec({
             toolCodec: this.toolCodec,
             compatibleMessageCodec: this.compatibleMessageCodec,
             codeExecution: this.codeExecution,
@@ -118,4 +118,5 @@ export namespace GoogleNativeEngine {
     export import Session = SessionModule.Session;
     export import RoleMessage = SessionModule.RoleMessage;
     export import Validator = ValidationModule.Validator;
+    export import MessageCodec = MessageCodecModule.MessageCodec;
 }

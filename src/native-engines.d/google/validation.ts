@@ -3,8 +3,7 @@ import { Function } from '../../function.ts';
 import { Verbatim } from '../../verbatim.ts';
 import { RoleMessage } from './session.ts';
 import { Validator as CompatibleValidator } from '../../compatible-engine/validation.ts';
-import { ResponseInvalid } from '../../engine.ts';
-import type { Engine } from '../../engine.ts';
+import { ResponseInvalid, Engine } from '../../engine.ts';
 
 
 

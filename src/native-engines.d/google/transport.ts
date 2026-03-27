@@ -7,7 +7,7 @@ import { type InferenceContext } from '../../inference-context.ts';
 import type { RestfulRequest } from '../../api-types/google/restful-request.ts';
 import { Throttle } from '../../throttle.ts';
 import { logger } from '../../telemetry.ts';
-import type { GoogleNativeMessageCodec } from './message-codec.ts';
+import type { MessageCodec } from './message-codec.ts';
 import type { ToolCodec } from '../../api-types/google/tool-codec.ts';
 import type { Billing } from '../../api-types/google/billing.ts';
 import type { Validator } from './validation.ts';
@@ -110,7 +110,7 @@ export namespace GoogleNativeTransport {
         urlContext: boolean;
         googleSearch: boolean;
 
-        messageCodec: GoogleNativeMessageCodec<fdm, vdm>;
+        messageCodec: MessageCodec<fdm, vdm>;
         toolCodec: ToolCodec<fdm>;
         billing: Billing;
         validator: Validator.From<fdm, vdm>;
