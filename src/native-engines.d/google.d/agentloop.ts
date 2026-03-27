@@ -1,7 +1,7 @@
 import { type InferenceContext } from '../../inference-context.ts';
 import { Function } from '../../function.ts';
 import { GoogleNativeEngine } from '../google.ts';
-import * as CompatibleAgentloopModule from '../../compatible-engine/agentloop.ts';
+import * as CompatibleAgentloopModule from '../../compatible-engine.d/agentloop.ts';
 import type { Verbatim } from '../../verbatim.ts';
 
 

@@ -1,7 +1,7 @@
 import { type InferenceContext } from '../../inference-context.ts';
 import { Function } from '../../function.ts';
 import { OpenAIResponsesNativeEngine } from '../openai-responses.ts';
-import * as CompatibleAgentloopModule from '../../compatible-engine/agentloop.ts';
+import * as CompatibleAgentloopModule from '../../compatible-engine.d/agentloop.ts';
 import type { Verbatim } from '../../verbatim.ts';
 
 
