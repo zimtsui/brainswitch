@@ -1,7 +1,7 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
+import { NetworkError, ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 import * as Undici from 'undici';
 import { type InferenceContext } from '../../inference-context.ts';
 import { Throttle } from '../../throttle.ts';
@@ -61,51 +61,48 @@ export class Transport<
         session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
-        try {
-            await this.ctx.throttle.requests(wfctx);
+        await this.ctx.throttle.requests(wfctx);
 
-            // Prepare request
-            const params = this.makeParams(session);
-            logger.message.trace(params);
+        // Prepare request
+        const params = this.makeParams(session);
+        logger.message.trace(params);
 
-            // Send request
-            const res = await Undici.fetch(
-                this.apiURL,
-                {
-                    method: 'POST',
-                    headers: new Headers({
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.ctx.providerSpec.apiKey}`,
-                    }),
-                    body: JSON.stringify(params),
-                    dispatcher: this.ctx.providerSpec.proxyAgent,
-                    signal,
-                },
-            );
+        // Send request
+        const res = await Undici.fetch(
+            this.apiURL,
+            {
+                method: 'POST',
+                headers: new Headers({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.ctx.providerSpec.apiKey}`,
+                }),
+                body: JSON.stringify(params),
+                dispatcher: this.ctx.providerSpec.proxyAgent,
+                signal,
+            },
+        ).catch(e => {
+            if (e instanceof TypeError)
+                throw new NetworkError(undefined, { cause: e });
+            else throw e;
+        });
 
-            // Get response
-            if (res.ok) {} else throw new Error(undefined, { cause: res });
-            const response = await res.json() as OpenAI.Responses.Response;
-            logger.message.trace(response);
+        // Get response
+        if (res.ok) {} else throw new Error(undefined, { cause: res });
+        const response = await res.json() as OpenAI.Responses.Response;
+        logger.message.trace(response);
 
-            // Validate response
-            if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
-                throw new ResponseInvalid('Token limit exceeded.', { cause: response });
-            if (response.status === 'completed') {}
-            else throw new ResponseInvalid('Abnormal response status', { cause: response });
-            if (response.usage) {} else throw new Error();
+        // Validate response
+        if (response.status === 'incomplete' && response.incomplete_details?.reason === 'max_output_tokens')
+            throw new ResponseInvalid('Token limit exceeded.', { cause: response });
+        if (response.status === 'completed') {}
+        else throw new ResponseInvalid('Abnormal response status', { cause: response });
+        if (response.usage) {} else throw new Error();
 
-            this.logAiMessage(response.output);
-            wfctx.cost?.(this.ctx.billing.charge(response.usage));
-            logger.message.debug(response.usage);
+        this.logAiMessage(response.output);
+        wfctx.cost?.(this.ctx.billing.charge(response.usage));
+        logger.message.debug(response.usage);
 
-            return this.ctx.messageCodec.decodeAiMessage(response.output);
-        } catch (e) {
-            if (e instanceof OpenAI.APIError)
-                throw new ResponseInvalid(undefined, { cause: e });
-            else
-                throw e;
-        }
+        return this.ctx.messageCodec.decodeAiMessage(response.output);
     }
 }
 

@@ -1,6 +1,6 @@
 import { RoleMessage, type Session } from '../../../compatible-engine/session.ts';
 import { Function } from '../../../function.ts';
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 import { Transport } from '../transport.ts';
 import { type InferenceContext } from '../../../inference-context.ts';
 import * as Undici from 'undici';
@@ -53,54 +53,48 @@ export abstract class MonolithTransport<
         session: Session.From<fdm, vdm>,
         signal?: AbortSignal,
     ): Promise<RoleMessage.Ai.From<fdm, vdm>> {
-        try {
-            await this.ctx.throttle.requests(wfctx);
+        await this.ctx.throttle.requests(wfctx);
 
-            // Prepare request
-            const params = this.makeParams(session);
-            logger.message.trace(params);
+        // Prepare request
+        const params = this.makeParams(session);
+        logger.message.trace(params);
 
-            // Send request
-            const res = await Undici.fetch(this.ctx.apiURL, {
-                method: 'POST',
-                headers: new Headers({
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.ctx.apiKey}`,
-                }),
-                body: JSON.stringify(params),
-                dispatcher: this.ctx.proxyAgent,
-                signal,
-            }).catch(e => {
-                if (e instanceof TypeError)
-                    throw new NetworkError(undefined, { cause: e });
-                else throw e;
-            });
-
-            // Get response
-            if (res.ok) {} else throw new Error(undefined, { cause: res });
-            const completion = await res.json() as OpenAI.ChatCompletion;
-            logger.message.trace(completion);
-
-            // Validate response
-            const choice = completion.choices[0];
-            if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
-
-            this.handleFinishReason(completion, choice.finish_reason);
-
-            if (completion.usage) {} else throw new Error();
-            const cost = this.ctx.billing.charge(completion.usage);
-
-            if (choice.message.content) logger.inference.debug(choice.message.content);
-            if (choice.message.tool_calls) logger.message.debug(choice.message.tool_calls);
-            logger.message.debug(completion.usage);
-            wfctx.cost?.(cost);
-
-            return this.ctx.messageCodec.decodeAiMessage(choice.message);
-        } catch (e) {
-            if (e instanceof OpenAI.APIError)
-                throw new ResponseInvalid(undefined, { cause: e });
+        // Send request
+        const res = await Undici.fetch(this.ctx.apiURL, {
+            method: 'POST',
+            headers: new Headers({
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.ctx.apiKey}`,
+            }),
+            body: JSON.stringify(params),
+            dispatcher: this.ctx.proxyAgent,
+            signal,
+        }).catch(e => {
+            if (e instanceof TypeError)
+                throw new NetworkError(undefined, { cause: e });
             else throw e;
-        }
+        });
+
+        // Get response
+        if (res.ok) {} else throw new Error(undefined, { cause: res });
+        const completion = await res.json() as OpenAI.ChatCompletion;
+        logger.message.trace(completion);
+
+        // Validate response
+        const choice = completion.choices[0];
+        if (choice) {} else throw new ResponseInvalid('Content missing', { cause: completion });
+
+        this.handleFinishReason(completion, choice.finish_reason);
+
+        if (completion.usage) {} else throw new Error();
+        const cost = this.ctx.billing.charge(completion.usage);
+
+        if (choice.message.content) logger.inference.debug(choice.message.content);
+        if (choice.message.tool_calls) logger.message.debug(choice.message.tool_calls);
+        logger.message.debug(completion.usage);
+        wfctx.cost?.(cost);
+
+        return this.ctx.messageCodec.decodeAiMessage(choice.message);
     }
 }
 

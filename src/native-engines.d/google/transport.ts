@@ -1,4 +1,4 @@
-import { ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
+import { NetworkError, ResponseInvalid, type InferenceParams, type ProviderSpec } from '../../engine.ts';
 import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
 import * as Google from '@google/genai';
@@ -73,6 +73,10 @@ export class GoogleNativeTransport<
             body: JSON.stringify(reqbody),
             dispatcher: this.ctx.providerSpec.proxyAgent,
             signal,
+        }).catch(e => {
+            if (e instanceof TypeError)
+                throw new NetworkError(undefined, { cause: e });
+            else throw e;
         });
         logger.message.trace(res);
         if (res.ok) {} else throw new Error(undefined, { cause: res });
