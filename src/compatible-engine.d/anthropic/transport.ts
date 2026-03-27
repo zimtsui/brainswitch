@@ -116,6 +116,11 @@ export class Transport<
                         logger.message.trace(event);
                         if (contentBlock?.type === 'tool_use') {
                             if (typeof contentBlock.input === 'string') {} else throw new Error();
+                            try {
+                                contentBlock.input = JSON.parse(contentBlock.input);
+                            } catch (e) {
+                                throw new ResponseInvalid('Invalid JSON of tool use input', { cause: contentBlock.input });
+                            }
                             logger.message.debug(contentBlock);
                         }
                     } else throw new Error('Unknown stream event', { cause: event });

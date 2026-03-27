@@ -21,20 +21,12 @@ export class ToolCodec<in out fdm extends Function.Decl.Map.Proto> {
     ): Function.Call.From<fdm> {
         const fditem = this.ctx.fdm[apifc.name];
         if (fditem) {} else throw new ResponseInvalid('Unknown function call', { cause: apifc });
-        if (typeof apifc.input === 'string') {} else throw new Error();
-        const args = (() => {
-            try {
-                return JSON.parse(apifc.input);
-            } catch {
-                throw new ResponseInvalid('Invalid JSON of function call', { cause: apifc });
-            }
-        })();
-        if (ajv.validate(fditem.parameters, args)) {}
+        if (ajv.validate(fditem.parameters, apifc.input)) {}
         else throw new ResponseInvalid('Function call not conforming to schema', { cause: apifc });
         return Function.Call.of({
             id: apifc.id,
             name: apifc.name,
-            args,
+            args: apifc.input,
         } as Function.Call.Options.From<fdm>);
     }
 
