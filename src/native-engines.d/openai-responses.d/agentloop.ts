@@ -1,8 +1,6 @@
 import { type InferenceContext } from '../../inference-context.ts';
-import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
-import { Tool } from './tool.ts';
-import { OpenAIResponsesNativeEngine } from './engine.ts';
+import { OpenAIResponsesNativeEngine } from '../openai-responses.ts';
 import * as CompatibleAgentloopModule from '../../compatible-engine/agentloop.ts';
 import type { Verbatim } from '../../verbatim.ts';
 
@@ -15,17 +13,17 @@ export async function *agentloop<
     vdm extends Verbatim.Decl.Map.Proto,
 >(
     wfctx: InferenceContext,
-    session: Session.From<fdm, vdm>,
+    session: OpenAIResponsesNativeEngine.Session.From<fdm, vdm>,
     engine: OpenAIResponsesNativeEngine<fdm, vdm>,
-    tlm: Tool.Map<fdm>,
+    tlm: OpenAIResponsesNativeEngine.Tool.Map<fdm>,
     limit = Number.POSITIVE_INFINITY,
 ): AsyncGenerator<string, string, void> {
     for (let i = 0; i < limit; i++) {
         const response = await engine.stateful(wfctx, session);
         if (response.allTextPart()) return response.getText();
-        const ptcs: Promise<Tool.Response.From<fdm>>[] = [];
+        const ptcs: Promise<OpenAIResponsesNativeEngine.Tool.Response.From<fdm>>[] = [];
         for (const part of response.getParts()) {
-            if (part instanceof RoleMessage.Part.Text) {
+            if (part instanceof OpenAIResponsesNativeEngine.RoleMessage.Part.Text) {
                 yield part.text;
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.From<fdm>;
@@ -37,19 +35,19 @@ export async function *agentloop<
                         text: await fn.call(tlm, fc.args),
                     } as Function.Response.Options.From<fdm>);
                 })());
-            } else if (part instanceof Tool.ApplyPatch.Call) {
-                const apc: Tool.ApplyPatch.Call = part;
-                const tl = tlm[Tool.APPLY_PATCH];
+            } else if (part instanceof OpenAIResponsesNativeEngine.Tool.ApplyPatch.Call) {
+                const apc: OpenAIResponsesNativeEngine.Tool.ApplyPatch.Call = part;
+                const tl = tlm[OpenAIResponsesNativeEngine.Tool.APPLY_PATCH];
                 ptcs.push((async () => {
-                    return new Tool.ApplyPatch.Response({
+                    return new OpenAIResponsesNativeEngine.Tool.ApplyPatch.Response({
                         id: apc.raw.call_id,
                         failure: await tl.call(tlm, apc.raw.operation),
                     });
                 })());
             } else throw new Error();
         }
-        const trs: Tool.Response.From<fdm>[] = await Promise.all(ptcs);
-        engine.pushUserMessage(session, new RoleMessage.User(trs));
+        const trs: OpenAIResponsesNativeEngine.Tool.Response.From<fdm>[] = await Promise.all(ptcs);
+        engine.pushUserMessage(session, new OpenAIResponsesNativeEngine.RoleMessage.User(trs));
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }

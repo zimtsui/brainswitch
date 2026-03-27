@@ -13,7 +13,6 @@ import type { Validator } from './validation.ts';
 import type { Verbatim } from '../../verbatim.ts';
 import * as ChoiceCodec from './choice-codec.ts';
 import { Structuring } from './structuring.ts';
-import * as VerbatimCodec from '../../verbatim/codec.ts';
 
 
 

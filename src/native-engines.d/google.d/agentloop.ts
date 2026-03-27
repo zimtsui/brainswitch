@@ -1,7 +1,6 @@
 import { type InferenceContext } from '../../inference-context.ts';
-import { RoleMessage, type Session } from './session.ts';
 import { Function } from '../../function.ts';
-import { type GoogleNativeEngine } from '../google.ts';
+import { GoogleNativeEngine } from '../google.ts';
 import * as CompatibleAgentloopModule from '../../compatible-engine/agentloop.ts';
 import type { Verbatim } from '../../verbatim.ts';
 
@@ -14,7 +13,7 @@ export async function *agentloop<
     vdm extends Verbatim.Decl.Map.Proto,
 >(
     wfctx: InferenceContext,
-    session: Session.From<fdm, vdm>,
+    session: GoogleNativeEngine.Session.From<fdm, vdm>,
     engine: GoogleNativeEngine<fdm, vdm>,
     fnm: Function.Map<fdm>,
     limit = Number.POSITIVE_INFINITY,
@@ -24,8 +23,8 @@ export async function *agentloop<
         if (response.allChatPart()) return response.getChatText();
         const pfrs: Promise<Function.Response.From<fdm>>[] = [];
         for (const part of response.getParts()) {
-            if (part instanceof RoleMessage.Part.Text) {
-                yield RoleMessage.Ai.encodeChatPart(part);
+            if (part instanceof GoogleNativeEngine.RoleMessage.Part.Text) {
+                yield GoogleNativeEngine.RoleMessage.Ai.encodeChatPart(part);
             } else if (part instanceof Function.Call) {
                 const fc = part as Function.Call.From<fdm>;
                 const f = fnm[fc.name];
@@ -36,14 +35,14 @@ export async function *agentloop<
                         text: await f.call(fnm, fc.args),
                     } as Function.Response.Options.From<fdm>);
                 })());
-            } else if (part instanceof RoleMessage.Ai.Part.ExecutableCode) {
-                yield RoleMessage.Ai.encodeChatPart(part);
-            } else if (part instanceof RoleMessage.Ai.Part.CodeExecutionResult) {
-                yield RoleMessage.Ai.encodeChatPart(part);
+            } else if (part instanceof GoogleNativeEngine.RoleMessage.Ai.Part.ExecutableCode) {
+                yield GoogleNativeEngine.RoleMessage.Ai.encodeChatPart(part);
+            } else if (part instanceof GoogleNativeEngine.RoleMessage.Ai.Part.CodeExecutionResult) {
+                yield GoogleNativeEngine.RoleMessage.Ai.encodeChatPart(part);
             } else throw new Error();
         }
         const frs: Function.Response.From<fdm>[] = await Promise.all(pfrs);
-        engine.pushUserMessage(session, new RoleMessage.User(frs));
+        engine.pushUserMessage(session, new GoogleNativeEngine.RoleMessage.User(frs));
     }
     throw new agentloop.FunctionCallLimitExceeded('Function call limit exceeded.');
 }
