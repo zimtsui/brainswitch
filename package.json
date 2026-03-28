@@ -5,8 +5,8 @@
     ".": "./build/exports.js",
     "./assets": "./build/assets.js",
     "./codec": "./build/verbatim/codec.js",
-    "./openai-responses": "./build/native-engines.d/openai-responses/exports.js",
-    "./google": "./build/native-engines.d/google/exports.js"
+    "./openai-responses": "./build/native-engines.d/openai-responses.d/exports.js",
+    "./google": "./build/native-engines.d/google.d/exports.js"
   },
   "engines": {
     "node": ">=22"
